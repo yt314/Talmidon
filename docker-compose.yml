@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:17
+    container_name: talmidon-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: talmidon
+      POSTGRES_USER: talmidon
+      POSTGRES_PASSWORD: talmidon_dev_pw
+    ports:
+      - "5432:5432"
+    volumes:
+      - talmidon_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U talmidon -d talmidon"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # שרת SMTP מקומי לפיתוח + ממשק web לצפייה במיילים שנשלחו
+  # SMTP: localhost:1025  |  Web UI: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: talmidon-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  talmidon_pgdata:

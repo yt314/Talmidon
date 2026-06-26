@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/Talmidon.Api/Talmidon.Api.csproj" />
+    <Project Path="backend/Talmidon.Domain/Talmidon.Domain.csproj" />
+    <Project Path="backend/Talmidon.Infrastructure/Talmidon.Infrastructure.csproj" />
+  </Folder>
+</Solution>

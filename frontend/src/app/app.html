@@ -1,0 +1,29 @@
+<div class="flex align-items-center justify-content-center" style="min-height: 100vh; background: var(--p-content-background, #f4f6fb);">
+  <p-card styleClass="w-full" [style]="{ 'max-width': '480px' }">
+    <ng-template pTemplate="header">
+      <div class="flex align-items-center gap-2 p-4 pb-0">
+        <i class="pi pi-graduation-cap" style="font-size: 2rem; color: var(--p-primary-color);"></i>
+        <h1 class="m-0 text-3xl font-bold">{{ title() }}</h1>
+      </div>
+    </ng-template>
+
+    <p class="mt-0 text-lg">מערכת לניהול ומעקב עבור מורות פרטיות 🎓</p>
+
+    <div class="flex gap-2 mb-3 flex-wrap">
+      <p-tag value="Angular 21" severity="success" />
+      <p-tag value="PrimeNG (Aura)" severity="info" />
+      <p-tag value="עברית RTL" severity="warn" />
+    </div>
+
+    <p class="text-color-secondary">
+      התשתית הוקמה בהצלחה. מכאן נבנה את המערכת צעד-אחר-צעד.
+    </p>
+
+    <div class="flex gap-2 mt-3">
+      <p-button label="בוא נתחיל" icon="pi pi-arrow-left" />
+      <p-button label="מידע" icon="pi pi-info-circle" [outlined]="true" severity="secondary" />
+    </div>
+  </p-card>
+</div>
+
+<router-outlet />

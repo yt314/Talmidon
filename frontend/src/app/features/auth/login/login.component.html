@@ -1,0 +1,44 @@
+<div class="auth-page">
+  <p-card styleClass="auth-card">
+    <ng-template pTemplate="header">
+      <div class="flex align-items-center gap-2 p-4 pb-0">
+        <i class="pi pi-graduation-cap" style="font-size: 1.8rem; color: var(--p-primary-color)"></i>
+        <h1 class="m-0 text-2xl font-bold">תלמידון</h1>
+      </div>
+    </ng-template>
+
+    <h2 class="mt-0 mb-3 text-xl">התחברות</h2>
+
+    @if (confirmed()) {
+      <p-message severity="success" text="כתובת המייל אומתה! אפשר להתחבר." styleClass="w-full mb-3" />
+    }
+    @if (error()) {
+      <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label for="email">אימייל</label>
+        <input pInputText id="email" type="email" formControlName="email" class="w-full" autocomplete="username" />
+      </div>
+
+      <div class="field">
+        <label for="password">סיסמה</label>
+        <p-password
+          inputId="password"
+          formControlName="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          autocomplete="current-password" />
+      </div>
+
+      <p-button type="submit" label="התחבר" icon="pi pi-sign-in" [loading]="loading()" styleClass="w-full" />
+    </form>
+
+    <div class="mt-3 text-center text-sm">
+      אין לך חשבון? <a routerLink="/register">הרשמה כמורה</a>
+    </div>
+  </p-card>
+</div>

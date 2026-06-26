@@ -1,0 +1,29 @@
+# ===== .NET / ASP.NET Core =====
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+appsettings.*.local.json
+*.pfx
+
+# ===== Node / Angular =====
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log*
+
+# ===== Environment / secrets =====
+.env
+*.local
+# סודות פיתוח מקומיים (העתק מ-appsettings.Development.example.json)
+**/appsettings.Development.json
+
+# ===== IDE / OS =====
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
