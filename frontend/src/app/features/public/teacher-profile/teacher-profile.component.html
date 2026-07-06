@@ -1,0 +1,48 @@
+<div class="library-page">
+  <header class="library-header">
+    <a routerLink="/" class="flex align-items-center gap-2 no-underline" style="color: inherit">
+      <i class="pi pi-graduation-cap" style="font-size: 1.8rem; color: var(--p-primary-color)"></i>
+      <h1 class="m-0 text-2xl font-bold">תלמידון</h1>
+    </a>
+    <div class="flex gap-2">
+      <p-button label="הרשמה כמורה" icon="pi pi-user-plus" severity="secondary" [outlined]="true" routerLink="/register" />
+      <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
+    </div>
+  </header>
+
+  <main class="library-content">
+    <a routerLink="/" class="inline-block mb-3">→ חזרה לספרייה</a>
+
+    @if (loading()) {
+      <p class="text-color-secondary">טוען...</p>
+    } @else if (!teacher()) {
+      <p-message severity="warn" text="המורה לא נמצאה, או שאינה מוצגת בספרייה הציבורית." />
+    } @else {
+      <p-card>
+        <h2 class="mt-0 mb-2">{{ teacher()!.fullName }}</h2>
+
+        <div class="flex gap-2 flex-wrap mb-3">
+          @for (subject of teacher()!.subjects; track subject) {
+            <p-tag [value]="subject" severity="info" />
+          }
+        </div>
+
+        @if (teacher()!.bio) {
+          <p>{{ teacher()!.bio }}</p>
+        }
+
+        <p class="font-bold text-lg">₪{{ teacher()!.defaultPricePerLesson }} לשיעור</p>
+
+        @if (teacher()!.rulesText) {
+          <h3 class="mb-2">כללי ביטול ותשלום</h3>
+          <p style="white-space: pre-line">{{ teacher()!.rulesText }}</p>
+        }
+
+        @if (teacher()!.contactInfo) {
+          <h3 class="mb-2">יצירת קשר</h3>
+          <p style="white-space: pre-line">{{ teacher()!.contactInfo }}</p>
+        }
+      </p-card>
+    }
+  </main>
+</div>

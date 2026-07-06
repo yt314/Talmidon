@@ -1,0 +1,58 @@
+<div class="library-page">
+  <header class="library-header">
+    <div class="flex align-items-center gap-2">
+      <i class="pi pi-graduation-cap" style="font-size: 1.8rem; color: var(--p-primary-color)"></i>
+      <h1 class="m-0 text-2xl font-bold">תלמידון</h1>
+    </div>
+    <div class="flex gap-2">
+      <p-button label="הרשמה כמורה" icon="pi pi-user-plus" severity="secondary" [outlined]="true" routerLink="/register" />
+      <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
+    </div>
+  </header>
+
+  <main class="library-content">
+    <h2 class="text-xl mb-3">ספריית מורות</h2>
+
+    <div class="flex flex-wrap gap-3 mb-4">
+      <input
+        pInputText
+        type="text"
+        placeholder="חיפוש לפי שם"
+        class="flex-1"
+        style="min-width: 220px"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)" />
+      <p-select
+        [options]="subjects()"
+        [ngModel]="selectedSubject()"
+        (ngModelChange)="selectedSubject.set($event)"
+        placeholder="כל התחומים"
+        [showClear]="true"
+        style="min-width: 200px" />
+    </div>
+
+    @if (loading()) {
+      <p class="text-color-secondary">טוען...</p>
+    } @else if (teachers().length === 0) {
+      <p class="text-color-secondary">לא נמצאו מורות מתאימות.</p>
+    } @else {
+      <div class="teachers-grid">
+        @for (teacher of teachers(); track teacher.id) {
+          <p-card styleClass="teacher-card">
+            <h3 class="mt-0 mb-2">{{ teacher.fullName }}</h3>
+            @if (teacher.bio) {
+              <p class="text-color-secondary line-clamp">{{ teacher.bio }}</p>
+            }
+            <div class="flex gap-2 flex-wrap mb-3">
+              @for (subject of teacher.subjects; track subject) {
+                <p-tag [value]="subject" severity="info" />
+              }
+            </div>
+            <p class="font-bold mb-3">₪{{ teacher.defaultPricePerLesson }} לשיעור</p>
+            <a [routerLink]="['/teachers', teacher.id]">לפרופיל המלא ←</a>
+          </p-card>
+        }
+      </div>
+    }
+  </main>
+</div>

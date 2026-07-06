@@ -32,3 +32,33 @@ body {
   font-weight: 500;
 }
 
+/* ספריית מורות ציבורית ופרופיל מורה */
+.library-page {
+  min-height: 100vh;
+  background: var(--p-content-background, #f4f6fb);
+}
+.library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: var(--p-surface-card, #fff);
+  border-bottom: 1px solid var(--p-content-border-color, #e5e7eb);
+}
+.library-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.teachers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.teacher-card .line-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
