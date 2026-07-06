@@ -120,6 +120,33 @@ public class AuthController(
             : BadRequest(new { message = "אימות נכשל או שפג תוקף הקישור." });
     }
 
+    /// <summary>קביעת סיסמה מקישור הזמנה (הורה/תלמיד שהמורה יצרה). מאמת גם את המייל.</summary>
+    [AllowAnonymous]
+    [HttpPost("set-password")]
+    public async Task<IActionResult> SetPassword(SetPasswordRequest request)
+    {
+        var user = await userManager.FindByIdAsync(request.UserId);
+        if (user is null)
+            return BadRequest(new { message = "קישור לא תקין." });
+
+        string decoded;
+        try { decoded = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token)); }
+        catch { return BadRequest(new { message = "קישור לא תקין." }); }
+
+        var result = await userManager.ResetPasswordAsync(user, decoded, request.Password);
+        if (!result.Succeeded)
+            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+
+        // קביעת סיסמה דרך קישור ההזמנה מוכיחה בעלות על המייל
+        if (!user.EmailConfirmed)
+        {
+            user.EmailConfirmed = true;
+            await userManager.UpdateAsync(user);
+        }
+
+        return Ok(new { message = "הסיסמה הוגדרה בהצלחה. אפשר להתחבר." });
+    }
+
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)

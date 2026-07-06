@@ -39,6 +39,7 @@ public static class DependencyInjection
         // שירותי אימות
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IAccountProvisioning, AccountProvisioning>();
 
         // Identity (ללא קוקיז — API מבוסס טוקנים)
         services.AddIdentityCore<ApplicationUser>(options =>

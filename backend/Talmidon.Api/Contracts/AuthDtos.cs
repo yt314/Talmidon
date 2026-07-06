@@ -18,6 +18,11 @@ public record RefreshRequest(
 public record ResendConfirmationRequest(
     [Required, EmailAddress] string Email);
 
+public record SetPasswordRequest(
+    [Required] string UserId,
+    [Required] string Token,
+    [Required, MinLength(8), MaxLength(100)] string Password);
+
 public record AuthResponse(
     string AccessToken,
     DateTimeOffset AccessTokenExpiresAt,
