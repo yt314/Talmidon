@@ -20,7 +20,8 @@ export class TeacherShellComponent {
 
   protected readonly menuItems: MenuItem[] = [
     { label: 'ראשי', icon: 'pi pi-home', routerLink: '/app/dashboard' },
-    { label: 'תלמידים', icon: 'pi pi-users', routerLink: '/app/students' }
+    { label: 'תלמידים', icon: 'pi pi-users', routerLink: '/app/students' },
+    { label: 'יומן שיעורים', icon: 'pi pi-calendar', routerLink: '/app/lessons' }
   ];
 
   logout(): void {

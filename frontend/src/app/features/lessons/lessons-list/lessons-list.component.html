@@ -1,0 +1,264 @@
+<h1 class="text-2xl font-bold mb-4">יומן שיעורים</h1>
+
+<p-tabs value="lessons">
+  <p-tablist>
+    <p-tab value="lessons">שיעורים</p-tab>
+    <p-tab value="requests">בקשות שינוי @if (changeRequests().length > 0) {({{ changeRequests().length }})}</p-tab>
+  </p-tablist>
+
+  <p-tabpanels>
+    <p-tabpanel value="lessons">
+      <div class="flex justify-content-end mb-3">
+        <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
+      </div>
+
+      <p-table [value]="lessons()" [loading]="loading()" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>תלמיד</th>
+            <th>מועד</th>
+            <th>סטטוס</th>
+            <th>שיעורי בית</th>
+            <th>תשלום</th>
+            <th>פעולות</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-lesson>
+          <tr>
+            <td>{{ lesson.studentName }}</td>
+            <td>{{ lesson.startTime | date: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | date: 'HH:mm' }}</td>
+            <td><p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" /></td>
+            <td>{{ lesson.homework || '—' }}</td>
+            <td>
+              @if (!lesson.paymentRequired) {
+                <span class="text-color-secondary">—</span>
+              } @else {
+                <p-tag [value]="lesson.isPaid ? 'שולם' : 'נדרש (' + lesson.amount + ' ₪)'" [severity]="lesson.isPaid ? 'success' : 'warn'" />
+              }
+            </td>
+            <td>
+              @if (lesson.status === LessonStatus.Requested) {
+                <div class="flex gap-1">
+                  <p-button
+                    label="אשר"
+                    size="small"
+                    severity="success"
+                    [loading]="busyRequestId() === lesson.id"
+                    (onClick)="approveRequest(lesson)" />
+                  <p-button
+                    label="דחה"
+                    size="small"
+                    severity="danger"
+                    [outlined]="true"
+                    [loading]="busyRequestId() === lesson.id"
+                    (onClick)="declineRequest(lesson)" />
+                </div>
+              } @else if (lesson.status === LessonStatus.Scheduled) {
+                <div class="flex gap-1">
+                  <p-button icon="pi pi-pencil" severity="secondary" [text]="true" pTooltip="עדכן מועד" (onClick)="openEditTimeDialog(lesson)" />
+                  <p-button icon="pi pi-check-circle" severity="success" [text]="true" pTooltip="סיום שיעור" (onClick)="openCompleteDialog(lesson)" />
+                  <p-button icon="pi pi-trash" severity="danger" [text]="true" pTooltip="מחק" (onClick)="deleteLesson(lesson)" />
+                </div>
+              } @else {
+                <span class="text-color-secondary">—</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center text-color-secondary">אין שיעורים עדיין.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-tabpanel>
+
+    <p-tabpanel value="requests">
+      <p-table [value]="changeRequests()" [loading]="changeRequestsLoading()" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>תלמיד</th>
+            <th>הורה מבקש</th>
+            <th>סוג</th>
+            <th>מועד נוכחי</th>
+            <th>מועד מוצע</th>
+            <th>סיבה</th>
+            <th>פעולות</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-request>
+          <tr>
+            <td>{{ request.studentName }}</td>
+            <td>{{ request.parentName }}</td>
+            <td>{{ request.type === ChangeRequestType.Cancel ? 'ביטול' : 'שינוי מועד' }}</td>
+            <td>{{ request.lessonStartTime | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              @if (request.proposedStartTime) {
+                {{ request.proposedStartTime | date: 'dd/MM/yyyy HH:mm' }}
+              } @else {
+                <span class="text-color-secondary">—</span>
+              }
+            </td>
+            <td>{{ request.reason || '—' }}</td>
+            <td>
+              <div class="flex gap-1">
+                <p-button
+                  label="אשר"
+                  size="small"
+                  severity="success"
+                  [loading]="busyRequestId() === request.id"
+                  (onClick)="approveChangeRequest(request)" />
+                <p-button
+                  label="דחה"
+                  size="small"
+                  severity="danger"
+                  [outlined]="true"
+                  [loading]="busyRequestId() === request.id"
+                  (onClick)="rejectChangeRequest(request)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="text-center text-color-secondary">אין בקשות שינוי ממתינות.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
+
+<p-dialog header="הוספת שיעור" [(visible)]="showLessonDialog" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="lessonForm" (ngSubmit)="saveLesson()">
+    <div class="field">
+      <label for="l-student">תלמיד</label>
+      <p-select
+        inputId="l-student"
+        [options]="students()"
+        optionLabel="fullName"
+        optionValue="id"
+        formControlName="studentId"
+        placeholder="בחר תלמיד"
+        styleClass="w-full" />
+    </div>
+    <div class="field">
+      <label for="l-start">התחלה</label>
+      <p-datepicker
+        inputId="l-start"
+        formControlName="startTime"
+        [showTime]="true"
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full" />
+    </div>
+    <div class="field">
+      <label for="l-end">סיום</label>
+      <p-datepicker
+        inputId="l-end"
+        formControlName="endTime"
+        [showTime]="true"
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full" />
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showLessonDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingLesson()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog header="עדכון מועד שיעור" [(visible)]="showEditTimeDialog" [modal]="true" [style]="{ width: '420px' }">
+  <form [formGroup]="timeForm" (ngSubmit)="saveTime()">
+    <div class="field">
+      <label for="t-start">התחלה</label>
+      <p-datepicker
+        inputId="t-start"
+        formControlName="startTime"
+        [showTime]="true"
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full" />
+    </div>
+    <div class="field">
+      <label for="t-end">סיום</label>
+      <p-datepicker
+        inputId="t-end"
+        formControlName="endTime"
+        [showTime]="true"
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full" />
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showEditTimeDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingTime()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog header="סיום שיעור" [(visible)]="showCompleteDialog" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="completeForm" (ngSubmit)="saveComplete()">
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="c-completed" formControlName="completed" [binary]="true" />
+      <label for="c-completed" class="m-0">השיעור התקיים</label>
+    </div>
+
+    @if (completeForm.controls.completed.value) {
+      <div class="field flex align-items-center gap-2">
+        <p-checkbox inputId="c-paymentRequired" formControlName="paymentRequired" [binary]="true" />
+        <label for="c-paymentRequired" class="m-0">נדרש תשלום</label>
+      </div>
+
+      @if (completeForm.controls.paymentRequired.value) {
+        <div class="field">
+          <label for="c-amount">סכום (₪)</label>
+          <p-inputnumber inputId="c-amount" formControlName="amount" mode="decimal" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
+        </div>
+      }
+
+      <div class="field">
+        <label for="c-homework">שיעורי בית</label>
+        <textarea pTextarea id="c-homework" formControlName="homework" rows="2" class="w-full"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="c-note">הערה פדגוגית (אופציונלי)</label>
+        <textarea pTextarea id="c-note" formControlName="noteContent" rows="3" class="w-full"></textarea>
+      </div>
+
+      @if (completeForm.controls.noteContent.value) {
+        <div class="field flex align-items-center gap-2">
+          <p-checkbox inputId="c-noteVisibleToStudent" formControlName="noteVisibleToStudent" [binary]="true" />
+          <label for="c-noteVisibleToStudent" class="m-0">גלוי לתלמיד</label>
+        </div>
+        <div class="field flex align-items-center gap-2">
+          <p-checkbox inputId="c-noteVisibleToParent" formControlName="noteVisibleToParent" [binary]="true" />
+          <label for="c-noteVisibleToParent" class="m-0">גלוי להורה</label>
+        </div>
+      }
+    } @else {
+      <p class="text-color-secondary">השיעור יסומן כמבוטל.</p>
+    }
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showCompleteDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingComplete()" />
+    </div>
+  </form>
+</p-dialog>
