@@ -40,6 +40,10 @@ export const routes: Routes = [
       {
         path: 'payments',
         loadComponent: () => import('./features/payments/payments-list/payments-list.component').then(m => m.PaymentsListComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/teacher/profile/profile.component').then(m => m.TeacherProfileSettingsComponent)
       }
     ]
   },

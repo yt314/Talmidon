@@ -22,7 +22,8 @@ export class TeacherShellComponent {
     { label: 'ראשי', icon: 'pi pi-home', routerLink: '/app/dashboard' },
     { label: 'תלמידים', icon: 'pi pi-users', routerLink: '/app/students' },
     { label: 'יומן שיעורים', icon: 'pi pi-calendar', routerLink: '/app/lessons' },
-    { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/app/payments' }
+    { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/app/payments' },
+    { label: 'הגדרות פרופיל', icon: 'pi pi-cog', routerLink: '/app/profile' }
   ];
 
   logout(): void {

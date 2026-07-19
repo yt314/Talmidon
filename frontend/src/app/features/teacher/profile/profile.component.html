@@ -1,0 +1,69 @@
+<h1 class="text-2xl font-bold mb-4">הגדרות פרופיל</h1>
+
+@if (loading()) {
+  <p class="text-color-secondary">טוען...</p>
+} @else if (!profile()) {
+  <p class="text-color-secondary">שגיאה בטעינת הפרופיל.</p>
+} @else {
+  <p-card class="block" [style]="{ 'max-width': '640px' }">
+    <h3 class="mt-0 mb-2">{{ profile()!.fullName }}</h3>
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="field">
+        <label for="t-phone">טלפון</label>
+        <input pInputText id="t-phone" formControlName="phone" class="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="t-bio">תקציר (מוצג בספרייה הציבורית)</label>
+        <textarea pTextarea id="t-bio" formControlName="bio" rows="3" class="w-full"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="t-price">מחיר לשיעור (₪)</label>
+        <p-inputnumber inputId="t-price" formControlName="defaultPricePerLesson" mode="decimal" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
+      </div>
+
+      <div class="field">
+        <label for="t-rules">כללי ביטול ותשלום</label>
+        <textarea pTextarea id="t-rules" formControlName="rulesText" rows="3" class="w-full"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="t-contact">פרטי יצירת קשר (מוצג בספרייה הציבורית)</label>
+        <textarea pTextarea id="t-contact" formControlName="contactInfo" rows="2" class="w-full"></textarea>
+      </div>
+
+      <div class="field flex align-items-center gap-2">
+        <p-checkbox inputId="t-isPublic" formControlName="isPublic" [binary]="true" />
+        <label for="t-isPublic" class="m-0">להציג בספרייה הציבורית</label>
+      </div>
+
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
+    </form>
+  </p-card>
+
+  <p-card class="block mt-4" [style]="{ 'max-width': '640px' }">
+    <h3 class="mt-0 mb-3">תחומי לימוד</h3>
+
+    <div class="flex flex-wrap gap-2 mb-3">
+      @for (subject of subjects(); track subject.id) {
+        <p-chip [label]="subject.name" [removable]="true" (onRemove)="removeSubject(subject)" />
+      } @empty {
+        <p class="text-color-secondary m-0">לא נוספו תחומים עדיין.</p>
+      }
+    </div>
+
+    <div class="flex gap-2" style="max-width: 360px">
+      <input
+        pInputText
+        [ngModel]="newSubjectName()"
+        (ngModelChange)="newSubjectName.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="תחום חדש (למשל: מתמטיקה)"
+        class="flex-1"
+        (keydown.enter)="addSubject()" />
+      <p-button icon="pi pi-plus" [loading]="addingSubject()" (onClick)="addSubject()" />
+    </div>
+  </p-card>
+}
