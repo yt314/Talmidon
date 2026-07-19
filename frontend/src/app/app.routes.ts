@@ -67,5 +67,21 @@ export const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'student',
+    canActivate: [roleGuard(['Student'])],
+    loadComponent: () => import('./features/student-portal/student-shell/student-shell.component').then(m => m.StudentShellComponent),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'lessons' },
+      {
+        path: 'lessons',
+        loadComponent: () => import('./features/student-portal/student-lessons/student-lessons.component').then(m => m.StudentLessonsComponent)
+      },
+      {
+        path: 'notes',
+        loadComponent: () => import('./features/student-portal/student-notes/student-notes.component').then(m => m.StudentNotesComponent)
+      }
+    ]
+  },
   { path: '**', redirectTo: '' }
 ];

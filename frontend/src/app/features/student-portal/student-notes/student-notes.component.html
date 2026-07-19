@@ -1,0 +1,18 @@
+<h1 class="text-2xl font-bold mb-4">הערות</h1>
+
+@if (loading()) {
+  <p class="text-color-secondary">טוען...</p>
+} @else if (notes().length === 0) {
+  <p class="text-color-secondary">אין הערות עדיין.</p>
+} @else {
+  <div class="flex flex-column gap-3">
+    @for (note of notes(); track note.id) {
+      <p-card>
+        <div class="mb-2">
+          <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <p class="m-0" style="white-space: pre-wrap">{{ note.content }}</p>
+      </p-card>
+    }
+  </div>
+}
