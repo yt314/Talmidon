@@ -1,0 +1,100 @@
+<a routerLink="/app/students" class="inline-block mb-3">→ חזרה לרשימת התלמידים</a>
+
+@if (loading()) {
+  <p class="text-color-secondary">טוען...</p>
+} @else if (!student()) {
+  <p class="text-color-secondary">התלמיד לא נמצא.</p>
+} @else {
+  <p-card>
+    <div class="flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+      <div>
+        <h2 class="mt-0 mb-2">{{ student()!.fullName }}</h2>
+        <div class="flex gap-2">
+          <p-tag [value]="student()!.isActive ? 'פעיל' : 'לא פעיל'" [severity]="student()!.isActive ? 'success' : 'danger'" />
+          <p-tag [value]="student()!.hasLogin ? 'יש התחברות' : 'ללא התחברות'" [severity]="student()!.hasLogin ? 'success' : 'secondary'" />
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <p-button label="ערוך" icon="pi pi-pencil" severity="secondary" [outlined]="true" (onClick)="openEditDialog()" />
+        <p-button label="מחק" icon="pi pi-trash" severity="danger" [outlined]="true" (onClick)="confirmDelete()" />
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <div class="mb-1"><span class="text-color-secondary">כיתה: </span>{{ student()!.gradeLevel || '—' }}</div>
+      <div class="mb-1"><span class="text-color-secondary">תאריך לידה: </span>{{ student()!.birthDate || '—' }}</div>
+      @if (student()!.generalInfo) {
+        <div class="mt-2">{{ student()!.generalInfo }}</div>
+      }
+    </div>
+
+    <h3 class="mb-2">הורים מקושרים</h3>
+    @if (student()!.parents.length === 0) {
+      <p class="text-color-secondary mb-3">אין הורים מקושרים.</p>
+    } @else {
+      <ul class="parent-list mb-3">
+        @for (parent of student()!.parents; track parent.id) {
+          <li class="flex align-items-center justify-content-between py-2">
+            <span>{{ parent.fullName }} · {{ parent.email }}</span>
+            <p-button icon="pi pi-times" severity="danger" [text]="true" (onClick)="unlinkParent(parent.id)" />
+          </li>
+        }
+      </ul>
+    }
+
+    @if (availableParents().length > 0) {
+      <div class="flex gap-2 align-items-end">
+        <p-select
+          [options]="availableParents()"
+          optionLabel="fullName"
+          optionValue="id"
+          placeholder="בחר הורה לקישור"
+          [ngModel]="selectedParentToLink()"
+          (ngModelChange)="selectedParentToLink.set($event)"
+          styleClass="flex-1" />
+        <p-button
+          label="קשר"
+          icon="pi pi-link"
+          [disabled]="!selectedParentToLink()"
+          [loading]="linkingParentId() !== null"
+          (onClick)="linkSelectedParent()" />
+      </div>
+    }
+  </p-card>
+}
+
+<p-dialog header="עריכת תלמיד" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+    <div class="field">
+      <label for="e-fullName">שם מלא</label>
+      <input pInputText id="e-fullName" formControlName="fullName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="e-gradeLevel">כיתה</label>
+      <input pInputText id="e-gradeLevel" formControlName="gradeLevel" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="e-birthDate">תאריך לידה</label>
+      <p-datepicker
+        inputId="e-birthDate"
+        formControlName="birthDate"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        styleClass="w-full"
+        inputStyleClass="w-full" />
+    </div>
+    <div class="field">
+      <label for="e-generalInfo">מידע כללי</label>
+      <input pInputText id="e-generalInfo" formControlName="generalInfo" class="w-full" />
+    </div>
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="e-isActive" formControlName="isActive" [binary]="true" />
+      <label for="e-isActive" class="m-0">פעיל</label>
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showEditDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>

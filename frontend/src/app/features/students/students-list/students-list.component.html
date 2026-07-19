@@ -1,0 +1,146 @@
+<h1 class="text-2xl font-bold mb-4">תלמידים</h1>
+
+<p-tabs value="students">
+  <p-tablist>
+    <p-tab value="students">תלמידים</p-tab>
+    <p-tab value="parents">הורים</p-tab>
+  </p-tablist>
+
+  <p-tabpanels>
+    <p-tabpanel value="students">
+      <div class="flex justify-content-end mb-3">
+        <p-button label="הוסף תלמיד" icon="pi pi-plus" (onClick)="openStudentDialog()" />
+      </div>
+
+      <p-table [value]="students()" [loading]="loading()" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>שם</th>
+            <th>כיתה</th>
+            <th>הורים</th>
+            <th>התחברות</th>
+            <th>סטטוס</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-student>
+          <tr style="cursor: pointer" (click)="openStudent(student)">
+            <td>{{ student.fullName }}</td>
+            <td>{{ student.gradeLevel || '—' }}</td>
+            <td>{{ student.parentCount }}</td>
+            <td>
+              <p-tag [value]="student.hasLogin ? 'יש' : 'אין'" [severity]="student.hasLogin ? 'success' : 'secondary'" />
+            </td>
+            <td>
+              <p-tag [value]="student.isActive ? 'פעיל' : 'לא פעיל'" [severity]="student.isActive ? 'success' : 'danger'" />
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center text-color-secondary">אין תלמידים עדיין.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-tabpanel>
+
+    <p-tabpanel value="parents">
+      <div class="flex justify-content-end mb-3">
+        <p-button label="הוסף הורה" icon="pi pi-plus" (onClick)="openParentDialog()" />
+      </div>
+
+      <p-table [value]="parents()" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>שם</th>
+            <th>אימייל</th>
+            <th>טלפון</th>
+            <th>ילדים</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-parent>
+          <tr>
+            <td>{{ parent.fullName }}</td>
+            <td>{{ parent.email }}</td>
+            <td>{{ parent.phone || '—' }}</td>
+            <td>{{ parent.studentCount }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4" class="text-center text-color-secondary">אין הורים עדיין.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
+
+<p-dialog header="הוספת תלמיד" [(visible)]="showStudentDialog" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="studentForm" (ngSubmit)="saveStudent()">
+    <div class="field">
+      <label for="s-fullName">שם מלא</label>
+      <input pInputText id="s-fullName" formControlName="fullName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="s-gradeLevel">כיתה</label>
+      <input pInputText id="s-gradeLevel" formControlName="gradeLevel" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="s-birthDate">תאריך לידה</label>
+      <p-datepicker
+        inputId="s-birthDate"
+        formControlName="birthDate"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        styleClass="w-full"
+        inputStyleClass="w-full" />
+    </div>
+    <div class="field">
+      <label for="s-generalInfo">מידע כללי</label>
+      <input pInputText id="s-generalInfo" formControlName="generalInfo" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="s-loginEmail">אימייל להתחברות (אופציונלי)</label>
+      <input pInputText id="s-loginEmail" type="email" formControlName="loginEmail" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="s-parentIds">הורים מקושרים</label>
+      <p-multiselect
+        inputId="s-parentIds"
+        [options]="parents()"
+        optionLabel="fullName"
+        optionValue="id"
+        formControlName="parentIds"
+        placeholder="בחר הורים (אופציונלי)"
+        display="chip"
+        styleClass="w-full" />
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showStudentDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingStudent()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog header="הוספת הורה" [(visible)]="showParentDialog" [modal]="true" [style]="{ width: '420px' }">
+  <form [formGroup]="parentForm" (ngSubmit)="saveParent()">
+    <div class="field">
+      <label for="p-fullName">שם מלא</label>
+      <input pInputText id="p-fullName" formControlName="fullName" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="p-email">אימייל</label>
+      <input pInputText id="p-email" type="email" formControlName="email" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="p-phone">טלפון</label>
+      <input pInputText id="p-phone" formControlName="phone" class="w-full" />
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showParentDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingParent()" />
+    </div>
+  </form>
+</p-dialog>

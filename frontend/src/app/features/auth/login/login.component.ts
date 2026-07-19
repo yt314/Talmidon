@@ -42,7 +42,7 @@ export class LoginComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.auth.login(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.router.navigate(['/app/dashboard']),
       error: err => {
         this.error.set(err?.error?.message ?? 'ההתחברות נכשלה. נסה שוב.');
         this.loading.set(false);
