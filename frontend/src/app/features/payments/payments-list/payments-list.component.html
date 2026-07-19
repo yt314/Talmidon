@@ -1,0 +1,136 @@
+<div class="flex justify-content-between align-items-center mb-4">
+  <h1 class="text-2xl font-bold m-0">תשלומים</h1>
+  <p-button
+    label="שלח תזכורות תשלום חודשיות"
+    icon="pi pi-envelope"
+    severity="secondary"
+    [outlined]="true"
+    [loading]="sendingReminders()"
+    (onClick)="sendMonthlyReminders()" />
+</div>
+
+<p-tabs value="open">
+  <p-tablist>
+    <p-tab value="open">חיובים פתוחים</p-tab>
+    <p-tab value="history">היסטוריית תשלומים</p-tab>
+  </p-tablist>
+
+  <p-tabpanels>
+    <p-tabpanel value="open">
+      <div class="field" style="max-width: 360px">
+        <label for="p-parent">הורה</label>
+        <p-select
+          inputId="p-parent"
+          [options]="parents()"
+          optionLabel="fullName"
+          optionValue="id"
+          placeholder="בחר הורה"
+          [ngModel]="selectedParentId()"
+          (ngModelChange)="selectedParentId.set($event); onParentChange()"
+          styleClass="w-full" />
+      </div>
+
+      @if (selectedParentId()) {
+        <p-table [value]="openCharges()" [loading]="openChargesLoading()" dataKey="lessonId" class="mt-3">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 3rem">
+                <input
+                  type="checkbox"
+                  [checked]="openCharges().length > 0 && selectedLessonIds().size === openCharges().length"
+                  (change)="toggleAll()" />
+              </th>
+              <th>תלמיד</th>
+              <th>תאריך שיעור</th>
+              <th>סכום</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-charge>
+            <tr>
+              <td>
+                <input type="checkbox" [checked]="isSelected(charge.lessonId)" (change)="toggleLesson(charge.lessonId)" />
+              </td>
+              <td>{{ charge.studentName }}</td>
+              <td>{{ charge.lessonStartTime | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ charge.amount }} ₪</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="text-center text-color-secondary">אין חיובים פתוחים להורה זה.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+
+        @if (openCharges().length > 0) {
+          <form [formGroup]="paymentForm" (ngSubmit)="markAsPaid()" class="mt-4" style="max-width: 480px">
+            <div class="flex justify-content-between align-items-center mb-3">
+              <span class="font-bold">סה"כ נבחר: {{ selectedTotal() }} ₪</span>
+            </div>
+            <div class="field">
+              <label for="p-paidDate">תאריך תשלום</label>
+              <p-datepicker
+                inputId="p-paidDate"
+                formControlName="paidDate"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                [appendTo]="'body'"
+                styleClass="w-full"
+                inputStyleClass="w-full" />
+            </div>
+            <div class="field">
+              <label for="p-method">אמצעי תשלום (אופציונלי)</label>
+              <input pInputText id="p-method" formControlName="method" class="w-full" placeholder="מזומן / העברה / ביט..." />
+            </div>
+            <div class="field">
+              <label for="p-note">הערה (אופציונלי)</label>
+              <input pInputText id="p-note" formControlName="note" class="w-full" />
+            </div>
+            <p-button
+              label="סמן כשולם ושלח אישור להורה"
+              icon="pi pi-check"
+              type="submit"
+              [disabled]="selectedLessonIds().size === 0"
+              [loading]="saving()" />
+          </form>
+        }
+      }
+    </p-tabpanel>
+
+    <p-tabpanel value="history">
+      <p-table [value]="payments()" [loading]="paymentsLoading()" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>הורה</th>
+            <th>סכום</th>
+            <th>תאריך תשלום</th>
+            <th>אמצעי</th>
+            <th>שיעורים</th>
+            <th>אישור נשלח</th>
+            <th>פעולות</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-payment>
+          <tr>
+            <td>{{ payment.parentName }}</td>
+            <td>{{ payment.amount }} ₪</td>
+            <td>{{ payment.paidDate | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ payment.method || '—' }}</td>
+            <td>{{ payment.lessonCount }}</td>
+            <td>
+              <p-tag [value]="payment.confirmationSentAt ? 'נשלח' : 'לא נשלח'" [severity]="payment.confirmationSentAt ? 'success' : 'secondary'" />
+            </td>
+            <td>
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="confirmDeletePayment(payment)" />
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="text-center text-color-secondary">אין תשלומים רשומים עדיין.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
