@@ -17,5 +17,5 @@ export const roleGuard = (allowed: Role[]): CanActivateFn => () => {
   if (auth.isAuthenticated() && allowed.some(role => auth.hasRole(role))) {
     return true;
   }
-  return router.createUrlTree([auth.isAuthenticated() ? '/app/dashboard' : '/login']);
+  return router.createUrlTree([auth.isAuthenticated() ? auth.homePath() : '/login']);
 };

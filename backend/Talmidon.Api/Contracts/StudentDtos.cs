@@ -40,3 +40,6 @@ public record ParentSummaryDto(
     string FullName,
     string Email,
     string? Phone);
+
+/// <summary>תצוגת הורה — ילד מקושר, לבחירה בבקשות שיעור (R2) וכד'.</summary>
+public record MyChildDto(Guid Id, string FullName);

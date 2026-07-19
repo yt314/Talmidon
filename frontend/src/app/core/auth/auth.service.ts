@@ -24,6 +24,15 @@ export class AuthService {
   readonly roles = computed<Role[]>(() => this.session()?.roles ?? []);
   readonly isAuthenticated = computed(() => !!this.session()?.accessToken);
 
+  /** נתיב הבית לפי תפקיד המשתמש המחובר, לניתוב אחרי התחברות ולנפילה-בטוחה מ-roleGuard. */
+  readonly homePath = computed(() => {
+    const roles = this.roles();
+    if (roles.includes('Teacher')) return '/app/dashboard';
+    if (roles.includes('Parent')) return '/parent';
+    if (roles.includes('Student')) return '/student';
+    return '/login';
+  });
+
   accessToken(): string | null {
     return this.session()?.accessToken ?? null;
   }

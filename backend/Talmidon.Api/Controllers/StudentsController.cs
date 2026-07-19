@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,6 @@ using Talmidon.Infrastructure.Multitenancy;
 namespace Talmidon.Api.Controllers;
 
 [ApiController]
-[Authorize(Roles = Roles.Teacher)]
 [Route("api/students")]
 public class StudentsController(
     TalmidonDbContext db,
@@ -23,6 +23,10 @@ public class StudentsController(
     private Guid TenantId => currentTenant.TenantId
         ?? throw new InvalidOperationException("No tenant in the current context.");
 
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? throw new InvalidOperationException("No user id in the current context.");
+
+    [Authorize(Roles = Roles.Teacher)]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<StudentListItemDto>>> List()
     {
@@ -34,6 +38,7 @@ public class StudentsController(
         return Ok(students);
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<StudentDetailDto>> GetById(Guid id)
     {
@@ -47,6 +52,7 @@ public class StudentsController(
         return student is null ? NotFound() : Ok(student);
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpPost]
     public async Task<ActionResult<StudentDetailDto>> Create(CreateStudentRequest request)
     {
@@ -107,6 +113,7 @@ public class StudentsController(
         return CreatedAtAction(nameof(GetById), new { id = student.Id }, await BuildDetailAsync(student.Id));
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateStudentRequest request)
     {
@@ -122,6 +129,7 @@ public class StudentsController(
         return NoContent();
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -151,6 +159,7 @@ public class StudentsController(
 
     // ----- קישור הורה-תלמיד -----
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/parents/{parentId:guid}")]
     public async Task<IActionResult> LinkParent(Guid id, Guid parentId)
     {
@@ -166,6 +175,7 @@ public class StudentsController(
         return NoContent();
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpDelete("{id:guid}/parents/{parentId:guid}")]
     public async Task<IActionResult> UnlinkParent(Guid id, Guid parentId)
     {
@@ -175,6 +185,23 @@ public class StudentsController(
         db.StudentParents.Remove(link);
         await db.SaveChangesAsync();
         return NoContent();
+    }
+
+    // ===== הורה =====
+
+    [Authorize(Roles = Roles.Parent)]
+    [HttpGet("mine")]
+    public async Task<ActionResult<IEnumerable<MyChildDto>>> MyChildren()
+    {
+        var parent = await db.Parents.FirstOrDefaultAsync(p => p.UserId == CurrentUserId);
+        if (parent is null) return Forbid();
+
+        var children = await db.StudentParents
+            .Where(sp => sp.ParentId == parent.Id)
+            .OrderBy(sp => sp.Student.FullName)
+            .Select(sp => new MyChildDto(sp.Student.Id, sp.Student.FullName))
+            .ToListAsync();
+        return Ok(children);
     }
 
     private async Task<StudentDetailDto?> BuildDetailAsync(Guid id) =>

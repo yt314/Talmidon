@@ -47,5 +47,25 @@ export const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'parent',
+    canActivate: [roleGuard(['Parent'])],
+    loadComponent: () => import('./features/parent-portal/parent-shell/parent-shell.component').then(m => m.ParentShellComponent),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'lessons' },
+      {
+        path: 'lessons',
+        loadComponent: () => import('./features/parent-portal/parent-lessons/parent-lessons.component').then(m => m.ParentLessonsComponent)
+      },
+      {
+        path: 'notes',
+        loadComponent: () => import('./features/parent-portal/parent-notes/parent-notes.component').then(m => m.ParentNotesComponent)
+      },
+      {
+        path: 'payments',
+        loadComponent: () => import('./features/parent-portal/parent-payments/parent-payments.component').then(m => m.ParentPaymentsComponent)
+      }
+    ]
+  },
   { path: '**', redirectTo: '' }
 ];
