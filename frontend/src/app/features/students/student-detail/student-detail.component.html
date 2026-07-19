@@ -61,6 +61,38 @@
       </div>
     }
   </p-card>
+
+  <p-card class="block mt-4">
+    <div class="flex justify-content-between align-items-center mb-3">
+      <h3 class="m-0">הערות פדגוגיות</h3>
+      <p-button label="הוסף הערה" icon="pi pi-plus" size="small" (onClick)="openAddNoteDialog()" />
+    </div>
+
+    @if (notesLoading()) {
+      <p class="text-color-secondary">טוען...</p>
+    } @else if (notes().length === 0) {
+      <p class="text-color-secondary">אין הערות עדיין.</p>
+    } @else {
+      <ul class="parent-list">
+        @for (note of notes(); track note.id) {
+          <li class="py-3">
+            <div class="flex justify-content-between align-items-start gap-2">
+              <p class="m-0 flex-1" style="white-space: pre-wrap">{{ note.content }}</p>
+              <div class="flex gap-1">
+                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditNoteDialog(note)" />
+                <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="confirmDeleteNote(note)" />
+              </div>
+            </div>
+            <div class="flex gap-2 mt-2 align-items-center">
+              <p-tag [value]="note.visibleToStudent ? 'גלוי לתלמיד' : 'מוסתר מתלמיד'" [severity]="note.visibleToStudent ? 'success' : 'secondary'" />
+              <p-tag [value]="note.visibleToParent ? 'גלוי להורה' : 'מוסתר מהורה'" [severity]="note.visibleToParent ? 'success' : 'secondary'" />
+              <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </p-card>
 }
 
 <p-dialog header="עריכת תלמיד" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '480px' }">
@@ -95,6 +127,29 @@
     <div class="flex justify-content-end gap-2 mt-4">
       <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showEditDialog.set(false)" type="button" />
       <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog [header]="editingNoteId() ? 'עריכת הערה' : 'הוספת הערה'" [(visible)]="showNoteDialog" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="noteForm" (ngSubmit)="saveNote()">
+    <div class="field">
+      <label for="n-content">תוכן ההערה</label>
+      <textarea pTextarea id="n-content" formControlName="content" rows="4" class="w-full"></textarea>
+    </div>
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="n-visibleToStudent" formControlName="visibleToStudent" [binary]="true" />
+      <label for="n-visibleToStudent" class="m-0">גלוי לתלמיד</label>
+    </div>
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="n-visibleToParent" formControlName="visibleToParent" [binary]="true" />
+      <label for="n-visibleToParent" class="m-0">גלוי להורה</label>
+    </div>
+    <p class="text-sm text-color-secondary mt-0">הערה שמסומנת "גלוי לתלמיד" תהיה גלויה אוטומטית גם להורה.</p>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showNoteDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingNote()" />
     </div>
   </form>
 </p-dialog>

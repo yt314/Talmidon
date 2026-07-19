@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -10,7 +11,10 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
+import { TextareaModule } from 'primeng/textarea';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
+import { Note } from '../../notes/notes.models';
+import { NotesService } from '../../notes/notes.service';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { StudentDetail } from '../students.models';
@@ -22,6 +26,7 @@ import { StudentsService } from '../students.service';
     ReactiveFormsModule,
     FormsModule,
     RouterLink,
+    DatePipe,
     ButtonModule,
     CardModule,
     CheckboxModule,
@@ -29,7 +34,8 @@ import { StudentsService } from '../students.service';
     DialogModule,
     InputTextModule,
     SelectModule,
-    TagModule
+    TagModule,
+    TextareaModule
   ],
   templateUrl: './student-detail.component.html'
 })
@@ -39,6 +45,7 @@ export class StudentDetailComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly studentsService = inject(StudentsService);
   private readonly parentsService = inject(ParentsService);
+  private readonly notesService = inject(NotesService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
 
@@ -51,6 +58,12 @@ export class StudentDetailComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly linkingParentId = signal<string | null>(null);
   protected readonly selectedParentToLink = signal<string | null>(null);
+
+  protected readonly notes = signal<Note[]>([]);
+  protected readonly notesLoading = signal(true);
+  protected readonly showNoteDialog = signal(false);
+  protected readonly savingNote = signal(false);
+  protected readonly editingNoteId = signal<string | null>(null);
 
   protected readonly availableParents = computed(() => {
     const linkedIds = new Set(this.student()?.parents.map(p => p.id) ?? []);
@@ -65,8 +78,15 @@ export class StudentDetailComponent implements OnInit {
     isActive: [true]
   });
 
+  protected readonly noteForm = this.fb.nonNullable.group({
+    content: ['', [Validators.required]],
+    visibleToStudent: [false],
+    visibleToParent: [false]
+  });
+
   ngOnInit(): void {
     this.load();
+    this.loadNotes();
     this.parentsService.list().subscribe(parents => this.allParents.set(parents));
   }
 
@@ -136,6 +156,82 @@ export class StudentDetailComponent implements OnInit {
       next: () => this.load(),
       error: err =>
         this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'ביטול הקישור נכשל.') })
+    });
+  }
+
+  openAddNoteDialog(): void {
+    this.editingNoteId.set(null);
+    this.noteForm.reset({ content: '', visibleToStudent: false, visibleToParent: false });
+    this.showNoteDialog.set(true);
+  }
+
+  openEditNoteDialog(note: Note): void {
+    this.editingNoteId.set(note.id);
+    this.noteForm.reset({
+      content: note.content,
+      visibleToStudent: note.visibleToStudent,
+      visibleToParent: note.visibleToParent
+    });
+    this.showNoteDialog.set(true);
+  }
+
+  saveNote(): void {
+    if (this.noteForm.invalid) {
+      this.noteForm.markAllAsTouched();
+      return;
+    }
+    this.savingNote.set(true);
+    const raw = this.noteForm.getRawValue();
+    const noteId = this.editingNoteId();
+    const onSuccess = (): void => {
+      this.savingNote.set(false);
+      this.showNoteDialog.set(false);
+      this.messageService.add({ severity: 'success', summary: 'ההערה נשמרה' });
+      this.loadNotes();
+    };
+    const onError = (err: unknown): void => {
+      this.savingNote.set(false);
+      this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'שמירת ההערה נכשלה.') });
+    };
+
+    if (noteId) {
+      this.notesService.update(noteId, raw).subscribe({ next: onSuccess, error: onError });
+    } else {
+      this.notesService.create({ studentId: this.studentId, ...raw }).subscribe({ next: onSuccess, error: onError });
+    }
+  }
+
+  confirmDeleteNote(note: Note): void {
+    this.confirmationService.confirm({
+      message: 'למחוק את ההערה? הפעולה אינה הפיכה.',
+      header: 'אישור מחיקה',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'מחק',
+      rejectLabel: 'ביטול',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.deleteNote(note.id)
+    });
+  }
+
+  private deleteNote(noteId: string): void {
+    this.notesService.delete(noteId).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'ההערה נמחקה' });
+        this.loadNotes();
+      },
+      error: err =>
+        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'המחיקה נכשלה.') })
+    });
+  }
+
+  private loadNotes(): void {
+    this.notesLoading.set(true);
+    this.notesService.listForStudent(this.studentId).subscribe({
+      next: notes => {
+        this.notes.set(notes);
+        this.notesLoading.set(false);
+      },
+      error: () => this.notesLoading.set(false)
     });
   }
 
