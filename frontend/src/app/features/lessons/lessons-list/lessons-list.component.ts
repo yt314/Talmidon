@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -14,6 +14,8 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
+import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+import { endAfterStartValidator } from '../../../core/forms/validators';
 import { StudentListItem } from '../../students/students.models';
 import { StudentsService } from '../../students/students.service';
 import {
@@ -75,27 +77,38 @@ export class LessonsListComponent implements OnInit {
   protected readonly savingComplete = signal(false);
 
   protected readonly busyRequestId = signal<string | null>(null);
+  protected readonly fieldError = fieldError;
+  protected readonly isInvalid = isInvalid;
 
-  protected readonly lessonForm = this.fb.nonNullable.group({
-    studentId: ['', [Validators.required]],
-    startTime: this.fb.control<Date | null>(null, Validators.required),
-    endTime: this.fb.control<Date | null>(null, Validators.required)
-  });
+  protected readonly lessonForm = this.fb.nonNullable.group(
+    {
+      studentId: ['', [Validators.required]],
+      startTime: this.fb.control<Date | null>(null, Validators.required),
+      endTime: this.fb.control<Date | null>(null, Validators.required)
+    },
+    { validators: endAfterStartValidator('startTime', 'endTime') }
+  );
 
-  protected readonly timeForm = this.fb.nonNullable.group({
-    startTime: this.fb.control<Date | null>(null, Validators.required),
-    endTime: this.fb.control<Date | null>(null, Validators.required)
-  });
+  protected readonly timeForm = this.fb.nonNullable.group(
+    {
+      startTime: this.fb.control<Date | null>(null, Validators.required),
+      endTime: this.fb.control<Date | null>(null, Validators.required)
+    },
+    { validators: endAfterStartValidator('startTime', 'endTime') }
+  );
 
-  protected readonly completeForm = this.fb.nonNullable.group({
-    completed: [true],
-    paymentRequired: [false],
-    amount: [0],
-    homework: [''],
-    noteContent: [''],
-    noteVisibleToStudent: [false],
-    noteVisibleToParent: [false]
-  });
+  protected readonly completeForm = this.fb.nonNullable.group(
+    {
+      completed: [true],
+      paymentRequired: [false],
+      amount: [0, [Validators.min(0)]],
+      homework: ['', [Validators.maxLength(2000)]],
+      noteContent: ['', [Validators.maxLength(4000)]],
+      noteVisibleToStudent: [false],
+      noteVisibleToParent: [false]
+    },
+    { validators: amountRequiredWhenChargingValidator }
+  );
 
   ngOnInit(): void {
     this.loadLessons();
@@ -187,11 +200,11 @@ export class LessonsListComponent implements OnInit {
   saveComplete(): void {
     const id = this.completingLessonId();
     if (!id) return;
-    const raw = this.completeForm.getRawValue();
-    if (raw.completed && raw.paymentRequired && raw.amount <= 0) {
-      this.messageService.add({ severity: 'warn', summary: 'יש להזין סכום חיוב' });
+    if (this.completeForm.invalid) {
+      this.completeForm.markAllAsTouched();
       return;
     }
+    const raw = this.completeForm.getRawValue();
     this.savingComplete.set(true);
     this.lessonsService
       .complete(id, {
@@ -315,4 +328,24 @@ export class LessonsListComponent implements OnInit {
       error: () => this.changeRequestsLoading.set(false)
     });
   }
+}
+
+/** כשמסמנים שיעור כהתקיים+נדרש תשלום, יש להזין סכום גדול מאפס. */
+function amountRequiredWhenChargingValidator(group: AbstractControl): ValidationErrors | null {
+  const completed = group.get('completed')?.value;
+  const paymentRequired = group.get('paymentRequired')?.value;
+  const amountControl = group.get('amount');
+  if (!amountControl) return null;
+
+  const needsAmount = completed && paymentRequired && (amountControl.value ?? 0) <= 0;
+  const currentErrors = amountControl.errors ?? {};
+  const hasRequired = !!currentErrors['required'];
+
+  if (needsAmount && !hasRequired) {
+    amountControl.setErrors({ ...currentErrors, required: true });
+  } else if (!needsAmount && hasRequired) {
+    const { required, ...rest } = currentErrors;
+    amountControl.setErrors(Object.keys(rest).length > 0 ? rest : null);
+  }
+  return null;
 }

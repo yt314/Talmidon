@@ -13,6 +13,7 @@ import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
+import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { Note } from '../../notes/notes.models';
 import { NotesService } from '../../notes/notes.service';
 import { Parent } from '../../parents/parents.models';
@@ -64,6 +65,8 @@ export class StudentDetailComponent implements OnInit {
   protected readonly showNoteDialog = signal(false);
   protected readonly savingNote = signal(false);
   protected readonly editingNoteId = signal<string | null>(null);
+  protected readonly fieldError = fieldError;
+  protected readonly isInvalid = isInvalid;
 
   protected readonly availableParents = computed(() => {
     const linkedIds = new Set(this.student()?.parents.map(p => p.id) ?? []);
@@ -71,15 +74,15 @@ export class StudentDetailComponent implements OnInit {
   });
 
   protected readonly editForm = this.fb.nonNullable.group({
-    fullName: ['', [Validators.required]],
-    gradeLevel: [''],
+    fullName: ['', [Validators.required, Validators.maxLength(200)]],
+    gradeLevel: ['', [Validators.maxLength(50)]],
     birthDate: this.fb.control<Date | null>(null),
-    generalInfo: [''],
+    generalInfo: ['', [Validators.maxLength(4000)]],
     isActive: [true]
   });
 
   protected readonly noteForm = this.fb.nonNullable.group({
-    content: ['', [Validators.required]],
+    content: ['', [Validators.required, Validators.maxLength(4000)]],
     visibleToStudent: [false],
     visibleToParent: [false]
   });

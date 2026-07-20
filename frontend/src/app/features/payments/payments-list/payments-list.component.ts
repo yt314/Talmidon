@@ -10,6 +10,7 @@ import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
+import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { OpenCharge, Payment } from '../payments.models';
@@ -48,6 +49,9 @@ export class PaymentsListComponent implements OnInit {
 
   protected readonly payments = signal<Payment[]>([]);
   protected readonly paymentsLoading = signal(true);
+  protected readonly noSelectionError = signal(false);
+  protected readonly fieldError = fieldError;
+  protected readonly isInvalid = isInvalid;
 
   protected readonly selectedTotal = computed(() => {
     const ids = this.selectedLessonIds();
@@ -58,8 +62,8 @@ export class PaymentsListComponent implements OnInit {
 
   protected readonly paymentForm = this.fb.nonNullable.group({
     paidDate: this.fb.nonNullable.control<Date>(new Date(), Validators.required),
-    method: [''],
-    note: ['']
+    method: ['', [Validators.maxLength(50)]],
+    note: ['', [Validators.maxLength(1000)]]
   });
 
   ngOnInit(): void {
@@ -69,6 +73,7 @@ export class PaymentsListComponent implements OnInit {
 
   onParentChange(): void {
     this.selectedLessonIds.set(new Set());
+    this.noSelectionError.set(false);
     const parentId = this.selectedParentId();
     if (!parentId) {
       this.openCharges.set([]);
@@ -93,16 +98,22 @@ export class PaymentsListComponent implements OnInit {
     if (next.has(lessonId)) next.delete(lessonId);
     else next.add(lessonId);
     this.selectedLessonIds.set(next);
+    this.noSelectionError.set(false);
   }
 
   toggleAll(): void {
     const all = this.openCharges();
     this.selectedLessonIds.set(this.selectedLessonIds().size === all.length ? new Set() : new Set(all.map(c => c.lessonId)));
+    this.noSelectionError.set(false);
   }
 
   markAsPaid(): void {
     const parentId = this.selectedParentId();
     const lessonIds = Array.from(this.selectedLessonIds());
+    this.noSelectionError.set(lessonIds.length === 0);
+    if (this.paymentForm.invalid) {
+      this.paymentForm.markAllAsTouched();
+    }
     if (!parentId || lessonIds.length === 0 || this.paymentForm.invalid) return;
 
     const raw = this.paymentForm.getRawValue();

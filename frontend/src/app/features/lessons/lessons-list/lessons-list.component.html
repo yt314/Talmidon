@@ -132,7 +132,7 @@
 <p-dialog header="הוספת שיעור" [(visible)]="showLessonDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="lessonForm" (ngSubmit)="saveLesson()">
     <div class="field">
-      <label for="l-student">תלמיד</label>
+      <label for="l-student">תלמיד *</label>
       <p-select
         inputId="l-student"
         [options]="students()"
@@ -140,10 +140,14 @@
         optionValue="id"
         formControlName="studentId"
         placeholder="בחר תלמיד"
-        styleClass="w-full" />
+        styleClass="w-full"
+        [invalid]="isInvalid(lessonForm.controls.studentId)" />
+      @if (fieldError(lessonForm.controls.studentId); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
-      <label for="l-start">התחלה</label>
+      <label for="l-start">התחלה *</label>
       <p-datepicker
         inputId="l-start"
         formControlName="startTime"
@@ -153,10 +157,14 @@
         [showIcon]="true"
         [appendTo]="'body'"
         styleClass="w-full"
-        inputStyleClass="w-full" />
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(lessonForm.controls.startTime)" />
+      @if (fieldError(lessonForm.controls.startTime); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
-      <label for="l-end">סיום</label>
+      <label for="l-end">סיום *</label>
       <p-datepicker
         inputId="l-end"
         formControlName="endTime"
@@ -166,7 +174,13 @@
         [showIcon]="true"
         [appendTo]="'body'"
         styleClass="w-full"
-        inputStyleClass="w-full" />
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(lessonForm.controls.endTime)" />
+      @if (fieldError(lessonForm.controls.endTime); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      } @else if (lessonForm.errors?.['dateRange'] && lessonForm.controls.endTime.touched) {
+        <small class="text-red-500 block mt-1">שעת הסיום חייבת להיות אחרי שעת ההתחלה</small>
+      }
     </div>
 
     <div class="flex justify-content-end gap-2 mt-4">
@@ -179,7 +193,7 @@
 <p-dialog header="עדכון מועד שיעור" [(visible)]="showEditTimeDialog" [modal]="true" [style]="{ width: '420px' }">
   <form [formGroup]="timeForm" (ngSubmit)="saveTime()">
     <div class="field">
-      <label for="t-start">התחלה</label>
+      <label for="t-start">התחלה *</label>
       <p-datepicker
         inputId="t-start"
         formControlName="startTime"
@@ -189,10 +203,14 @@
         [showIcon]="true"
         [appendTo]="'body'"
         styleClass="w-full"
-        inputStyleClass="w-full" />
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(timeForm.controls.startTime)" />
+      @if (fieldError(timeForm.controls.startTime); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
-      <label for="t-end">סיום</label>
+      <label for="t-end">סיום *</label>
       <p-datepicker
         inputId="t-end"
         formControlName="endTime"
@@ -202,7 +220,13 @@
         [showIcon]="true"
         [appendTo]="'body'"
         styleClass="w-full"
-        inputStyleClass="w-full" />
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(timeForm.controls.endTime)" />
+      @if (fieldError(timeForm.controls.endTime); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      } @else if (timeForm.errors?.['dateRange'] && timeForm.controls.endTime.touched) {
+        <small class="text-red-500 block mt-1">שעת הסיום חייבת להיות אחרי שעת ההתחלה</small>
+      }
     </div>
 
     <div class="flex justify-content-end gap-2 mt-4">
@@ -227,19 +251,47 @@
 
       @if (completeForm.controls.paymentRequired.value) {
         <div class="field">
-          <label for="c-amount">סכום (₪)</label>
-          <p-inputnumber inputId="c-amount" formControlName="amount" mode="decimal" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
+          <label for="c-amount">סכום (₪) *</label>
+          <p-inputnumber
+            inputId="c-amount"
+            formControlName="amount"
+            mode="decimal"
+            [min]="0"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [invalid]="isInvalid(completeForm.controls.amount)" />
+          @if (fieldError(completeForm.controls.amount); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
         </div>
       }
 
       <div class="field">
         <label for="c-homework">שיעורי בית</label>
-        <textarea pTextarea id="c-homework" formControlName="homework" rows="2" class="w-full"></textarea>
+        <textarea
+          pTextarea
+          id="c-homework"
+          formControlName="homework"
+          rows="2"
+          class="w-full"
+          [invalid]="isInvalid(completeForm.controls.homework)"></textarea>
+        @if (fieldError(completeForm.controls.homework); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
       </div>
 
       <div class="field">
         <label for="c-note">הערה פדגוגית (אופציונלי)</label>
-        <textarea pTextarea id="c-note" formControlName="noteContent" rows="3" class="w-full"></textarea>
+        <textarea
+          pTextarea
+          id="c-note"
+          formControlName="noteContent"
+          rows="3"
+          class="w-full"
+          [invalid]="isInvalid(completeForm.controls.noteContent)"></textarea>
+        @if (fieldError(completeForm.controls.noteContent); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
       </div>
 
       @if (completeForm.controls.noteContent.value) {

@@ -10,6 +10,8 @@ import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
+import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+import { endAfterStartValidator } from '../../../core/forms/validators';
 import { LESSON_STATUS_LABELS, ChangeRequestType, Lesson, LessonStatus } from '../../lessons/lessons.models';
 import { MyChild } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
@@ -40,18 +42,23 @@ export class ParentLessonsComponent implements OnInit {
   protected readonly changeRequestType = signal<ChangeRequestType>(ChangeRequestType.Cancel);
   protected readonly changingLessonId = signal<string | null>(null);
   protected readonly savingChange = signal(false);
+  protected readonly fieldError = fieldError;
+  protected readonly isInvalid = isInvalid;
 
-  protected readonly requestForm = this.fb.nonNullable.group({
-    studentId: ['', [Validators.required]],
-    startTime: this.fb.control<Date | null>(null, Validators.required),
-    endTime: this.fb.control<Date | null>(null, Validators.required),
-    reason: ['']
-  });
+  protected readonly requestForm = this.fb.nonNullable.group(
+    {
+      studentId: ['', [Validators.required]],
+      startTime: this.fb.control<Date | null>(null, Validators.required),
+      endTime: this.fb.control<Date | null>(null, Validators.required),
+      reason: ['', [Validators.maxLength(1000)]]
+    },
+    { validators: endAfterStartValidator('startTime', 'endTime') }
+  );
 
   protected readonly changeForm = this.fb.nonNullable.group({
     proposedStartTime: this.fb.control<Date | null>(null),
     proposedEndTime: this.fb.control<Date | null>(null),
-    reason: ['']
+    reason: ['', [Validators.maxLength(1000)]]
   });
 
   ngOnInit(): void {
@@ -116,9 +123,22 @@ export class ParentLessonsComponent implements OnInit {
     const type = this.changeRequestType();
     const raw = this.changeForm.getRawValue();
 
-    if (type === ChangeRequestType.Reschedule && (!raw.proposedStartTime || !raw.proposedEndTime)) {
-      this.messageService.add({ severity: 'warn', summary: 'יש לבחור מועד מוצע' });
+    if (this.changeForm.invalid) {
+      this.changeForm.markAllAsTouched();
       return;
+    }
+
+    if (type === ChangeRequestType.Reschedule) {
+      const startControl = this.changeForm.controls.proposedStartTime;
+      const endControl = this.changeForm.controls.proposedEndTime;
+      startControl.markAsTouched();
+      endControl.markAsTouched();
+      if (!raw.proposedStartTime) startControl.setErrors({ required: true });
+      if (!raw.proposedEndTime) endControl.setErrors({ required: true });
+      if (raw.proposedStartTime && raw.proposedEndTime && raw.proposedEndTime <= raw.proposedStartTime) {
+        endControl.setErrors({ dateRange: true });
+      }
+      if (startControl.invalid || endControl.invalid) return;
     }
 
     this.savingChange.set(true);

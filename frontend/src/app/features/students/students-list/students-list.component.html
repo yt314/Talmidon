@@ -78,12 +78,18 @@
 <p-dialog header="הוספת תלמיד" [(visible)]="showStudentDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="studentForm" (ngSubmit)="saveStudent()">
     <div class="field">
-      <label for="s-fullName">שם מלא</label>
-      <input pInputText id="s-fullName" formControlName="fullName" class="w-full" />
+      <label for="s-fullName">שם מלא *</label>
+      <input pInputText id="s-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(studentForm.controls.fullName)" />
+      @if (fieldError(studentForm.controls.fullName); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
       <label for="s-gradeLevel">כיתה</label>
-      <input pInputText id="s-gradeLevel" formControlName="gradeLevel" class="w-full" />
+      <input pInputText id="s-gradeLevel" formControlName="gradeLevel" class="w-full" [invalid]="isInvalid(studentForm.controls.gradeLevel)" />
+      @if (fieldError(studentForm.controls.gradeLevel); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
       <label for="s-birthDate">תאריך לידה</label>
@@ -98,11 +104,23 @@
     </div>
     <div class="field">
       <label for="s-generalInfo">מידע כללי</label>
-      <input pInputText id="s-generalInfo" formControlName="generalInfo" class="w-full" />
+      <input pInputText id="s-generalInfo" formControlName="generalInfo" class="w-full" [invalid]="isInvalid(studentForm.controls.generalInfo)" />
+      @if (fieldError(studentForm.controls.generalInfo); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
       <label for="s-loginEmail">אימייל להתחברות (אופציונלי)</label>
-      <input pInputText id="s-loginEmail" type="email" formControlName="loginEmail" class="w-full" />
+      <input
+        pInputText
+        id="s-loginEmail"
+        type="email"
+        formControlName="loginEmail"
+        class="w-full"
+        [invalid]="isInvalid(studentForm.controls.loginEmail)" />
+      @if (fieldError(studentForm.controls.loginEmail); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
       <label for="s-parentIds">הורים מקושרים</label>
@@ -127,16 +145,25 @@
 <p-dialog header="הוספת הורה" [(visible)]="showParentDialog" [modal]="true" [style]="{ width: '420px' }">
   <form [formGroup]="parentForm" (ngSubmit)="saveParent()">
     <div class="field">
-      <label for="p-fullName">שם מלא</label>
-      <input pInputText id="p-fullName" formControlName="fullName" class="w-full" />
+      <label for="p-fullName">שם מלא *</label>
+      <input pInputText id="p-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(parentForm.controls.fullName)" />
+      @if (fieldError(parentForm.controls.fullName); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
-      <label for="p-email">אימייל</label>
-      <input pInputText id="p-email" type="email" formControlName="email" class="w-full" />
+      <label for="p-email">אימייל *</label>
+      <input pInputText id="p-email" type="email" formControlName="email" class="w-full" [invalid]="isInvalid(parentForm.controls.email)" />
+      @if (fieldError(parentForm.controls.email); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
       <label for="p-phone">טלפון</label>
-      <input pInputText id="p-phone" formControlName="phone" class="w-full" />
+      <input pInputText id="p-phone" formControlName="phone" class="w-full" [invalid]="isInvalid(parentForm.controls.phone)" />
+      @if (fieldError(parentForm.controls.phone); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
 
     <div class="flex justify-content-end gap-2 mt-4">

@@ -98,12 +98,18 @@
 <p-dialog header="עריכת תלמיד" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
     <div class="field">
-      <label for="e-fullName">שם מלא</label>
-      <input pInputText id="e-fullName" formControlName="fullName" class="w-full" />
+      <label for="e-fullName">שם מלא *</label>
+      <input pInputText id="e-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(editForm.controls.fullName)" />
+      @if (fieldError(editForm.controls.fullName); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
       <label for="e-gradeLevel">כיתה</label>
-      <input pInputText id="e-gradeLevel" formControlName="gradeLevel" class="w-full" />
+      <input pInputText id="e-gradeLevel" formControlName="gradeLevel" class="w-full" [invalid]="isInvalid(editForm.controls.gradeLevel)" />
+      @if (fieldError(editForm.controls.gradeLevel); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
       <label for="e-birthDate">תאריך לידה</label>
@@ -118,7 +124,15 @@
     </div>
     <div class="field">
       <label for="e-generalInfo">מידע כללי</label>
-      <input pInputText id="e-generalInfo" formControlName="generalInfo" class="w-full" />
+      <input
+        pInputText
+        id="e-generalInfo"
+        formControlName="generalInfo"
+        class="w-full"
+        [invalid]="isInvalid(editForm.controls.generalInfo)" />
+      @if (fieldError(editForm.controls.generalInfo); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field flex align-items-center gap-2">
       <p-checkbox inputId="e-isActive" formControlName="isActive" [binary]="true" />
@@ -135,8 +149,17 @@
 <p-dialog [header]="editingNoteId() ? 'עריכת הערה' : 'הוספת הערה'" [(visible)]="showNoteDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="noteForm" (ngSubmit)="saveNote()">
     <div class="field">
-      <label for="n-content">תוכן ההערה</label>
-      <textarea pTextarea id="n-content" formControlName="content" rows="4" class="w-full"></textarea>
+      <label for="n-content">תוכן ההערה *</label>
+      <textarea
+        pTextarea
+        id="n-content"
+        formControlName="content"
+        rows="4"
+        class="w-full"
+        [invalid]="isInvalid(noteForm.controls.content)"></textarea>
+      @if (fieldError(noteForm.controls.content); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field flex align-items-center gap-2">
       <p-checkbox inputId="n-visibleToStudent" formControlName="visibleToStudent" [binary]="true" />

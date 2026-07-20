@@ -11,6 +11,7 @@ import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
+import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { StudentListItem } from '../students.models';
@@ -46,20 +47,22 @@ export class StudentsListComponent implements OnInit {
   protected readonly showParentDialog = signal(false);
   protected readonly savingStudent = signal(false);
   protected readonly savingParent = signal(false);
+  protected readonly fieldError = fieldError;
+  protected readonly isInvalid = isInvalid;
 
   protected readonly studentForm = this.fb.nonNullable.group({
-    fullName: ['', [Validators.required]],
-    gradeLevel: [''],
+    fullName: ['', [Validators.required, Validators.maxLength(200)]],
+    gradeLevel: ['', [Validators.maxLength(50)]],
     birthDate: this.fb.control<Date | null>(null),
-    generalInfo: [''],
-    loginEmail: ['', [Validators.email]],
+    generalInfo: ['', [Validators.maxLength(4000)]],
+    loginEmail: ['', [Validators.email, Validators.maxLength(256)]],
     parentIds: this.fb.control<string[]>([])
   });
 
   protected readonly parentForm = this.fb.nonNullable.group({
-    fullName: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    phone: ['']
+    fullName: ['', [Validators.required, Validators.maxLength(200)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
+    phone: ['', [Validators.maxLength(40)]]
   });
 
   ngOnInit(): void {

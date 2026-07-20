@@ -23,15 +23,28 @@
 
       <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="field">
-          <label for="fullName">שם מלא</label>
-          <input pInputText id="fullName" formControlName="fullName" class="w-full" />
+          <label for="fullName">שם מלא *</label>
+          <input pInputText id="fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(form.controls.fullName)" />
+          @if (fieldError(form.controls.fullName); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
         </div>
         <div class="field">
-          <label for="email">אימייל</label>
-          <input pInputText id="email" type="email" formControlName="email" class="w-full" autocomplete="email" />
+          <label for="email">אימייל *</label>
+          <input
+            pInputText
+            id="email"
+            type="email"
+            formControlName="email"
+            class="w-full"
+            autocomplete="email"
+            [invalid]="isInvalid(form.controls.email)" />
+          @if (fieldError(form.controls.email); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
         </div>
         <div class="field">
-          <label for="password">סיסמה (8 תווים לפחות)</label>
+          <label for="password">סיסמה * (8+ תווים, אות גדולה, אות קטנה וספרה)</label>
           <p-password
             inputId="password"
             formControlName="password"
@@ -42,11 +55,33 @@
             strongLabel="חזקה"
             styleClass="w-full"
             inputStyleClass="w-full"
-            autocomplete="new-password" />
+            autocomplete="new-password"
+            [invalid]="isInvalid(form.controls.password)" />
+          @if (fieldError(form.controls.password); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
+        </div>
+        <div class="field">
+          <label for="confirmPassword">אימות סיסמה *</label>
+          <p-password
+            inputId="confirmPassword"
+            formControlName="confirmPassword"
+            [toggleMask]="true"
+            [feedback]="false"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            autocomplete="new-password"
+            [invalid]="isInvalid(form.controls.confirmPassword)" />
+          @if (fieldError(form.controls.confirmPassword); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
         </div>
         <div class="field">
           <label for="phone">טלפון (לא חובה)</label>
-          <input pInputText id="phone" formControlName="phone" class="w-full" />
+          <input pInputText id="phone" formControlName="phone" class="w-full" [invalid]="isInvalid(form.controls.phone)" />
+          @if (fieldError(form.controls.phone); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
         </div>
 
         <p-button type="submit" label="הרשמה" icon="pi pi-user-plus" [loading]="loading()" styleClass="w-full" />

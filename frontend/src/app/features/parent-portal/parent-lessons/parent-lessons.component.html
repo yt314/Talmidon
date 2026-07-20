@@ -65,7 +65,7 @@
 <p-dialog header="בקשת שיעור חדש" [(visible)]="showRequestDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
     <div class="field">
-      <label for="r-student">ילד/ה</label>
+      <label for="r-student">ילד/ה *</label>
       <p-select
         inputId="r-student"
         [options]="children()"
@@ -73,10 +73,14 @@
         optionValue="id"
         formControlName="studentId"
         placeholder="בחר/י ילד/ה"
-        styleClass="w-full" />
+        styleClass="w-full"
+        [invalid]="isInvalid(requestForm.controls.studentId)" />
+      @if (fieldError(requestForm.controls.studentId); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
-      <label for="r-start">התחלה מבוקשת</label>
+      <label for="r-start">התחלה מבוקשת *</label>
       <p-datepicker
         inputId="r-start"
         formControlName="startTime"
@@ -86,10 +90,14 @@
         [showIcon]="true"
         [appendTo]="'body'"
         styleClass="w-full"
-        inputStyleClass="w-full" />
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(requestForm.controls.startTime)" />
+      @if (fieldError(requestForm.controls.startTime); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
     <div class="field">
-      <label for="r-end">סיום מבוקש</label>
+      <label for="r-end">סיום מבוקש *</label>
       <p-datepicker
         inputId="r-end"
         formControlName="endTime"
@@ -99,11 +107,20 @@
         [showIcon]="true"
         [appendTo]="'body'"
         styleClass="w-full"
-        inputStyleClass="w-full" />
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(requestForm.controls.endTime)" />
+      @if (fieldError(requestForm.controls.endTime); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      } @else if (requestForm.errors?.['dateRange'] && requestForm.controls.endTime.touched) {
+        <small class="text-red-500 block mt-1">שעת הסיום חייבת להיות אחרי שעת ההתחלה</small>
+      }
     </div>
     <div class="field">
       <label for="r-reason">הערה (אופציונלי)</label>
-      <input pInputText id="r-reason" formControlName="reason" class="w-full" />
+      <input pInputText id="r-reason" formControlName="reason" class="w-full" [invalid]="isInvalid(requestForm.controls.reason)" />
+      @if (fieldError(requestForm.controls.reason); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
 
     <div class="flex justify-content-end gap-2 mt-4">
@@ -121,7 +138,7 @@
   <form [formGroup]="changeForm" (ngSubmit)="submitChangeRequest()">
     @if (changeRequestType() === ChangeRequestType.Reschedule) {
       <div class="field">
-        <label for="c-start">מועד התחלה מוצע</label>
+        <label for="c-start">מועד התחלה מוצע *</label>
         <p-datepicker
           inputId="c-start"
           formControlName="proposedStartTime"
@@ -131,10 +148,14 @@
           [showIcon]="true"
           [appendTo]="'body'"
           styleClass="w-full"
-          inputStyleClass="w-full" />
+          inputStyleClass="w-full"
+          [invalid]="isInvalid(changeForm.controls.proposedStartTime)" />
+        @if (fieldError(changeForm.controls.proposedStartTime); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
       </div>
       <div class="field">
-        <label for="c-end">מועד סיום מוצע</label>
+        <label for="c-end">מועד סיום מוצע *</label>
         <p-datepicker
           inputId="c-end"
           formControlName="proposedEndTime"
@@ -144,12 +165,19 @@
           [showIcon]="true"
           [appendTo]="'body'"
           styleClass="w-full"
-          inputStyleClass="w-full" />
+          inputStyleClass="w-full"
+          [invalid]="isInvalid(changeForm.controls.proposedEndTime)" />
+        @if (fieldError(changeForm.controls.proposedEndTime); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
       </div>
     }
     <div class="field">
       <label for="c-reason">סיבה (אופציונלי)</label>
-      <input pInputText id="c-reason" formControlName="reason" class="w-full" />
+      <input pInputText id="c-reason" formControlName="reason" class="w-full" [invalid]="isInvalid(changeForm.controls.reason)" />
+      @if (fieldError(changeForm.controls.reason); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
 
     <div class="flex justify-content-end gap-2 mt-4">

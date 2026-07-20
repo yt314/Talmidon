@@ -18,12 +18,22 @@
 
     <form [formGroup]="form" (ngSubmit)="submit()">
       <div class="field">
-        <label for="email">אימייל</label>
-        <input pInputText id="email" type="email" formControlName="email" class="w-full" autocomplete="username" />
+        <label for="email">אימייל *</label>
+        <input
+          pInputText
+          id="email"
+          type="email"
+          formControlName="email"
+          class="w-full"
+          autocomplete="username"
+          [invalid]="isInvalid(form.controls.email)" />
+        @if (fieldError(form.controls.email); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
       </div>
 
       <div class="field">
-        <label for="password">סיסמה</label>
+        <label for="password">סיסמה *</label>
         <p-password
           inputId="password"
           formControlName="password"
@@ -31,7 +41,11 @@
           [toggleMask]="true"
           styleClass="w-full"
           inputStyleClass="w-full"
-          autocomplete="current-password" />
+          autocomplete="current-password"
+          [invalid]="isInvalid(form.controls.password)" />
+        @if (fieldError(form.controls.password); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
       </div>
 
       <p-button type="submit" label="התחבר" icon="pi pi-sign-in" [loading]="loading()" styleClass="w-full" />

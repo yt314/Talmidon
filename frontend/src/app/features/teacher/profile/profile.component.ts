@@ -9,6 +9,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
+import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { Subject, TeacherProfile } from './profile.models';
 import { TeacherProfileService } from './profile.service';
 
@@ -28,13 +29,16 @@ export class TeacherProfileSettingsComponent implements OnInit {
   protected readonly subjects = signal<Subject[]>([]);
   protected readonly newSubjectName = signal('');
   protected readonly addingSubject = signal(false);
+  protected readonly subjectNameError = signal<string | null>(null);
+  protected readonly fieldError = fieldError;
+  protected readonly isInvalid = isInvalid;
 
   protected readonly form = this.fb.nonNullable.group({
-    phone: [''],
-    bio: [''],
+    phone: ['', [Validators.maxLength(40)]],
+    bio: ['', [Validators.maxLength(2000)]],
     defaultPricePerLesson: [0, [Validators.required, Validators.min(0)]],
-    rulesText: [''],
-    contactInfo: [''],
+    rulesText: ['', [Validators.maxLength(4000)]],
+    contactInfo: ['', [Validators.maxLength(1000)]],
     isPublic: [true]
   });
 
@@ -72,7 +76,15 @@ export class TeacherProfileSettingsComponent implements OnInit {
 
   addSubject(): void {
     const name = this.newSubjectName().trim();
-    if (!name) return;
+    if (!name) {
+      this.subjectNameError.set('שדה חובה');
+      return;
+    }
+    if (name.length > 100) {
+      this.subjectNameError.set('מקסימום 100 תווים');
+      return;
+    }
+    this.subjectNameError.set(null);
     this.addingSubject.set(true);
     this.profileService.addSubject(name).subscribe({
       next: subject => {

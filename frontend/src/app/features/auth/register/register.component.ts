@@ -7,6 +7,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { PasswordModule } from 'primeng/password';
 import { AuthService } from '../../../core/auth/auth.service';
+import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+import { passwordPolicyValidator, passwordsMatchValidator } from '../../../core/forms/validators';
 
 @Component({
   selector: 'app-register',
@@ -21,13 +23,19 @@ export class RegisterComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly done = signal(false);
   protected readonly successMessage = signal<string>('');
+  protected readonly fieldError = fieldError;
+  protected readonly isInvalid = isInvalid;
 
-  protected readonly form = this.fb.nonNullable.group({
-    fullName: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    phone: ['']
-  });
+  protected readonly form = this.fb.nonNullable.group(
+    {
+      fullName: ['', [Validators.required, Validators.maxLength(200)]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
+      password: ['', [Validators.required, Validators.maxLength(100), passwordPolicyValidator]],
+      confirmPassword: ['', [Validators.required]],
+      phone: ['', [Validators.maxLength(40)]]
+    },
+    { validators: passwordsMatchValidator('password', 'confirmPassword') }
+  );
 
   submit(): void {
     if (this.form.invalid) {
