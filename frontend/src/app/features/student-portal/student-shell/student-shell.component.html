@@ -10,7 +10,7 @@
     </ng-template>
     <ng-template pTemplate="end">
       <div class="flex align-items-center gap-3">
-        <span class="text-sm text-color-secondary">שלום, {{ email() }}</span>
+        <span class="text-sm text-color-secondary">{{ greeting() }}</span>
         <p-button icon="pi pi-sign-out" label="התנתקות" severity="secondary" [text]="true" (onClick)="logout()" />
       </div>
     </ng-template>

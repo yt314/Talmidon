@@ -104,6 +104,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Student>(e =>
         {
             e.Property(s => s.FullName).HasMaxLength(200).IsRequired();
+            e.Property(s => s.Gender).HasConversion<string>().HasMaxLength(10);
             e.Property(s => s.GradeLevel).HasMaxLength(50);
             e.Property(s => s.GeneralInfo).HasMaxLength(4000);
 
@@ -130,6 +131,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Parent>(e =>
         {
             e.Property(p => p.FullName).HasMaxLength(200).IsRequired();
+            e.Property(p => p.Gender).HasConversion<string>().HasMaxLength(10);
             e.Property(p => p.Email).HasMaxLength(256).IsRequired();
             e.Property(p => p.Phone).HasMaxLength(40);
 

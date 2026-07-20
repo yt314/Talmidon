@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateStudentRequest, StudentDetail, StudentListItem, UpdateStudentRequest } from './students.models';
+import { CreateStudentRequest, MyStudentProfile, StudentDetail, StudentListItem, UpdateStudentRequest } from './students.models';
 
 @Injectable({ providedIn: 'root' })
 export class StudentsService {
@@ -35,5 +35,9 @@ export class StudentsService {
 
   unlinkParent(studentId: string, parentId: string): Observable<void> {
     return this.http.delete<void>(`${this.api}/${studentId}/parents/${parentId}`);
+  }
+
+  myProfile(): Observable<MyStudentProfile> {
+    return this.http.get<MyStudentProfile>(`${this.api}/me`);
   }
 }

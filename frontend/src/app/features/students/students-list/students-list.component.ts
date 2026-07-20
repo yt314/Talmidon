@@ -7,11 +7,13 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { StudentListItem } from '../students.models';
@@ -26,6 +28,7 @@ import { StudentsService } from '../students.service';
     DialogModule,
     InputTextModule,
     MultiSelectModule,
+    SelectModule,
     TableModule,
     TabsModule,
     TagModule
@@ -39,6 +42,7 @@ export class StudentsListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
 
+  protected readonly genderOptions = GENDER_OPTIONS;
   protected readonly students = signal<StudentListItem[]>([]);
   protected readonly parents = signal<Parent[]>([]);
   protected readonly loading = signal(true);
@@ -50,8 +54,13 @@ export class StudentsListComponent implements OnInit {
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
 
+  protected readonly showEditParentDialog = signal(false);
+  protected readonly editingParentId = signal<string | null>(null);
+  protected readonly savingEditParent = signal(false);
+
   protected readonly studentForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.maxLength(200)]],
+    gender: this.fb.control<Gender | null>(null, Validators.required),
     gradeLevel: ['', [Validators.maxLength(50)]],
     birthDate: this.fb.control<Date | null>(null),
     generalInfo: ['', [Validators.maxLength(4000)]],
@@ -61,7 +70,14 @@ export class StudentsListComponent implements OnInit {
 
   protected readonly parentForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.maxLength(200)]],
+    gender: this.fb.control<Gender | null>(null, Validators.required),
     email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
+    phone: ['', [Validators.maxLength(40)]]
+  });
+
+  protected readonly editParentForm = this.fb.nonNullable.group({
+    fullName: ['', [Validators.required, Validators.maxLength(200)]],
+    gender: this.fb.control<Gender | null>(null, Validators.required),
     phone: ['', [Validators.maxLength(40)]]
   });
 
@@ -71,13 +87,42 @@ export class StudentsListComponent implements OnInit {
   }
 
   openStudentDialog(): void {
-    this.studentForm.reset({ fullName: '', gradeLevel: '', birthDate: null, generalInfo: '', loginEmail: '', parentIds: [] });
+    this.studentForm.reset({ fullName: '', gender: null, gradeLevel: '', birthDate: null, generalInfo: '', loginEmail: '', parentIds: [] });
     this.showStudentDialog.set(true);
   }
 
   openParentDialog(): void {
-    this.parentForm.reset({ fullName: '', email: '', phone: '' });
+    this.parentForm.reset({ fullName: '', gender: null, email: '', phone: '' });
     this.showParentDialog.set(true);
+  }
+
+  openEditParentDialog(parent: Parent): void {
+    this.editingParentId.set(parent.id);
+    this.editParentForm.reset({ fullName: parent.fullName, gender: parent.gender, phone: parent.phone ?? '' });
+    this.showEditParentDialog.set(true);
+  }
+
+  saveEditParent(): void {
+    const id = this.editingParentId();
+    if (!id) return;
+    if (this.editParentForm.invalid) {
+      this.editParentForm.markAllAsTouched();
+      return;
+    }
+    this.savingEditParent.set(true);
+    const raw = this.editParentForm.getRawValue();
+    this.parentsService.update(id, { fullName: raw.fullName, gender: raw.gender, phone: raw.phone || null }).subscribe({
+      next: () => {
+        this.savingEditParent.set(false);
+        this.showEditParentDialog.set(false);
+        this.messageService.add({ severity: 'success', summary: 'פרטי ההורה נשמרו' });
+        this.loadParents();
+      },
+      error: err => {
+        this.savingEditParent.set(false);
+        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'העדכון נכשל.') });
+      }
+    });
   }
 
   saveStudent(): void {
@@ -90,6 +135,7 @@ export class StudentsListComponent implements OnInit {
     this.studentsService
       .create({
         fullName: raw.fullName,
+        gender: raw.gender,
         gradeLevel: raw.gradeLevel || null,
         birthDate: raw.birthDate ? this.toDateOnly(raw.birthDate) : null,
         generalInfo: raw.generalInfo || null,
@@ -121,7 +167,7 @@ export class StudentsListComponent implements OnInit {
     }
     this.savingParent.set(true);
     const raw = this.parentForm.getRawValue();
-    this.parentsService.create({ fullName: raw.fullName, email: raw.email, phone: raw.phone || null }).subscribe({
+    this.parentsService.create({ fullName: raw.fullName, gender: raw.gender, email: raw.email, phone: raw.phone || null }).subscribe({
       next: () => {
         this.savingParent.set(false);
         this.showParentDialog.set(false);

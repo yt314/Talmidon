@@ -55,6 +55,7 @@
             <th>אימייל</th>
             <th>טלפון</th>
             <th>ילדים</th>
+            <th>פעולות</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-parent>
@@ -63,11 +64,14 @@
             <td>{{ parent.email }}</td>
             <td>{{ parent.phone || '—' }}</td>
             <td>{{ parent.studentCount }}</td>
+            <td>
+              <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditParentDialog(parent)" />
+            </td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="4" class="text-center text-color-secondary">אין הורים עדיין.</td>
+            <td colspan="5" class="text-center text-color-secondary">אין הורים עדיין.</td>
           </tr>
         </ng-template>
       </p-table>
@@ -81,6 +85,21 @@
       <label for="s-fullName">שם מלא *</label>
       <input pInputText id="s-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(studentForm.controls.fullName)" />
       @if (fieldError(studentForm.controls.fullName); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
+      <label for="s-gender">מגדר *</label>
+      <p-select
+        inputId="s-gender"
+        [options]="genderOptions"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="gender"
+        placeholder="בחר/י מגדר"
+        styleClass="w-full"
+        [invalid]="isInvalid(studentForm.controls.gender)" />
+      @if (fieldError(studentForm.controls.gender); as msg) {
         <small class="text-red-500 block mt-1">{{ msg }}</small>
       }
     </div>
@@ -152,6 +171,21 @@
       }
     </div>
     <div class="field">
+      <label for="p-gender">מגדר *</label>
+      <p-select
+        inputId="p-gender"
+        [options]="genderOptions"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="gender"
+        placeholder="בחר/י מגדר"
+        styleClass="w-full"
+        [invalid]="isInvalid(parentForm.controls.gender)" />
+      @if (fieldError(parentForm.controls.gender); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
       <label for="p-email">אימייל *</label>
       <input pInputText id="p-email" type="email" formControlName="email" class="w-full" [invalid]="isInvalid(parentForm.controls.email)" />
       @if (fieldError(parentForm.controls.email); as msg) {
@@ -169,6 +203,45 @@
     <div class="flex justify-content-end gap-2 mt-4">
       <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showParentDialog.set(false)" type="button" />
       <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingParent()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog header="עריכת הורה" [(visible)]="showEditParentDialog" [modal]="true" [style]="{ width: '420px' }">
+  <form [formGroup]="editParentForm" (ngSubmit)="saveEditParent()">
+    <div class="field">
+      <label for="ep-fullName">שם מלא *</label>
+      <input pInputText id="ep-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(editParentForm.controls.fullName)" />
+      @if (fieldError(editParentForm.controls.fullName); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
+      <label for="ep-gender">מגדר *</label>
+      <p-select
+        inputId="ep-gender"
+        [options]="genderOptions"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="gender"
+        placeholder="בחר/י מגדר"
+        styleClass="w-full"
+        [invalid]="isInvalid(editParentForm.controls.gender)" />
+      @if (fieldError(editParentForm.controls.gender); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
+      <label for="ep-phone">טלפון</label>
+      <input pInputText id="ep-phone" formControlName="phone" class="w-full" [invalid]="isInvalid(editParentForm.controls.phone)" />
+      @if (fieldError(editParentForm.controls.phone); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showEditParentDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingEditParent()" />
     </div>
   </form>
 </p-dialog>

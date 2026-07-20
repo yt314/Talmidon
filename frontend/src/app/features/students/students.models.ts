@@ -1,3 +1,5 @@
+import { Gender } from '../../core/models/gender';
+
 export interface StudentListItem {
   id: string;
   fullName: string;
@@ -17,6 +19,7 @@ export interface ParentSummary {
 export interface StudentDetail {
   id: string;
   fullName: string;
+  gender: Gender | null;
   gradeLevel: string | null;
   birthDate: string | null;
   generalInfo: string | null;
@@ -27,6 +30,7 @@ export interface StudentDetail {
 
 export interface CreateStudentRequest {
   fullName: string;
+  gender?: Gender | null;
   gradeLevel?: string | null;
   birthDate?: string | null;
   generalInfo?: string | null;
@@ -36,8 +40,14 @@ export interface CreateStudentRequest {
 
 export interface UpdateStudentRequest {
   fullName: string;
+  gender?: Gender | null;
   gradeLevel?: string | null;
   birthDate?: string | null;
   generalInfo?: string | null;
   isActive: boolean;
+}
+
+export interface MyStudentProfile {
+  fullName: string;
+  gender: Gender | null;
 }

@@ -1,4 +1,5 @@
 using Talmidon.Domain.Common;
+using Talmidon.Domain.Enums;
 
 namespace Talmidon.Domain.Entities;
 
@@ -14,6 +15,7 @@ public class Student : ITenantScoped
     public string? UserId { get; set; }
 
     public string FullName { get; set; } = default!;
+    public Gender? Gender { get; set; }
     public DateOnly? BirthDate { get; set; }
     public string? GradeLevel { get; set; }
     public string? GeneralInfo { get; set; }

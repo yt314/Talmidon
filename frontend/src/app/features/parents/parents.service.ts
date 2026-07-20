@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateParentRequest, Parent, UpdateParentRequest } from './parents.models';
+import { CreateParentRequest, MyParentProfile, Parent, UpdateParentRequest } from './parents.models';
 
 @Injectable({ providedIn: 'root' })
 export class ParentsService {
@@ -23,5 +23,9 @@ export class ParentsService {
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
+  }
+
+  myProfile(): Observable<MyParentProfile> {
+    return this.http.get<MyParentProfile>(`${this.api}/me`);
   }
 }

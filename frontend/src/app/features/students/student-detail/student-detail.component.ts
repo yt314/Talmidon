@@ -14,6 +14,7 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
 import { Note } from '../../notes/notes.models';
 import { NotesService } from '../../notes/notes.service';
 import { Parent } from '../../parents/parents.models';
@@ -67,6 +68,7 @@ export class StudentDetailComponent implements OnInit {
   protected readonly editingNoteId = signal<string | null>(null);
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
+  protected readonly genderOptions = GENDER_OPTIONS;
 
   protected readonly availableParents = computed(() => {
     const linkedIds = new Set(this.student()?.parents.map(p => p.id) ?? []);
@@ -75,6 +77,7 @@ export class StudentDetailComponent implements OnInit {
 
   protected readonly editForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.maxLength(200)]],
+    gender: this.fb.control<Gender | null>(null, Validators.required),
     gradeLevel: ['', [Validators.maxLength(50)]],
     birthDate: this.fb.control<Date | null>(null),
     generalInfo: ['', [Validators.maxLength(4000)]],
@@ -98,6 +101,7 @@ export class StudentDetailComponent implements OnInit {
     if (!s) return;
     this.editForm.reset({
       fullName: s.fullName,
+      gender: s.gender,
       gradeLevel: s.gradeLevel ?? '',
       birthDate: s.birthDate ? new Date(s.birthDate) : null,
       generalInfo: s.generalInfo ?? '',
@@ -116,6 +120,7 @@ export class StudentDetailComponent implements OnInit {
     this.studentsService
       .update(this.studentId, {
         fullName: raw.fullName,
+        gender: raw.gender,
         gradeLevel: raw.gradeLevel || null,
         birthDate: raw.birthDate ? this.toDateOnly(raw.birthDate) : null,
         generalInfo: raw.generalInfo || null,

@@ -45,7 +45,7 @@ public class StudentsController(
         var student = await db.Students
             .Where(s => s.Id == id)
             .Select(s => new StudentDetailDto(
-                s.Id, s.FullName, s.GradeLevel, s.BirthDate, s.GeneralInfo, s.IsActive, s.UserId != null,
+                s.Id, s.FullName, s.Gender, s.GradeLevel, s.BirthDate, s.GeneralInfo, s.IsActive, s.UserId != null,
                 s.StudentParents.Select(sp => new ParentSummaryDto(
                     sp.Parent.Id, sp.Parent.FullName, sp.Parent.Email, sp.Parent.Phone)).ToList()))
             .FirstOrDefaultAsync();
@@ -77,6 +77,7 @@ public class StudentsController(
             TenantId = TenantId,
             UserId = user?.Id,
             FullName = request.FullName,
+            Gender = request.Gender,
             GradeLevel = request.GradeLevel,
             BirthDate = request.BirthDate,
             GeneralInfo = request.GeneralInfo,
@@ -121,6 +122,7 @@ public class StudentsController(
         if (student is null) return NotFound();
 
         student.FullName = request.FullName;
+        student.Gender = request.Gender;
         student.GradeLevel = request.GradeLevel;
         student.BirthDate = request.BirthDate;
         student.GeneralInfo = request.GeneralInfo;
@@ -204,11 +206,24 @@ public class StudentsController(
         return Ok(children);
     }
 
+    // ===== תלמיד =====
+
+    [Authorize(Roles = Roles.Student)]
+    [HttpGet("me")]
+    public async Task<ActionResult<MyStudentProfileDto>> MyProfile()
+    {
+        var student = await db.Students
+            .Where(s => s.UserId == CurrentUserId)
+            .Select(s => new MyStudentProfileDto(s.FullName, s.Gender))
+            .FirstOrDefaultAsync();
+        return student is null ? Forbid() : Ok(student);
+    }
+
     private async Task<StudentDetailDto?> BuildDetailAsync(Guid id) =>
         await db.Students
             .Where(s => s.Id == id)
             .Select(s => new StudentDetailDto(
-                s.Id, s.FullName, s.GradeLevel, s.BirthDate, s.GeneralInfo, s.IsActive, s.UserId != null,
+                s.Id, s.FullName, s.Gender, s.GradeLevel, s.BirthDate, s.GeneralInfo, s.IsActive, s.UserId != null,
                 s.StudentParents.Select(sp => new ParentSummaryDto(
                     sp.Parent.Id, sp.Parent.FullName, sp.Parent.Email, sp.Parent.Phone)).ToList()))
             .FirstOrDefaultAsync();

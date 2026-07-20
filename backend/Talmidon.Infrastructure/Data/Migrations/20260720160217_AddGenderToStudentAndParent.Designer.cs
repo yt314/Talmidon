@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Talmidon.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Talmidon.Infrastructure.Data;
 namespace Talmidon.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(TalmidonDbContext))]
-    partial class TalmidonDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260720160217_AddGenderToStudentAndParent")]
+    partial class AddGenderToStudentAndParent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

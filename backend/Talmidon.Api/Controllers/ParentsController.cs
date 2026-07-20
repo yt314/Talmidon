@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,6 @@ using Talmidon.Infrastructure.Multitenancy;
 namespace Talmidon.Api.Controllers;
 
 [ApiController]
-[Authorize(Roles = Roles.Teacher)]
 [Route("api/parents")]
 public class ParentsController(
     TalmidonDbContext db,
@@ -23,26 +23,32 @@ public class ParentsController(
     private Guid TenantId => currentTenant.TenantId
         ?? throw new InvalidOperationException("No tenant in the current context.");
 
+    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? throw new InvalidOperationException("No user id in the current context.");
+
+    [Authorize(Roles = Roles.Teacher)]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ParentDto>>> List()
     {
         var parents = await db.Parents
             .OrderBy(p => p.FullName)
-            .Select(p => new ParentDto(p.Id, p.FullName, p.Email, p.Phone, p.StudentParents.Count))
+            .Select(p => new ParentDto(p.Id, p.FullName, p.Gender, p.Email, p.Phone, p.StudentParents.Count))
             .ToListAsync();
         return Ok(parents);
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ParentDto>> GetById(Guid id)
     {
         var parent = await db.Parents
             .Where(p => p.Id == id)
-            .Select(p => new ParentDto(p.Id, p.FullName, p.Email, p.Phone, p.StudentParents.Count))
+            .Select(p => new ParentDto(p.Id, p.FullName, p.Gender, p.Email, p.Phone, p.StudentParents.Count))
             .FirstOrDefaultAsync();
         return parent is null ? NotFound() : Ok(parent);
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpPost]
     public async Task<ActionResult<ParentDto>> Create(CreateParentRequest request)
     {
@@ -61,6 +67,7 @@ public class ParentsController(
             TenantId = TenantId,
             UserId = user.Id,
             FullName = request.FullName,
+            Gender = request.Gender,
             Email = request.Email,
             Phone = request.Phone
         };
@@ -70,10 +77,11 @@ public class ParentsController(
 
         await provisioning.SendInvitationEmailAsync(user, request.FullName);
 
-        var dto = new ParentDto(parent.Id, parent.FullName, parent.Email, parent.Phone, 0);
+        var dto = new ParentDto(parent.Id, parent.FullName, parent.Gender, parent.Email, parent.Phone, 0);
         return CreatedAtAction(nameof(GetById), new { id = parent.Id }, dto);
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateParentRequest request)
     {
@@ -81,11 +89,13 @@ public class ParentsController(
         if (parent is null) return NotFound();
 
         parent.FullName = request.FullName;
+        parent.Gender = request.Gender;
         parent.Phone = request.Phone;
         await db.SaveChangesAsync();
         return NoContent();
     }
 
+    [Authorize(Roles = Roles.Teacher)]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -112,5 +122,18 @@ public class ParentsController(
             // למשל: קיימים תשלומים המקושרים להורה (FK Restrict)
             return Conflict(new { message = "לא ניתן למחוק הורה עם תשלומים מקושרים." });
         }
+    }
+
+    // ===== הורה =====
+
+    [Authorize(Roles = Roles.Parent)]
+    [HttpGet("me")]
+    public async Task<ActionResult<MyParentProfileDto>> MyProfile()
+    {
+        var parent = await db.Parents
+            .Where(p => p.UserId == CurrentUserId)
+            .Select(p => new MyParentProfileDto(p.FullName, p.Gender))
+            .FirstOrDefaultAsync();
+        return parent is null ? Forbid() : Ok(parent);
     }
 }

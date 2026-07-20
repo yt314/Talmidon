@@ -9,7 +9,6 @@ import { AuthService } from '../../core/auth/auth.service';
   template: `
     <p-card>
       <h2 class="mt-0">שלום 👋</h2>
-      <p class="text-lg">מחוברת כ: <strong>{{ email() }}</strong></p>
       <div class="flex gap-2 flex-wrap">
         @for (role of roles(); track role) {
           <p-tag [value]="role" severity="info" />
@@ -24,6 +23,5 @@ import { AuthService } from '../../core/auth/auth.service';
 export class DashboardComponent {
   private readonly auth = inject(AuthService);
 
-  protected readonly email = this.auth.currentEmail;
   protected readonly roles = this.auth.roles;
 }

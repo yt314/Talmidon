@@ -105,6 +105,21 @@
       }
     </div>
     <div class="field">
+      <label for="e-gender">מגדר *</label>
+      <p-select
+        inputId="e-gender"
+        [options]="genderOptions"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="gender"
+        placeholder="בחר/י מגדר"
+        styleClass="w-full"
+        [invalid]="isInvalid(editForm.controls.gender)" />
+      @if (fieldError(editForm.controls.gender); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
       <label for="e-gradeLevel">כיתה</label>
       <input pInputText id="e-gradeLevel" formControlName="gradeLevel" class="w-full" [invalid]="isInvalid(editForm.controls.gradeLevel)" />
       @if (fieldError(editForm.controls.gradeLevel); as msg) {

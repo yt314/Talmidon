@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using Talmidon.Domain.Enums;
 
 namespace Talmidon.Api.Contracts;
 
 public record CreateStudentRequest(
     [Required, MaxLength(200)] string FullName,
+    Gender? Gender,
     [MaxLength(50)] string? GradeLevel,
     DateOnly? BirthDate,
     [MaxLength(4000)] string? GeneralInfo,
@@ -12,6 +14,7 @@ public record CreateStudentRequest(
 
 public record UpdateStudentRequest(
     [Required, MaxLength(200)] string FullName,
+    Gender? Gender,
     [MaxLength(50)] string? GradeLevel,
     DateOnly? BirthDate,
     [MaxLength(4000)] string? GeneralInfo,
@@ -28,6 +31,7 @@ public record StudentListItemDto(
 public record StudentDetailDto(
     Guid Id,
     string FullName,
+    Gender? Gender,
     string? GradeLevel,
     DateOnly? BirthDate,
     string? GeneralInfo,
@@ -43,3 +47,6 @@ public record ParentSummaryDto(
 
 /// <summary>תצוגת הורה — ילד מקושר, לבחירה בבקשות שיעור (R2) וכד'.</summary>
 public record MyChildDto(Guid Id, string FullName);
+
+/// <summary>תצוגת תלמיד על עצמו — לפנייה מותאמת בממשק (S-self).</summary>
+public record MyStudentProfileDto(string FullName, Gender? Gender);

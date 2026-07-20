@@ -36,3 +36,13 @@ public enum ChangeRequestStatus
     Approved = 1,
     Rejected = 2
 }
+
+/// <summary>
+/// מגדר — לצורך ניסוח פנייה מתאים (תלמיד/תלמידה, אבא/אמא). אופציונלי; רשומות ישנות
+/// ללא ערך יוצגו בניסוח ניטרלי.
+/// </summary>
+public enum Gender
+{
+    Male = 0,
+    Female = 1
+}

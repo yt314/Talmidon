@@ -1,4 +1,5 @@
 using Talmidon.Domain.Common;
+using Talmidon.Domain.Enums;
 
 namespace Talmidon.Domain.Entities;
 
@@ -14,6 +15,9 @@ public class Parent : ITenantScoped
     public string UserId { get; set; } = default!;
 
     public string FullName { get; set; } = default!;
+
+    /// <summary>Male → "אבא", Female → "אמא" בפניות למערכת.</summary>
+    public Gender? Gender { get; set; }
 
     /// <summary>יעד מיילים (תזכורות ואישורי תשלום).</summary>
     public string Email { get; set; } = default!;
