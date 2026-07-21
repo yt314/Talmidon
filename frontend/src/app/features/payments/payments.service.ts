@@ -9,8 +9,10 @@ export class PaymentsService {
   private readonly http = inject(HttpClient);
   private readonly api = `${environment.apiUrl}/payments`;
 
-  openCharges(parentId: string): Observable<OpenCharge[]> {
-    const params = new HttpParams().set('parentId', parentId);
+  /** ללא parentId מחזיר את כל החיובים הפתוחים של המורה (כל ההורים). */
+  openCharges(parentId?: string): Observable<OpenCharge[]> {
+    let params = new HttpParams();
+    if (parentId) params = params.set('parentId', parentId);
     return this.http.get<OpenCharge[]>(`${this.api}/open-charges`, { params });
   }
 

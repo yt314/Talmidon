@@ -8,6 +8,7 @@ import {
   CompleteLessonRequest,
   CreateLessonRequest,
   Lesson,
+  LessonStatus,
   UpdateLessonRequest
 } from './lessons.models';
 
@@ -16,10 +17,11 @@ export class LessonsService {
   private readonly http = inject(HttpClient);
   private readonly api = `${environment.apiUrl}/lessons`;
 
-  list(from?: Date, to?: Date): Observable<Lesson[]> {
+  list(from?: Date, to?: Date, status?: LessonStatus): Observable<Lesson[]> {
     let params = new HttpParams();
     if (from) params = params.set('from', from.toISOString());
     if (to) params = params.set('to', to.toISOString());
+    if (status !== undefined) params = params.set('status', status);
     return this.http.get<Lesson[]>(this.api, { params });
   }
 
