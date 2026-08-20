@@ -3,7 +3,8 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import { LESSON_STATUS_LABELS, ChangeRequestStatus, Lesson, LessonStatus } from '../lessons/lessons.models';
+import { OpenCharge } from '../payments/payments.models';
+import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestStatus, Lesson, LessonStatus } from '../lessons/lessons.models';
 import { LessonsService } from '../lessons/lessons.service';
 import { PaymentsService } from '../payments/payments.service';
 
@@ -17,12 +18,12 @@ export class DashboardComponent implements OnInit {
   private readonly paymentsService = inject(PaymentsService);
 
   protected readonly statusLabel = (status: LessonStatus): string => LESSON_STATUS_LABELS[status];
+  protected readonly statusSeverity = (status: LessonStatus) => LESSON_STATUS_SEVERITY[status];
 
   protected readonly todayLessons = signal<Lesson[] | null>(null);
   protected readonly pendingLessonRequests = signal<number | null>(null);
   protected readonly pendingChangeRequests = signal<number | null>(null);
-  protected readonly openChargesTotal = signal<number | null>(null);
-  protected readonly openChargesCount = signal<number | null>(null);
+  protected readonly openCharges = signal<OpenCharge[] | null>(null);
 
   protected readonly pendingRequestsTotal = computed(() => {
     const a = this.pendingLessonRequests();
@@ -30,36 +31,32 @@ export class DashboardComponent implements OnInit {
     return a === null || b === null ? null : a + b;
   });
 
+  protected readonly openChargesCount = computed(() => this.openCharges()?.length ?? null);
+  protected readonly openChargesTotal = computed(
+    () => this.openCharges()?.reduce((sum, c) => sum + c.amount, 0) ?? null
+  );
+
   ngOnInit(): void {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    this.lessonsService.list(startOfDay, endOfDay).subscribe(lessons => this.todayLessons.set(lessons));
-    this.lessonsService.list(undefined, undefined, LessonStatus.Requested).subscribe(lessons => this.pendingLessonRequests.set(lessons.length));
-    this.lessonsService
-      .listChangeRequests(ChangeRequestStatus.Pending)
-      .subscribe(requests => this.pendingChangeRequests.set(requests.length));
-    this.paymentsService.openCharges().subscribe(charges => {
-      this.openChargesCount.set(charges.length);
-      this.openChargesTotal.set(charges.reduce((sum, c) => sum + c.amount, 0));
+    this.lessonsService.list(startOfDay, endOfDay).subscribe({
+      next: lessons => this.todayLessons.set(lessons),
+      error: () => this.todayLessons.set([])
     });
-  }
-
-  protected statusSeverity(status: LessonStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    switch (status) {
-      case LessonStatus.Completed:
-        return 'success';
-      case LessonStatus.Scheduled:
-        return 'info';
-      case LessonStatus.Requested:
-        return 'warn';
-      case LessonStatus.Cancelled:
-      case LessonStatus.Declined:
-        return 'danger';
-      default:
-        return 'secondary';
-    }
+    this.lessonsService.list(undefined, undefined, LessonStatus.Requested).subscribe({
+      next: lessons => this.pendingLessonRequests.set(lessons.length),
+      error: () => this.pendingLessonRequests.set(0)
+    });
+    this.lessonsService.listChangeRequests(ChangeRequestStatus.Pending).subscribe({
+      next: requests => this.pendingChangeRequests.set(requests.length),
+      error: () => this.pendingChangeRequests.set(0)
+    });
+    this.paymentsService.openCharges().subscribe({
+      next: charges => this.openCharges.set(charges),
+      error: () => this.openCharges.set([])
+    });
   }
 }

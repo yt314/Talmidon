@@ -20,6 +20,7 @@ import { StudentListItem } from '../../students/students.models';
 import { StudentsService } from '../../students/students.service';
 import {
   LESSON_STATUS_LABELS,
+  LESSON_STATUS_SEVERITY,
   ChangeRequest,
   ChangeRequestStatus,
   ChangeRequestType,
@@ -57,6 +58,7 @@ export class LessonsListComponent implements OnInit {
   protected readonly ChangeRequestType = ChangeRequestType;
   protected readonly ChangeRequestStatus = ChangeRequestStatus;
   protected readonly statusLabel = (status: LessonStatus): string => LESSON_STATUS_LABELS[status];
+  protected readonly statusSeverity = (status: LessonStatus) => LESSON_STATUS_SEVERITY[status];
 
   protected readonly lessons = signal<Lesson[]>([]);
   protected readonly loading = signal(true);
@@ -289,22 +291,6 @@ export class LessonsListComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'הדחייה נכשלה.') });
       }
     });
-  }
-
-  protected statusSeverity(status: LessonStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    switch (status) {
-      case LessonStatus.Completed:
-        return 'success';
-      case LessonStatus.Scheduled:
-        return 'info';
-      case LessonStatus.Requested:
-        return 'warn';
-      case LessonStatus.Cancelled:
-      case LessonStatus.Declined:
-        return 'danger';
-      default:
-        return 'secondary';
-    }
   }
 
   private loadLessons(): void {

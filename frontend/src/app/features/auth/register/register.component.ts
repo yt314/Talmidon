@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { PasswordModule } from 'primeng/password';
 import { AuthService } from '../../../core/auth/auth.service';
+import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { passwordPolicyValidator, passwordsMatchValidator } from '../../../core/forms/validators';
 
@@ -53,8 +54,7 @@ export class RegisterComponent {
         this.loading.set(false);
       },
       error: err => {
-        const errors: string[] | undefined = err?.error?.errors;
-        this.error.set(errors?.length ? errors.join(' ') : (err?.error?.message ?? 'ההרשמה נכשלה. נסה שוב.'));
+        this.error.set(extractErrorMessage(err, 'ההרשמה נכשלה. נסה שוב.'));
         this.loading.set(false);
       }
     });

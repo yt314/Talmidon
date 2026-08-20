@@ -30,6 +30,16 @@ export const LESSON_STATUS_LABELS: Record<LessonStatus, string> = {
   [LessonStatus.Declined]: 'נדחה'
 };
 
+export type LessonStatusSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
+
+export const LESSON_STATUS_SEVERITY: Record<LessonStatus, LessonStatusSeverity> = {
+  [LessonStatus.Requested]: 'warn',
+  [LessonStatus.Scheduled]: 'info',
+  [LessonStatus.Completed]: 'success',
+  [LessonStatus.Cancelled]: 'danger',
+  [LessonStatus.Declined]: 'danger'
+};
+
 export interface Lesson {
   id: string;
   studentId: string;

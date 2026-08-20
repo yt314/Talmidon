@@ -55,7 +55,8 @@ public static class DependencyInjection
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<TalmidonDbContext>()
             .AddSignInManager()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddErrorDescriber<HebrewIdentityErrorDescriber>();
 
         // תוקף קצר יותר לאסימוני אימות מייל (ברירת מחדל של Identity היא יממה)
         services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(6));

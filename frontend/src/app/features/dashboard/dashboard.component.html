@@ -24,9 +24,7 @@
             <div class="text-4xl font-bold">{{ pendingRequestsTotal() === null ? '—' : pendingRequestsTotal() }}</div>
           </div>
           @if (pendingRequestsTotal(); as count) {
-            @if (count > 0) {
-              <p-tag value="דורש טיפול" severity="warn" />
-            }
+            <p-tag value="דורש טיפול" severity="warn" />
           }
         </div>
       </p-card>
@@ -42,9 +40,7 @@
             <div class="text-4xl font-bold">{{ openChargesTotal() === null ? '—' : openChargesTotal() + ' ₪' }}</div>
           </div>
           @if (openChargesCount(); as count) {
-            @if (count > 0) {
-              <p-tag [value]="count + ' חיובים'" severity="warn" />
-            }
+            <p-tag [value]="count + ' חיובים'" severity="warn" />
           }
         </div>
       </p-card>

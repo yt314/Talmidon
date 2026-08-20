@@ -12,7 +12,7 @@ import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { endAfterStartValidator } from '../../../core/forms/validators';
-import { LESSON_STATUS_LABELS, ChangeRequestType, Lesson, LessonStatus } from '../../lessons/lessons.models';
+import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestType, Lesson, LessonStatus } from '../../lessons/lessons.models';
 import { MyChild } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
 
@@ -29,6 +29,7 @@ export class ParentLessonsComponent implements OnInit {
   protected readonly LessonStatus = LessonStatus;
   protected readonly ChangeRequestType = ChangeRequestType;
   protected readonly statusLabel = (status: LessonStatus): string => LESSON_STATUS_LABELS[status];
+  protected readonly statusSeverity = (status: LessonStatus) => LESSON_STATUS_SEVERITY[status];
 
   protected readonly children = signal<MyChild[]>([]);
   protected readonly selectedChildId = signal<string | null>(null);
@@ -160,22 +161,6 @@ export class ParentLessonsComponent implements OnInit {
           this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'שליחת הבקשה נכשלה.') });
         }
       });
-  }
-
-  protected statusSeverity(status: LessonStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    switch (status) {
-      case LessonStatus.Completed:
-        return 'success';
-      case LessonStatus.Scheduled:
-        return 'info';
-      case LessonStatus.Requested:
-        return 'warn';
-      case LessonStatus.Cancelled:
-      case LessonStatus.Declined:
-        return 'danger';
-      default:
-        return 'secondary';
-    }
   }
 
   private load(): void {
