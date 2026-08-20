@@ -1,0 +1,68 @@
+<h1 class="text-2xl font-bold mb-4">הגדרות חשבון</h1>
+
+<p-card styleClass="max-w-30rem">
+  <h2 class="mt-0 mb-3 text-xl">שינוי סיסמה</h2>
+
+  @if (email(); as currentEmail) {
+    <p class="text-color-secondary mt-0 mb-3">מחוברת כ-{{ currentEmail }}</p>
+  }
+
+  @if (error()) {
+    <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="currentPassword">סיסמה נוכחית *</label>
+      <p-password
+        inputId="currentPassword"
+        formControlName="currentPassword"
+        [feedback]="false"
+        [toggleMask]="true"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        autocomplete="current-password"
+        [invalid]="isInvalid(form.controls.currentPassword)" />
+      @if (fieldError(form.controls.currentPassword); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="newPassword">סיסמה חדשה * (8+ תווים, אות גדולה, אות קטנה וספרה)</label>
+      <p-password
+        inputId="newPassword"
+        formControlName="newPassword"
+        [toggleMask]="true"
+        promptLabel="הקלד סיסמה"
+        weakLabel="חלשה"
+        mediumLabel="בינונית"
+        strongLabel="חזקה"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        autocomplete="new-password"
+        [invalid]="isInvalid(form.controls.newPassword)" />
+      @if (fieldError(form.controls.newPassword); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="confirmNewPassword">אימות סיסמה חדשה *</label>
+      <p-password
+        inputId="confirmNewPassword"
+        formControlName="confirmNewPassword"
+        [toggleMask]="true"
+        [feedback]="false"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        autocomplete="new-password"
+        [invalid]="isInvalid(form.controls.confirmNewPassword)" />
+      @if (fieldError(form.controls.confirmNewPassword); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <p-button type="submit" label="עדכון סיסמה" icon="pi pi-lock" [loading]="saving()" styleClass="w-full" />
+  </form>
+</p-card>

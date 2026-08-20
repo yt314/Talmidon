@@ -12,6 +12,11 @@ export interface RegisterRequest {
   phone?: string;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface AuthResponse {
   accessToken: string;
   accessTokenExpiresAt: string;

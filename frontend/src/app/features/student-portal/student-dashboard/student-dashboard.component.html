@@ -1,0 +1,56 @@
+<h1 class="text-2xl font-bold mb-4">ראשי</h1>
+
+<div class="grid">
+  <div class="col-12 md:col-6">
+    <a routerLink="/student/lessons" class="block no-underline text-color">
+      <p-card styleClass="h-full cursor-pointer">
+        <div class="flex justify-content-between align-items-start">
+          <div>
+            <div class="text-color-secondary mb-2">השיעור הבא</div>
+            @if (nextLesson(); as lesson) {
+              <div class="text-xl font-bold">{{ lesson.startTime | date: 'dd/MM HH:mm' }}</div>
+            } @else {
+              <div class="text-xl font-bold text-color-secondary">{{ lessons() === null ? '—' : 'אין שיעורים קרובים' }}</div>
+            }
+          </div>
+          <i class="pi pi-calendar text-2xl text-color-secondary"></i>
+        </div>
+      </p-card>
+    </a>
+  </div>
+
+  @if (recentHomework(); as hw) {
+    <div class="col-12 md:col-6">
+      <a routerLink="/student/lessons" class="block no-underline text-color">
+        <p-card styleClass="h-full cursor-pointer">
+          <div class="flex justify-content-between align-items-start">
+            <div>
+              <div class="text-color-secondary mb-2">שיעורי בית אחרונים</div>
+              <div class="text-lg">{{ hw.homework }}</div>
+            </div>
+            <i class="pi pi-book text-2xl text-color-secondary"></i>
+          </div>
+        </p-card>
+      </a>
+    </div>
+  }
+</div>
+
+<p-card styleClass="mt-4">
+  <h3 class="mt-0 mb-3">היומן שלי</h3>
+
+  @if (upcomingLessons() === null) {
+    <p class="text-color-secondary">טוען...</p>
+  } @else if (upcomingLessons()!.length === 0) {
+    <p class="text-color-secondary">אין שיעורים קרובים מתוזמנים.</p>
+  } @else {
+    <ul class="parent-list">
+      @for (lesson of upcomingLessons(); track lesson.id) {
+        <li class="flex justify-content-between align-items-center py-2">
+          <span class="text-color-secondary">{{ lesson.startTime | date: 'dd/MM HH:mm' }}</span>
+          <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" />
+        </li>
+      }
+    </ul>
+  }
+</p-card>

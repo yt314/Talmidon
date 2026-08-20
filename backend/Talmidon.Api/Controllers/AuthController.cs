@@ -228,6 +228,25 @@ public class AuthController(
         return NoContent();
     }
 
+    /// <summary>שינוי סיסמה למשתמש מחובר. מבטל את כל אסימוני הרענון הפעילים (התחברות מחדש נדרשת בכל מכשיר).</summary>
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new InvalidOperationException("No user id in the current context.");
+        var user = await userManager.FindByIdAsync(userId);
+        if (user is null)
+            return Unauthorized();
+
+        var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+
+        await RevokeAllActiveTokensAsync(user.Id);
+        return Ok(new { message = "הסיסמה עודכנה בהצלחה. יש להתחבר מחדש." });
+    }
+
     // ----- עזר -----
 
     private async Task<ActionResult<AuthResponse>> IssueTokensAsync(

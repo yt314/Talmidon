@@ -12,6 +12,9 @@
     @if (confirmed()) {
       <p-message severity="success" text="כתובת המייל אומתה! אפשר להתחבר." styleClass="w-full mb-3" />
     }
+    @if (passwordChanged()) {
+      <p-message severity="success" text="הסיסמה עודכנה בהצלחה. יש להתחבר מחדש." styleClass="w-full mb-3" />
+    }
     @if (error()) {
       <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
     }

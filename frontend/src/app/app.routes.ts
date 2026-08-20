@@ -44,6 +44,11 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () => import('./features/teacher/profile/profile.component').then(m => m.TeacherProfileSettingsComponent)
+      },
+      {
+        path: 'account',
+        loadComponent: () =>
+          import('./features/teacher/account-settings/account-settings.component').then(m => m.AccountSettingsComponent)
       }
     ]
   },
@@ -52,7 +57,12 @@ export const routes: Routes = [
     canActivate: [roleGuard(['Parent'])],
     loadComponent: () => import('./features/parent-portal/parent-shell/parent-shell.component').then(m => m.ParentShellComponent),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'lessons' },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/parent-portal/parent-dashboard/parent-dashboard.component').then(m => m.ParentDashboardComponent)
+      },
       {
         path: 'lessons',
         loadComponent: () => import('./features/parent-portal/parent-lessons/parent-lessons.component').then(m => m.ParentLessonsComponent)
@@ -72,7 +82,12 @@ export const routes: Routes = [
     canActivate: [roleGuard(['Student'])],
     loadComponent: () => import('./features/student-portal/student-shell/student-shell.component').then(m => m.StudentShellComponent),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'lessons' },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/student-portal/student-dashboard/student-dashboard.component').then(m => m.StudentDashboardComponent)
+      },
       {
         path: 'lessons',
         loadComponent: () => import('./features/student-portal/student-lessons/student-lessons.component').then(m => m.StudentLessonsComponent)

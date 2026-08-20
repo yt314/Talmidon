@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest, MessageResponse, RegisterRequest, Role } from './auth.models';
+import { AuthResponse, ChangePasswordRequest, LoginRequest, MessageResponse, RegisterRequest, Role } from './auth.models';
 
 interface Session {
   accessToken: string;
@@ -67,6 +67,10 @@ export class AuthService {
       tap(response => this.store(response)),
       map(response => response.accessToken)
     );
+  }
+
+  changePassword(request: ChangePasswordRequest): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.api}/change-password`, request);
   }
 
   logout(): void {

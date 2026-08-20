@@ -23,6 +23,10 @@ public record SetPasswordRequest(
     [Required] string Token,
     [Required, MinLength(8), MaxLength(100)] string Password);
 
+public record ChangePasswordRequest(
+    [Required] string CurrentPassword,
+    [Required, MinLength(8), MaxLength(100)] string NewPassword);
+
 public record AuthResponse(
     string AccessToken,
     DateTimeOffset AccessTokenExpiresAt,

@@ -23,6 +23,7 @@ export class LoginComponent implements OnInit {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly confirmed = signal(false);
+  protected readonly passwordChanged = signal(false);
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
 
@@ -34,6 +35,9 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     if (this.route.snapshot.queryParamMap.get('confirmed') === '1') {
       this.confirmed.set(true);
+    }
+    if (this.route.snapshot.queryParamMap.get('passwordChanged') === '1') {
+      this.passwordChanged.set(true);
     }
   }
 

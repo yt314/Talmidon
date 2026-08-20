@@ -30,6 +30,7 @@ export class ParentShellComponent implements OnInit {
   });
 
   protected readonly menuItems: MenuItem[] = [
+    { label: 'ראשי', icon: 'pi pi-home', routerLink: '/parent/dashboard' },
     { label: 'יומן', icon: 'pi pi-calendar', routerLink: '/parent/lessons' },
     { label: 'הערות', icon: 'pi pi-book', routerLink: '/parent/notes' },
     { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/parent/payments' }

@@ -27,6 +27,7 @@ export class StudentShellComponent implements OnInit {
   });
 
   protected readonly menuItems: MenuItem[] = [
+    { label: 'ראשי', icon: 'pi pi-home', routerLink: '/student/dashboard' },
     { label: 'יומן', icon: 'pi pi-calendar', routerLink: '/student/lessons' },
     { label: 'הערות', icon: 'pi pi-book', routerLink: '/student/notes' }
   ];
