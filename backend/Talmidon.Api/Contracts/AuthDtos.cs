@@ -18,6 +18,9 @@ public record RefreshRequest(
 public record ResendConfirmationRequest(
     [Required, EmailAddress] string Email);
 
+public record ForgotPasswordRequest(
+    [Required, EmailAddress] string Email);
+
 public record SetPasswordRequest(
     [Required] string UserId,
     [Required] string Token,

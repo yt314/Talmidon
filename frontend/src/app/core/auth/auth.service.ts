@@ -61,6 +61,10 @@ export class AuthService {
     return this.http.post<MessageResponse>(`${this.api}/resend-confirmation`, { email });
   }
 
+  forgotPassword(email: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.api}/forgot-password`, { email });
+  }
+
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.api}/login`, request).pipe(
       tap(response => this.store(response))

@@ -8,7 +8,15 @@ import { AuthService } from './auth.service';
 let isRefreshing = false;
 const refreshedToken$ = new BehaviorSubject<string | null>(null);
 
-const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/confirm', '/auth/resend', '/auth/set-password'];
+const AUTH_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/confirm',
+  '/auth/resend',
+  '/auth/set-password',
+  '/auth/forgot-password'
+];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);

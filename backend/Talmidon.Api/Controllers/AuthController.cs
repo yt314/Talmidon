@@ -32,6 +32,9 @@ public class AuthController(
     private const string GenericRegisterMessage =
         "אם הכתובת אינה רשומה עדיין, נשלח אליה מייל לאימות. נא לבדוק את תיבת הדואר.";
 
+    private const string GenericForgotPasswordMessage =
+        "אם הכתובת רשומה במערכת, נשלח אליה קישור לאיפוס סיסמה. נא לבדוק את תיבת הדואר.";
+
     /// <summary>הרשמת מורה עצמאית: יוצר משתמש + תפקיד Teacher + ישות מורה (דייר) + שולח מייל אימות.</summary>
     [AllowAnonymous]
     [HttpPost("register")]
@@ -95,6 +98,18 @@ public class AuthController(
             await SendConfirmationEmailAsync(user, user.DisplayName ?? user.Email!);
 
         return Ok(new { message = GenericRegisterMessage });
+    }
+
+    /// <summary>שליחת קישור לאיפוס סיסמה למי ששכח/ה אותה. תגובה גנרית תמיד (מניעת חשיפת קיום מייל).</summary>
+    [AllowAnonymous]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email);
+        if (user is not null)
+            await SendPasswordResetEmailAsync(user, user.DisplayName ?? user.Email!);
+
+        return Ok(new { message = GenericForgotPasswordMessage });
     }
 
     /// <summary>אימות כתובת המייל (מהקישור במייל). מפנה חזרה לאפליקציית הלקוח.</summary>
@@ -327,6 +342,38 @@ public class AuthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to send confirmation email.");
+        }
+    }
+
+    /// <summary>
+    /// שולח קישור לעמוד /set-password בלקוח (אותו עמוד שמשמש גם להזמנות הורה/תלמיד) —
+    /// קביעת סיסמה חדשה מאמתת מחדש את הבעלות על המייל, ולכן מאשרת אותו גם אם לא היה מאושר.
+    /// </summary>
+    private async Task SendPasswordResetEmailAsync(ApplicationUser user, string fullName)
+    {
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+        var clientUrl = (configuration["App:ClientUrl"] ?? "http://localhost:4200").TrimEnd('/');
+        var resetUrl = $"{clientUrl}/set-password?userId={user.Id}&token={encoded}";
+
+        var html =
+            $"""
+            <div dir="rtl" style="font-family:Arial,sans-serif">
+              <h2>איפוס סיסמה — תלמידון 🎓</h2>
+              <p>שלום {WebUtility.HtmlEncode(fullName)},</p>
+              <p>קיבלנו בקשה לאיפוס הסיסמה שלך. לקביעת סיסמה חדשה לחצי על הקישור:</p>
+              <p><a href="{resetUrl}">קביעת סיסמה חדשה</a></p>
+              <p style="color:#888;font-size:12px">אם לא ביקשת לאפס סיסמה, ניתן להתעלם מהודעה זו — החשבון שלך בטוח.</p>
+            </div>
+            """;
+
+        try
+        {
+            await emailSender.SendAsync(user.Email!, "איפוס סיסמה — תלמידון", html);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send password reset email.");
         }
     }
 }
