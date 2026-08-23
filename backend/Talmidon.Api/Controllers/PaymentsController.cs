@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
 using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Auth;
+using Talmidon.Infrastructure.BackgroundJobs;
 using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Multitenancy;
@@ -22,6 +23,7 @@ public class PaymentsController(
     TalmidonDbContext db,
     ICurrentTenant currentTenant,
     IEmailSender emailSender,
+    MonthlyPaymentReminderJob monthlyReminderJob,
     ILogger<PaymentsController> logger) : ControllerBase
 {
     private Guid TenantId => currentTenant.TenantId
@@ -155,28 +157,14 @@ public class PaymentsController(
     }
 
     /// <summary>
-    /// שולחת תזכורת תשלום לכל הורה עם חיובים פתוחים (מרוכזת לפי ילד).
-    /// כרגע מופעלת ע"י המורה ידנית; חיבור לתזמון אוטומטי חודשי (Hangfire/Quartz) נדרש בהמשך.
+    /// שולחת תזכורת תשלום לכל הורה עם חיובים פתוחים (מרוכזת לפי ילד), לדייר הנוכחי בלבד.
+    /// פועלת גם אוטומטית פעם בחודש לכל הדיירים דרך Hangfire (ראו MonthlyPaymentReminderJob).
     /// </summary>
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("send-monthly-reminders")]
     public async Task<ActionResult<object>> SendMonthlyReminders()
     {
-        var openCharges = await (
-            from l in db.Lessons
-            where l.PaymentRequired && l.PaymentId == null
-            join sp in db.StudentParents on l.StudentId equals sp.StudentId
-            select new { sp.Parent, l.Student.FullName, l.StartTime, l.Amount })
-            .ToListAsync();
-
-        var sentCount = 0;
-        foreach (var group in openCharges.GroupBy(x => x.Parent))
-        {
-            var charges = group.Select(g => (g.FullName, g.StartTime, g.Amount)).ToList();
-            if (await SendMonthlyReminderAsync(group.Key, charges))
-                sentCount++;
-        }
-
+        var sentCount = await monthlyReminderJob.RunForCurrentTenantAsync();
         return Ok(new { sentCount });
     }
 
@@ -217,22 +205,12 @@ public class PaymentsController(
 
     // ----- עזר -----
 
-    private static string BuildEmailHtml(string title, string greeting, string introLine, IEnumerable<string> lines) =>
-        $"""
-        <div dir="rtl" style="font-family:Arial,sans-serif">
-          <h2>{WebUtility.HtmlEncode(title)}</h2>
-          <p>{WebUtility.HtmlEncode(greeting)}</p>
-          <p>{WebUtility.HtmlEncode(introLine)}</p>
-          <ul>{string.Join("", lines)}</ul>
-        </div>
-        """;
-
     private async Task<bool> SendPaymentConfirmationAsync(
         Parent parent, decimal amount, DateOnly paidDate, List<Lesson> lessons)
     {
         var lines = lessons.Select(l =>
             $"<li>{WebUtility.HtmlEncode(l.Student.FullName)} — {l.StartTime:dd/MM/yyyy} — ₪{l.Amount}</li>");
-        var html = BuildEmailHtml(
+        var html = EmailTemplates.SimpleListEmail(
             "אישור קבלת תשלום",
             $"שלום {parent.FullName},",
             $"התקבל תשלום בסך ₪{amount} בתאריך {paidDate:dd/MM/yyyy}, המכסה את השיעורים הבאים:",
@@ -246,30 +224,6 @@ public class PaymentsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to send payment confirmation email.");
-            return false;
-        }
-    }
-
-    private async Task<bool> SendMonthlyReminderAsync(
-        Parent parent, List<(string StudentName, DateTimeOffset StartTime, decimal Amount)> charges)
-    {
-        var total = charges.Sum(c => c.Amount);
-        var lines = charges.Select(c =>
-            $"<li>{WebUtility.HtmlEncode(c.StudentName)} — {c.StartTime:dd/MM/yyyy} — ₪{c.Amount}</li>");
-        var html = BuildEmailHtml(
-            "תזכורת תשלום חודשית",
-            $"שלום {parent.FullName},",
-            $"להלן החיובים הפתוחים לתשלום, בסך כולל של ₪{total}:",
-            lines);
-
-        try
-        {
-            await emailSender.SendAsync(parent.Email, "תזכורת תשלום חודשית", html);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to send monthly payment reminder email.");
             return false;
         }
     }

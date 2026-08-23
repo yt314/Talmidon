@@ -1,9 +1,12 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Talmidon.Infrastructure.Auth;
+using Talmidon.Infrastructure.BackgroundJobs;
 using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
@@ -60,6 +63,15 @@ public static class DependencyInjection
 
         // תוקף קצר יותר לאסימוני אימות מייל (ברירת מחדל של Identity היא יממה)
         services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(6));
+
+        // עבודת רקע: תזכורת תשלום חודשית (Hangfire, אחסון על אותו Postgres)
+        services.AddScoped<MonthlyPaymentReminderJob>();
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(connectionString)));
+        services.AddHangfireServer();
 
         return services;
     }

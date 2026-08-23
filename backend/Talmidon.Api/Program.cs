@@ -1,5 +1,6 @@
 using System.Text;
 using System.Threading.RateLimiting;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -8,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Talmidon.Api.Multitenancy;
 using Talmidon.Infrastructure;
 using Talmidon.Infrastructure.Auth;
+using Talmidon.Infrastructure.BackgroundJobs;
 using Talmidon.Infrastructure.Multitenancy;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -96,6 +98,9 @@ await SeedRolesAsync(app);
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi().AllowAnonymous();
+    // הדשבורד של Hangfire נחשף רק בפיתוח: הוא מבוסס Cookie/HttpContext.User ולא
+    // מכיר את סכימת ה-Bearer JWT של האפליקציה, כך שאין דרך פשוטה לאמת גישה אליו בפרודקשן.
+    app.MapHangfireDashboard().AllowAnonymous();
 }
 else
 {
@@ -108,6 +113,13 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// תזכורת תשלום חודשית לכל הדיירים — פעם בחודש, UTC (סעיף 6-7 באפיון).
+RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
+    "monthly-payment-reminders",
+    job => job.RunForAllTenantsAsync(),
+    Cron.Monthly(),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
 app.Run();
 
