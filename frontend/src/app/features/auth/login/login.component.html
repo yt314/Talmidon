@@ -18,6 +18,21 @@
     @if (error()) {
       <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
     }
+    @if (unconfirmedEmail()) {
+      @if (resendDone()) {
+        <p-message severity="success" text="אם הכתובת אינה מאומתת עדיין, נשלח אליה מייל אימות חדש." styleClass="w-full mb-3" />
+      } @else {
+        <div class="mb-3 text-center">
+          <p-button
+            label="שלח מייל אימות מחדש"
+            icon="pi pi-envelope"
+            severity="secondary"
+            [text]="true"
+            [loading]="resending()"
+            (onClick)="resendConfirmation()" />
+        </div>
+      }
+    }
 
     <form [formGroup]="form" (ngSubmit)="submit()">
       <div class="field">

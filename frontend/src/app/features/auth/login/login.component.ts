@@ -7,7 +7,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { PasswordModule } from 'primeng/password';
 import { AuthService } from '../../../core/auth/auth.service';
+import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+
+/** תואם להודעה המדויקת שמחזיר AuthController.Login כשהחשבון קיים אך המייל טרם אומת. */
+const EMAIL_NOT_CONFIRMED_MESSAGE = 'יש לאמת את כתובת המייל לפני התחברות.';
 
 @Component({
   selector: 'app-login',
@@ -24,6 +28,9 @@ export class LoginComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly confirmed = signal(false);
   protected readonly passwordChanged = signal(false);
+  protected readonly unconfirmedEmail = signal<string | null>(null);
+  protected readonly resending = signal(false);
+  protected readonly resendDone = signal(false);
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
 
@@ -48,11 +55,35 @@ export class LoginComponent implements OnInit {
     }
     this.loading.set(true);
     this.error.set(null);
-    this.auth.login(this.form.getRawValue()).subscribe({
+    this.unconfirmedEmail.set(null);
+    this.resendDone.set(false);
+    const { email, password } = this.form.getRawValue();
+    this.auth.login({ email, password }).subscribe({
       next: () => this.router.navigateByUrl(this.auth.homePath()),
       error: err => {
-        this.error.set(err?.error?.message ?? 'ההתחברות נכשלה. נסה שוב.');
+        const message = extractErrorMessage(err, 'ההתחברות נכשלה. נסה שוב.');
+        this.error.set(message);
+        if (message === EMAIL_NOT_CONFIRMED_MESSAGE) {
+          this.unconfirmedEmail.set(email);
+        }
         this.loading.set(false);
+      }
+    });
+  }
+
+  resendConfirmation(): void {
+    const email = this.unconfirmedEmail();
+    if (!email) return;
+    this.resending.set(true);
+    this.auth.resendConfirmation(email).subscribe({
+      next: () => {
+        this.resending.set(false);
+        this.resendDone.set(true);
+      },
+      error: () => {
+        // תגובה גנרית תמיד מוצגת גם בכשל, כדי לא לחשוף אם המייל קיים במערכת
+        this.resending.set(false);
+        this.resendDone.set(true);
       }
     });
   }
