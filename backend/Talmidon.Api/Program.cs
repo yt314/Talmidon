@@ -54,17 +54,20 @@ builder.Services
 builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
-// הגבלת קצב לנקודות האימות (לפי כתובת IP)
+// הגבלת קצב לנקודות האימות (לפי כתובת IP) — ניתנת לכיוונון בלי קומפילציה מחדש;
+// גם מאפשרת להרחיב את המכסה בבדיקות אינטגרציה, שבהן כל הבקשות חולקות "כתובת" מזוהה אחת.
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    var permitLimit = builder.Configuration.GetValue("RateLimiting:Auth:PermitLimit", 10);
+    var windowMinutes = builder.Configuration.GetValue("RateLimiting:Auth:WindowMinutes", 1);
     options.AddPolicy("auth", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,
-                Window = TimeSpan.FromMinutes(1),
+                PermitLimit = permitLimit,
+                Window = TimeSpan.FromMinutes(windowMinutes),
                 QueueLimit = 0
             }));
 });

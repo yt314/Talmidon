@@ -74,7 +74,8 @@ Talmidon/
 ├── backend/
 │   ├── Talmidon.Domain/          # Entities, enums — no external dependencies
 │   ├── Talmidon.Infrastructure/  # EF Core DbContext, Identity, tokens, email, tenant isolation
-│   └── Talmidon.Api/             # Web API controllers, JWT auth, request/response contracts
+│   ├── Talmidon.Api/             # Web API controllers, JWT auth, request/response contracts
+│   └── Talmidon.Tests/           # xUnit integration tests — tenant isolation, auth, IDOR
 ├── frontend/
 │   └── src/app/
 │       ├── core/                 # Auth, HTTP interceptors, shared form-validation helpers
@@ -136,6 +137,25 @@ The app is served at **http://localhost:4200**.
 Open http://localhost:4200, register as a teacher, and confirm the account via the link
 in the confirmation email — check Mailpit at http://localhost:8025 instead of a real
 inbox.
+
+## Testing
+
+```bash
+docker compose up -d   # the tests need a real Postgres, same as local dev
+dotnet test backend/Talmidon.Tests
+```
+
+The suite runs the real API in-process (`WebApplicationFactory`) against its own `talmidon_test`
+database on the same PostgreSQL server — not mocks, not an in-memory provider — so the actual
+EF Core global query filters and Npgsql behavior are what's under test. The database and its
+schema are created automatically on first run.
+
+Coverage today is deliberately narrow and aimed at the highest-blast-radius failure modes for a
+multi-tenant app: one tutor can never read, list, or modify another tutor's data
+(`TenantIsolationTests`); a parent or student can't reach a teacher-only endpoint
+(`RoleAuthorizationTests`); a parent can't act on a lesson belonging to a different parent's
+child under the same tutor (`ParentIdorTests`); and the full register → confirm → login →
+forgot-password → change-password lifecycle behaves correctly end to end (`AuthFlowTests`).
 
 ## Configuration
 

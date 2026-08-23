@@ -19,4 +19,9 @@
     <ProjectReference Include="..\Talmidon.Infrastructure\Talmidon.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- מאפשר ל-WebApplicationFactory&lt;Program&gt; בפרויקט הבדיקות לגשת ל-Program הפנימי -->
+    <InternalsVisibleTo Include="Talmidon.Tests" />
+  </ItemGroup>
+
 </Project>

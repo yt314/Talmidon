@@ -3,5 +3,6 @@
     <Project Path="backend/Talmidon.Api/Talmidon.Api.csproj" />
     <Project Path="backend/Talmidon.Domain/Talmidon.Domain.csproj" />
     <Project Path="backend/Talmidon.Infrastructure/Talmidon.Infrastructure.csproj" />
+    <Project Path="backend/Talmidon.Tests/Talmidon.Tests.csproj" />
   </Folder>
 </Solution>
