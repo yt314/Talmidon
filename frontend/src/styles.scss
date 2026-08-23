@@ -77,3 +77,16 @@ body {
   border-bottom: 1px solid var(--p-content-border-color, #e5e7eb);
 }
 
+/* שם/ברכה בכותרת העליונה — קיצוץ בשלוש נקודות במקום גלישה לכמה שורות שדוחקת את שאר הכותרת */
+.app-shell-greeting {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+@media (max-width: 600px) {
+  .app-shell-greeting {
+    max-width: 96px;
+  }
+}
+
