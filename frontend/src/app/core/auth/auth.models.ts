@@ -17,6 +17,12 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface SetPasswordRequest {
+  userId: string;
+  token: string;
+  password: string;
+}
+
 export interface AuthResponse {
   accessToken: string;
   accessTokenExpiresAt: string;

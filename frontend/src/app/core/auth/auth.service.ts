@@ -2,7 +2,15 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, ChangePasswordRequest, LoginRequest, MessageResponse, RegisterRequest, Role } from './auth.models';
+import {
+  AuthResponse,
+  ChangePasswordRequest,
+  LoginRequest,
+  MessageResponse,
+  RegisterRequest,
+  Role,
+  SetPasswordRequest
+} from './auth.models';
 
 interface Session {
   accessToken: string;
@@ -71,6 +79,10 @@ export class AuthService {
 
   changePassword(request: ChangePasswordRequest): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(`${this.api}/change-password`, request);
+  }
+
+  setPassword(request: SetPasswordRequest): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.api}/set-password`, request);
   }
 
   logout(): void {

@@ -19,6 +19,10 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   {
+    path: 'set-password',
+    loadComponent: () => import('./features/auth/set-password/set-password.component').then(m => m.SetPasswordComponent)
+  },
+  {
     path: 'app',
     canActivate: [roleGuard(['Teacher'])],
     loadComponent: () => import('./features/teacher/teacher-shell/teacher-shell.component').then(m => m.TeacherShellComponent),
