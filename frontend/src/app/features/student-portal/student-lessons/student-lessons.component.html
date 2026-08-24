@@ -1,23 +1,18 @@
 <h1 class="text-2xl font-bold mb-4">יומן שיעורים</h1>
 
-<p-table [value]="lessons()" [loading]="loading()" dataKey="id">
-  <ng-template pTemplate="header">
-    <tr>
-      <th>מועד</th>
-      <th>סטטוס</th>
-      <th>שיעורי בית</th>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="body" let-lesson>
-    <tr>
-      <td>{{ lesson.startTime | date: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | date: 'HH:mm' }}</td>
-      <td><p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" /></td>
-      <td>{{ lesson.homework || '—' }}</td>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="emptymessage">
-    <tr>
-      <td colspan="3" class="text-center text-color-secondary">אין שיעורים עדיין.</td>
-    </tr>
-  </ng-template>
-</p-table>
+<app-lesson-calendar [events]="calendarEvents()" [selectable]="false" (eventClicked)="onEventClicked($event)" />
+
+<p-dialog header="פרטי שיעור" [(visible)]="showLessonDetailDialog" [modal]="true" [style]="{ width: '380px' }">
+  @if (selectedLesson(); as lesson) {
+    <div class="flex flex-column gap-2">
+      <div><strong>מועד:</strong> {{ lesson.startTime | date: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | date: 'HH:mm' }}</div>
+      <div><strong>סטטוס:</strong> <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" /></div>
+      @if (lesson.homework) {
+        <div><strong>שיעורי בית:</strong> {{ lesson.homework }}</div>
+      }
+    </div>
+    <div class="flex justify-content-end mt-4">
+      <p-button label="סגירה" severity="secondary" [text]="true" (onClick)="showLessonDetailDialog.set(false)" />
+    </div>
+  }
+</p-dialog>

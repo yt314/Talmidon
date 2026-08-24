@@ -1,133 +1,21 @@
-<h1 class="text-2xl font-bold mb-4">יומן שיעורים</h1>
+<div class="flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+  <h1 class="text-2xl font-bold m-0">יומן שיעורים</h1>
+  <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
+</div>
 
-<p-tabs value="lessons">
-  <p-tablist>
-    <p-tab value="lessons">שיעורים</p-tab>
-    <p-tab value="requests">בקשות שינוי @if (changeRequests().length > 0) {({{ changeRequests().length }})}</p-tab>
-  </p-tablist>
+<div class="flex gap-3 mb-3 flex-wrap text-sm align-items-center">
+  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#3b82f6"></span> מתוזמן</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#22c55e"></span> התקיים</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot legend-dot-pending"></span> ממתין לאישור</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#e5e7eb"></span> בוטל</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#fecaca"></span> נדחה</span>
+</div>
 
-  <p-tabpanels>
-    <p-tabpanel value="lessons">
-      <div class="flex justify-content-end mb-3">
-        <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
-      </div>
-
-      <p-table [value]="lessons()" [loading]="loading()" dataKey="id">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>תלמיד</th>
-            <th>מועד</th>
-            <th>סטטוס</th>
-            <th>שיעורי בית</th>
-            <th>תשלום</th>
-            <th>פעולות</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-lesson>
-          <tr>
-            <td>{{ lesson.studentName }}</td>
-            <td>{{ lesson.startTime | date: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | date: 'HH:mm' }}</td>
-            <td><p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" /></td>
-            <td>{{ lesson.homework || '—' }}</td>
-            <td>
-              @if (!lesson.paymentRequired) {
-                <span class="text-color-secondary">—</span>
-              } @else {
-                <p-tag [value]="lesson.isPaid ? 'שולם' : 'נדרש (' + lesson.amount + ' ₪)'" [severity]="lesson.isPaid ? 'success' : 'warn'" />
-              }
-            </td>
-            <td>
-              @if (lesson.status === LessonStatus.Requested) {
-                <div class="flex gap-1">
-                  <p-button
-                    label="אשר"
-                    size="small"
-                    severity="success"
-                    [loading]="busyRequestId() === lesson.id"
-                    (onClick)="approveRequest(lesson)" />
-                  <p-button
-                    label="דחה"
-                    size="small"
-                    severity="danger"
-                    [outlined]="true"
-                    [loading]="busyRequestId() === lesson.id"
-                    (onClick)="declineRequest(lesson)" />
-                </div>
-              } @else if (lesson.status === LessonStatus.Scheduled) {
-                <div class="flex gap-1">
-                  <p-button icon="pi pi-pencil" severity="secondary" [text]="true" pTooltip="עדכן מועד" (onClick)="openEditTimeDialog(lesson)" />
-                  <p-button icon="pi pi-check-circle" severity="success" [text]="true" pTooltip="סיום שיעור" (onClick)="openCompleteDialog(lesson)" />
-                  <p-button icon="pi pi-trash" severity="danger" [text]="true" pTooltip="מחק" (onClick)="deleteLesson(lesson)" />
-                </div>
-              } @else {
-                <span class="text-color-secondary">—</span>
-              }
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="6" class="text-center text-color-secondary">אין שיעורים עדיין.</td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </p-tabpanel>
-
-    <p-tabpanel value="requests">
-      <p-table [value]="changeRequests()" [loading]="changeRequestsLoading()" dataKey="id">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>תלמיד</th>
-            <th>הורה מבקש</th>
-            <th>סוג</th>
-            <th>מועד נוכחי</th>
-            <th>מועד מוצע</th>
-            <th>סיבה</th>
-            <th>פעולות</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-request>
-          <tr>
-            <td>{{ request.studentName }}</td>
-            <td>{{ request.parentName }}</td>
-            <td>{{ request.type === ChangeRequestType.Cancel ? 'ביטול' : 'שינוי מועד' }}</td>
-            <td>{{ request.lessonStartTime | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>
-              @if (request.proposedStartTime) {
-                {{ request.proposedStartTime | date: 'dd/MM/yyyy HH:mm' }}
-              } @else {
-                <span class="text-color-secondary">—</span>
-              }
-            </td>
-            <td>{{ request.reason || '—' }}</td>
-            <td>
-              <div class="flex gap-1">
-                <p-button
-                  label="אשר"
-                  size="small"
-                  severity="success"
-                  [loading]="busyRequestId() === request.id"
-                  (onClick)="approveChangeRequest(request)" />
-                <p-button
-                  label="דחה"
-                  size="small"
-                  severity="danger"
-                  [outlined]="true"
-                  [loading]="busyRequestId() === request.id"
-                  (onClick)="rejectChangeRequest(request)" />
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="7" class="text-center text-color-secondary">אין בקשות שינוי ממתינות.</td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </p-tabpanel>
-  </p-tabpanels>
-</p-tabs>
+<app-lesson-calendar
+  [events]="calendarEvents()"
+  [selectable]="true"
+  (eventClicked)="onEventClicked($event)"
+  (slotSelected)="onSlotSelected($event)" />
 
 <p-dialog header="הוספת שיעור" [(visible)]="showLessonDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="lessonForm" (ngSubmit)="saveLesson()">
@@ -313,4 +201,60 @@
       <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingComplete()" />
     </div>
   </form>
+</p-dialog>
+
+<p-dialog header="פרטי שיעור" [(visible)]="showLessonDetailDialog" [modal]="true" [style]="{ width: '420px' }">
+  @if (selectedLesson(); as lesson) {
+    <div class="flex flex-column gap-2">
+      <div><strong>תלמיד:</strong> {{ lesson.studentName }}</div>
+      <div><strong>מועד:</strong> {{ lesson.startTime | date: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | date: 'HH:mm' }}</div>
+      <div><strong>סטטוס:</strong> <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" /></div>
+      @if (lesson.homework) {
+        <div><strong>שיעורי בית:</strong> {{ lesson.homework }}</div>
+      }
+      @if (lesson.paymentRequired) {
+        <div>
+          <strong>תשלום:</strong>
+          <p-tag [value]="lesson.isPaid ? 'שולם' : 'נדרש (' + lesson.amount + ' ₪)'" [severity]="lesson.isPaid ? 'success' : 'warn'" />
+        </div>
+      }
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4 flex-wrap">
+      @if (lesson.status === LessonStatus.Requested) {
+        <p-button label="דחה" severity="danger" [outlined]="true" [loading]="busyRequestId() === lesson.id" (onClick)="lessonDetailDecline()" />
+        <p-button label="אשר" severity="success" [loading]="busyRequestId() === lesson.id" (onClick)="lessonDetailApprove()" />
+      } @else if (lesson.status === LessonStatus.Scheduled) {
+        <p-button label="מחק" severity="danger" [text]="true" (onClick)="lessonDetailDelete()" />
+        <p-button label="עדכן מועד" severity="secondary" [outlined]="true" (onClick)="lessonDetailEditTime()" />
+        <p-button label="סיום שיעור" severity="success" (onClick)="lessonDetailComplete()" />
+      } @else {
+        <p-button label="סגירה" severity="secondary" [text]="true" (onClick)="showLessonDetailDialog.set(false)" />
+      }
+    </div>
+  }
+</p-dialog>
+
+<p-dialog
+  [header]="selectedChangeRequest()?.type === ChangeRequestType.Cancel ? 'בקשת ביטול שיעור' : 'בקשת שינוי מועד'"
+  [(visible)]="showChangeRequestDialog"
+  [modal]="true"
+  [style]="{ width: '440px' }">
+  @if (selectedChangeRequest(); as request) {
+    <div class="flex flex-column gap-2">
+      <div><strong>תלמיד:</strong> {{ request.studentName }}</div>
+      <div><strong>הורה מבקש:</strong> {{ request.parentName }}</div>
+      <div><strong>מועד נוכחי:</strong> {{ request.lessonStartTime | date: 'dd/MM/yyyy HH:mm' }} – {{ request.lessonEndTime | date: 'HH:mm' }}</div>
+      @if (request.type === ChangeRequestType.Reschedule && request.proposedStartTime) {
+        <div><strong>מועד מוצע:</strong> {{ request.proposedStartTime | date: 'dd/MM/yyyy HH:mm' }} – {{ request.proposedEndTime | date: 'HH:mm' }}</div>
+      }
+      @if (request.reason) {
+        <div><strong>סיבה:</strong> {{ request.reason }}</div>
+      }
+    </div>
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="דחה" severity="danger" [outlined]="true" [loading]="busyRequestId() === request.id" (onClick)="changeRequestDetailReject()" />
+      <p-button label="אשר" severity="success" [loading]="busyRequestId() === request.id" (onClick)="changeRequestDetailApprove()" />
+    </div>
+  }
 </p-dialog>

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -8,16 +8,16 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
-import { TableModule } from 'primeng/table';
-import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
-import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { endAfterStartValidator } from '../../../core/forms/validators';
+import { CalendarEventExtendedProps, CalendarSlotSelection } from '../../../shared/calendar/lesson-calendar.model';
+import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
 import { StudentListItem } from '../../students/students.models';
 import { StudentsService } from '../../students/students.service';
+import { buildTeacherCalendarEvents } from '../lesson-calendar.util';
 import {
   LESSON_STATUS_LABELS,
   LESSON_STATUS_SEVERITY,
@@ -40,11 +40,9 @@ import { LessonsService } from '../lessons.service';
     DialogModule,
     InputNumberModule,
     SelectModule,
-    TableModule,
-    TabsModule,
     TagModule,
     TextareaModule,
-    TooltipModule
+    LessonCalendarComponent
   ],
   templateUrl: './lessons-list.component.html'
 })
@@ -67,6 +65,8 @@ export class LessonsListComponent implements OnInit {
   protected readonly changeRequests = signal<ChangeRequest[]>([]);
   protected readonly changeRequestsLoading = signal(true);
 
+  protected readonly calendarEvents = computed(() => buildTeacherCalendarEvents(this.lessons(), this.changeRequests()));
+
   protected readonly showLessonDialog = signal(false);
   protected readonly savingLesson = signal(false);
 
@@ -77,6 +77,12 @@ export class LessonsListComponent implements OnInit {
   protected readonly showCompleteDialog = signal(false);
   protected readonly completingLessonId = signal<string | null>(null);
   protected readonly savingComplete = signal(false);
+
+  protected readonly showLessonDetailDialog = signal(false);
+  protected readonly selectedLesson = signal<Lesson | null>(null);
+
+  protected readonly showChangeRequestDialog = signal(false);
+  protected readonly selectedChangeRequest = signal<ChangeRequest | null>(null);
 
   protected readonly busyRequestId = signal<string | null>(null);
   protected readonly fieldError = fieldError;
@@ -121,6 +127,83 @@ export class LessonsListComponent implements OnInit {
   openAddLessonDialog(): void {
     this.lessonForm.reset({ studentId: '', startTime: null, endTime: null });
     this.showLessonDialog.set(true);
+  }
+
+  onSlotSelected(range: CalendarSlotSelection): void {
+    this.lessonForm.reset({ studentId: '', startTime: range.start, endTime: range.end });
+    this.showLessonDialog.set(true);
+  }
+
+  onEventClicked(props: CalendarEventExtendedProps): void {
+    switch (props.kind) {
+      case 'lesson':
+      case 'request': {
+        const lesson = this.lessons().find(l => l.id === props.refId);
+        if (lesson) {
+          this.selectedLesson.set(lesson);
+          this.showLessonDetailDialog.set(true);
+        }
+        break;
+      }
+      case 'change-reschedule':
+      case 'change-cancel': {
+        const request = this.changeRequests().find(r => r.id === props.refId);
+        if (request) {
+          this.selectedChangeRequest.set(request);
+          this.showChangeRequestDialog.set(true);
+        }
+        break;
+      }
+    }
+  }
+
+  lessonDetailApprove(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+    this.showLessonDetailDialog.set(false);
+    this.approveRequest(lesson);
+  }
+
+  lessonDetailDecline(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+    this.showLessonDetailDialog.set(false);
+    this.declineRequest(lesson);
+  }
+
+  lessonDetailEditTime(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+    this.showLessonDetailDialog.set(false);
+    this.openEditTimeDialog(lesson);
+  }
+
+  lessonDetailComplete(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+    this.showLessonDetailDialog.set(false);
+    this.openCompleteDialog(lesson);
+  }
+
+  lessonDetailDelete(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+    this.showLessonDetailDialog.set(false);
+    this.deleteLesson(lesson);
+  }
+
+  changeRequestDetailApprove(): void {
+    const request = this.selectedChangeRequest();
+    if (!request) return;
+    this.showChangeRequestDialog.set(false);
+    this.approveChangeRequest(request);
+  }
+
+  changeRequestDetailReject(): void {
+    const request = this.selectedChangeRequest();
+    if (!request) return;
+    this.showChangeRequestDialog.set(false);
+    this.rejectChangeRequest(request);
   }
 
   saveLesson(): void {

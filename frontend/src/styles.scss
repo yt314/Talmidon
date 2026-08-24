@@ -1,6 +1,8 @@
 /* גלובלי — תלמידון */
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
+@import "fullcalendar/skeleton.css";
+@import "fullcalendar/themes/classic/theme.css";
 
 html,
 body {
@@ -100,5 +102,29 @@ body {
 .p-datatable-thead > tr > th,
 .p-datatable-tbody > tr > td {
   white-space: nowrap;
+}
+
+/* יומן שיעורים (FullCalendar) — עיצוב אירועים לפי סטטוס */
+full-calendar {
+  font-family: inherit;
+  display: block;
+}
+.lesson-cal-pending {
+  border-style: dashed !important;
+  border-width: 2px !important;
+}
+.lesson-cal-muted {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.legend-dot-pending {
+  background: #fef3c7;
+  border: 2px dashed #f59e0b;
 }
 

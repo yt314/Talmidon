@@ -40,6 +40,23 @@ export const LESSON_STATUS_SEVERITY: Record<LessonStatus, LessonStatusSeverity> 
   [LessonStatus.Declined]: 'danger'
 };
 
+export interface LessonCalendarColor {
+  color: string;
+  contrastColor: string;
+}
+
+/** צבעי בלוקים ביומן (FullCalendar) לפי סטטוס שיעור. */
+export const LESSON_STATUS_COLOR: Record<LessonStatus, LessonCalendarColor> = {
+  [LessonStatus.Requested]: { color: '#f59e0b', contrastColor: '#92400e' },
+  [LessonStatus.Scheduled]: { color: '#3b82f6', contrastColor: '#ffffff' },
+  [LessonStatus.Completed]: { color: '#22c55e', contrastColor: '#ffffff' },
+  [LessonStatus.Cancelled]: { color: '#9ca3af', contrastColor: '#4b5563' },
+  [LessonStatus.Declined]: { color: '#ef4444', contrastColor: '#7f1d1d' }
+};
+
+/** צבע בלוקי-רפאים (ghost) של בקשות שינוי/ביטול ממתינות ביומן המורה — אותו עיצוב "ממתין לאישור". */
+export const PENDING_CHANGE_COLOR: LessonCalendarColor = LESSON_STATUS_COLOR[LessonStatus.Requested];
+
 export interface Lesson {
   id: string;
   studentId: string;

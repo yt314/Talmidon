@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -7,18 +7,31 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { endAfterStartValidator } from '../../../core/forms/validators';
+import { CalendarEventExtendedProps } from '../../../shared/calendar/lesson-calendar.model';
+import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
+import { lessonToCalendarEvent } from '../../lessons/lesson-calendar.util';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestType, Lesson, LessonStatus } from '../../lessons/lessons.models';
 import { MyChild } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
 
 @Component({
   selector: 'app-parent-lessons',
-  imports: [ReactiveFormsModule, FormsModule, DatePipe, ButtonModule, DatePickerModule, DialogModule, InputTextModule, SelectModule, TableModule, TagModule],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    DatePipe,
+    ButtonModule,
+    DatePickerModule,
+    DialogModule,
+    InputTextModule,
+    SelectModule,
+    TagModule,
+    LessonCalendarComponent
+  ],
   templateUrl: './parent-lessons.component.html'
 })
 export class ParentLessonsComponent implements OnInit {
@@ -35,6 +48,11 @@ export class ParentLessonsComponent implements OnInit {
   protected readonly selectedChildId = signal<string | null>(null);
   protected readonly lessons = signal<Lesson[]>([]);
   protected readonly loading = signal(true);
+
+  protected readonly calendarEvents = computed(() => this.lessons().map(lessonToCalendarEvent));
+
+  protected readonly showLessonDetailDialog = signal(false);
+  protected readonly selectedLesson = signal<Lesson | null>(null);
 
   protected readonly showRequestDialog = signal(false);
   protected readonly savingRequest = signal(false);
@@ -69,6 +87,27 @@ export class ParentLessonsComponent implements OnInit {
 
   onChildChange(): void {
     this.load();
+  }
+
+  onEventClicked(props: CalendarEventExtendedProps): void {
+    const lesson = this.lessons().find(l => l.id === props.refId);
+    if (!lesson) return;
+    this.selectedLesson.set(lesson);
+    this.showLessonDetailDialog.set(true);
+  }
+
+  lessonDetailReschedule(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+    this.showLessonDetailDialog.set(false);
+    this.openRescheduleDialog(lesson);
+  }
+
+  lessonDetailCancel(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+    this.showLessonDetailDialog.set(false);
+    this.openCancelDialog(lesson);
   }
 
   openRequestDialog(): void {
