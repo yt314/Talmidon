@@ -14,8 +14,10 @@
 <app-lesson-calendar
   [events]="calendarEvents()"
   [selectable]="true"
+  [editable]="true"
   (eventClicked)="onEventClicked($event)"
-  (slotSelected)="onSlotSelected($event)" />
+  (slotSelected)="onSlotSelected($event)"
+  (eventDropped)="onEventDropped($event)" />
 
 <p-dialog header="הוספת שיעור" [(visible)]="showLessonDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="lessonForm" (ngSubmit)="saveLesson()">

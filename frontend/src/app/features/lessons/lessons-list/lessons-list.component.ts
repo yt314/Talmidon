@@ -1,7 +1,7 @@
-import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe, formatDate } from '@angular/common';
+import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -13,7 +13,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { endAfterStartValidator } from '../../../core/forms/validators';
-import { CalendarEventExtendedProps, CalendarSlotSelection } from '../../../shared/calendar/lesson-calendar.model';
+import { CalendarEventDrop, CalendarEventExtendedProps, CalendarSlotSelection } from '../../../shared/calendar/lesson-calendar.model';
 import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
 import { StudentListItem } from '../../students/students.models';
 import { StudentsService } from '../../students/students.service';
@@ -51,6 +51,8 @@ export class LessonsListComponent implements OnInit {
   private readonly lessonsService = inject(LessonsService);
   private readonly studentsService = inject(StudentsService);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly locale = inject(LOCALE_ID);
 
   protected readonly LessonStatus = LessonStatus;
   protected readonly ChangeRequestType = ChangeRequestType;
@@ -132,6 +134,39 @@ export class LessonsListComponent implements OnInit {
   onSlotSelected(range: CalendarSlotSelection): void {
     this.lessonForm.reset({ studentId: '', startTime: range.start, endTime: range.end });
     this.showLessonDialog.set(true);
+  }
+
+  /** גרירת שיעור ללוח (רק מתוזמן ניתן לגרירה — נאכף ב-lesson-calendar.util). מבקש אישור לפני שמירה בפועל. */
+  onEventDropped(drop: CalendarEventDrop): void {
+    const lesson = this.lessons().find(l => l.id === drop.refId);
+    if (!lesson) {
+      drop.revert();
+      return;
+    }
+
+    const oldTime = formatDate(lesson.startTime, 'dd/MM/yyyy HH:mm', this.locale);
+    const newTime = formatDate(drop.start, 'dd/MM/yyyy HH:mm', this.locale);
+
+    this.confirmationService.confirm({
+      header: 'אישור שינוי מועד',
+      message: `להעביר את השיעור של ${lesson.studentName} מ-${oldTime} ל-${newTime}?`,
+      icon: 'pi pi-calendar',
+      acceptLabel: 'עדכן',
+      rejectLabel: 'ביטול',
+      accept: () => {
+        this.lessonsService.update(lesson.id, { startTime: drop.start.toISOString(), endTime: drop.end.toISOString() }).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'המועד עודכן' });
+            this.loadLessons();
+          },
+          error: err => {
+            drop.revert();
+            this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'עדכון המועד נכשל.') });
+          }
+        });
+      },
+      reject: () => drop.revert()
+    });
   }
 
   onEventClicked(props: CalendarEventExtendedProps): void {

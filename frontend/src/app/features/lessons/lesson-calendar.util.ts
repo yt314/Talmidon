@@ -14,6 +14,9 @@ export function lessonToCalendarEvent(lesson: Lesson): EventInput {
     color: color.color,
     contrastColor: color.contrastColor,
     classNames: pending ? ['lesson-cal-pending'] : lesson.status === LessonStatus.Cancelled ? ['lesson-cal-muted'] : [],
+    // רק שיעור מתוזמן ניתן לגרירה למועד אחר; אף פעם לא לשינוי משך (גרירת הקצה).
+    startEditable: lesson.status === LessonStatus.Scheduled,
+    durationEditable: false,
     extendedProps
   };
 }
@@ -44,6 +47,8 @@ export function buildTeacherCalendarEvents(lessons: Lesson[], pendingChangeReque
       color: PENDING_CHANGE_COLOR.color,
       contrastColor: PENDING_CHANGE_COLOR.contrastColor,
       classNames: ['lesson-cal-pending'],
+      startEditable: false,
+      durationEditable: false,
       extendedProps
     };
   });
@@ -58,6 +63,8 @@ export function buildTeacherCalendarEvents(lessons: Lesson[], pendingChangeReque
       color: PENDING_CHANGE_COLOR.color,
       contrastColor: PENDING_CHANGE_COLOR.contrastColor,
       classNames: ['lesson-cal-pending'],
+      startEditable: false,
+      durationEditable: false,
       extendedProps
     };
   });
