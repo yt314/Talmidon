@@ -170,6 +170,12 @@ core domain rules that are easy to silently break in a refactor:
 - **Payments/billing:** the guards on marking lessons paid (already paid, not billable, or
   belonging to a different parent's child) and the full mark-paid → appears on the payment →
   disappears from open charges → delete reopens it cycle (`PaymentsTests`).
+- **Rate limiting:** the per-IP limit on `/api/auth/*` actually returns 429 once exceeded
+  (`RateLimitingTests`) — this needs its own `WebApplicationFactory` with a small permit limit,
+  since the shared test fixture intentionally inflates the limit for every other test.
+- **Student IDOR:** two students under the same tutor never see each other's lessons or notes
+  through their own-schedule/own-notes endpoints, and a student can't reach a teacher-only
+  by-id endpoint at all, even for their own record (`StudentIdorTests`).
 
 ## Configuration
 
