@@ -3,10 +3,10 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import Aura from '@primeng/themes/aura';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { TalmidonPreset } from './core/theme/talmidon-preset';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     providePrimeNG({
       ripple: true,
       theme: {
-        preset: Aura,
+        preset: TalmidonPreset,
         options: {
           // מצב כהה מופעל רק כשמוסיפים class .app-dark ל-<html>
           darkModeSelector: '.app-dark'

@@ -5,17 +5,22 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
+import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { PublicTeacherSummary } from '../public.models';
 import { PublicService } from '../public.service';
 
 @Component({
   selector: 'app-teacher-library',
-  imports: [FormsModule, RouterLink, ButtonModule, CardModule, InputTextModule, SelectModule, TagModule],
+  imports: [FormsModule, RouterLink, ButtonModule, CardModule, InputTextModule, SelectModule, SkeletonModule, TagModule],
   templateUrl: './teacher-library.component.html'
 })
 export class TeacherLibraryComponent implements OnInit {
   private readonly publicService = inject(PublicService);
+
+  protected readonly initials = getInitials;
+  protected readonly avatarColor = getAvatarColor;
 
   protected readonly loading = signal(true);
   protected readonly allTeachers = signal<PublicTeacherSummary[]>([]);
