@@ -11,3 +11,12 @@ public class EmailSettings
     public string? Username { get; set; }
     public string? Password { get; set; }
 }
+
+/// <summary>
+/// הגדרות SendGrid (נטענות מ-section "SendGrid"). כשה-ApiKey מוגדר (בפרודקשן, דרך משתנה הסביבה
+/// SendGrid__ApiKey) המערכת שולחת מיילים דרך SendGrid Web API במקום SMTP/Mailpit.
+/// </summary>
+public class SendGridSettings
+{
+    public string? ApiKey { get; set; }
+}

@@ -3,6 +3,8 @@ using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace Talmidon.Infrastructure.Email;
 
@@ -45,5 +47,37 @@ public class SmtpEmailSender : IEmailSender
         await client.DisconnectAsync(true, ct);
 
         _logger.LogInformation("Email sent (subject: {Subject})", subject);
+    }
+}
+
+/// <summary>שולח מיילים דרך SendGrid Web API. פעיל בפרודקשן כש-SendGrid:ApiKey מוגדר (ראו DependencyInjection).</summary>
+public class SendGridEmailSender : IEmailSender
+{
+    private readonly EmailSettings _emailSettings;
+    private readonly SendGridSettings _sendGridSettings;
+    private readonly ILogger<SendGridEmailSender> _logger;
+
+    public SendGridEmailSender(IOptions<EmailSettings> emailSettings, IOptions<SendGridSettings> sendGridSettings, ILogger<SendGridEmailSender> logger)
+    {
+        _emailSettings = emailSettings.Value;
+        _sendGridSettings = sendGridSettings.Value;
+        _logger = logger;
+    }
+
+    public async Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken ct = default)
+    {
+        var client = new SendGridClient(_sendGridSettings.ApiKey);
+        var from = new EmailAddress(_emailSettings.FromAddress, _emailSettings.FromName);
+        var to = new EmailAddress(toEmail);
+        var message = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent: string.Empty, htmlContent: htmlBody);
+
+        var response = await client.SendEmailAsync(message, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Body.ReadAsStringAsync(ct);
+            throw new InvalidOperationException($"SendGrid send failed with status {(int)response.StatusCode}: {body}");
+        }
+
+        _logger.LogInformation("Email sent via SendGrid (subject: {Subject})", subject);
     }
 }

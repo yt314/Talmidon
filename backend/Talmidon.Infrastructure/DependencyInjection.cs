@@ -38,10 +38,19 @@ public static class DependencyInjection
         // הגדרות
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.Configure<EmailSettings>(configuration.GetSection("Email"));
+        services.Configure<SendGridSettings>(configuration.GetSection("SendGrid"));
 
         // שירותי אימות
         services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<IEmailSender, SmtpEmailSender>();
+
+        // שליחת מייל: SendGrid כש-SendGrid:ApiKey מוגדר (פרודקשן, דרך משתנה הסביבה SendGrid__ApiKey),
+        // אחרת SMTP מול Mailpit (ברירת המחדל בפיתוח/בדיקות).
+        var sendGridApiKey = configuration["SendGrid:ApiKey"];
+        if (!string.IsNullOrWhiteSpace(sendGridApiKey))
+            services.AddScoped<IEmailSender, SendGridEmailSender>();
+        else
+            services.AddScoped<IEmailSender, SmtpEmailSender>();
+
         services.AddScoped<IAccountProvisioning, AccountProvisioning>();
 
         // Identity (ללא קוקיז — API מבוסס טוקנים)

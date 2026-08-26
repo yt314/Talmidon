@@ -150,12 +150,26 @@ database on the same PostgreSQL server — not mocks, not an in-memory provider 
 EF Core global query filters and Npgsql behavior are what's under test. The database and its
 schema are created automatically on first run.
 
-Coverage today is deliberately narrow and aimed at the highest-blast-radius failure modes for a
-multi-tenant app: one tutor can never read, list, or modify another tutor's data
-(`TenantIsolationTests`); a parent or student can't reach a teacher-only endpoint
-(`RoleAuthorizationTests`); a parent can't act on a lesson belonging to a different parent's
-child under the same tutor (`ParentIdorTests`); and the full register → confirm → login →
-forgot-password → change-password lifecycle behaves correctly end to end (`AuthFlowTests`).
+Coverage is aimed at the highest-blast-radius failure modes for a multi-tenant app, plus the
+core domain rules that are easy to silently break in a refactor:
+
+- **Isolation & authorization:** one tutor can never read, list, or modify another tutor's data
+  (`TenantIsolationTests`); a parent or student can't reach a teacher-only endpoint
+  (`RoleAuthorizationTests`); a parent can't act on a lesson belonging to a different parent's
+  child under the same tutor (`ParentIdorTests`).
+- **Auth lifecycle & tokens:** register → confirm → login → forgot-password → change-password
+  end to end (`AuthFlowTests`); refresh-token rotation, and reuse of an already-rotated token
+  revoking the entire token family (`RefreshTokenReuseTests`).
+- **Lesson state machine:** every status-transition guard — updating/deleting/completing a
+  lesson in the wrong state, approving/declining a request twice, a duplicate pending
+  change-request — plus the actual effect of an approved cancel/reschedule on the lesson
+  (`LessonStatusTransitionTests`).
+- **Note visibility:** the server-enforced rule that a note visible to the student is always
+  visible to the parent too, on both create and update, and that each portal's endpoint only
+  ever returns notes actually marked visible to it (`NoteVisibilityTests`).
+- **Payments/billing:** the guards on marking lessons paid (already paid, not billable, or
+  belonging to a different parent's child) and the full mark-paid → appears on the payment →
+  disappears from open charges → delete reopens it cycle (`PaymentsTests`).
 
 ## Configuration
 
@@ -169,7 +183,26 @@ deployment, supply these via environment variables instead of committing secrets
 | `Jwt__SecretKey` | JWT signing key — **32+ bytes**, high-entropy |
 | `App__ApiBaseUrl` | Public base URL of the API (used in generated email links) |
 | `App__ClientUrl` | Public base URL of the Angular app |
-| `Email__*` | SMTP host, port, credentials, and sender identity |
+| `Email__FromAddress`, `Email__FromName` | Sender identity on outgoing email — `FromAddress` must be on a domain verified with your email provider |
+| `SendGrid__ApiKey` | SendGrid API key. When set, email sends via the [SendGrid](https://sendgrid.com) Web API instead of SMTP/Mailpit — see below |
+| `Email__*` (Host/Port/UseSsl/Username/Password) | Only used as a fallback when `SendGrid__ApiKey` is unset — SMTP host, port, and credentials |
+
+### Production email (SendGrid)
+
+By default the app sends every email — confirmation, password reset, parent/student
+invitations, payment reminders and receipts — over SMTP to Mailpit, which only works
+locally. To send real email in production:
+
+1. Create a [SendGrid](https://sendgrid.com) account and verify a sender: either a single
+   sender address or, better, an entire domain (Settings → Sender Authentication). Emails
+   sent from an unverified `Email__FromAddress` will be rejected.
+2. Create an API key with **Mail Send** permission (Settings → API Keys).
+3. Set `SendGrid__ApiKey` to that key and `Email__FromAddress` to the verified sender in your
+   production environment's variables — never commit the key to a config file.
+
+With `SendGrid__ApiKey` set, `AddInfrastructure` (`backend/Talmidon.Infrastructure/DependencyInjection.cs`)
+registers `SendGridEmailSender` instead of the Mailpit-facing `SmtpEmailSender`; every call site
+uses the same `IEmailSender` interface, so no other code changes when you switch providers.
 
 ## Documentation
 
