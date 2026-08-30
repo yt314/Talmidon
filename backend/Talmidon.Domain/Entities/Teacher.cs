@@ -37,6 +37,7 @@ public class Teacher
     public ICollection<Student> Students { get; set; } = new List<Student>();
     public ICollection<Parent> Parents { get; set; } = new List<Parent>();
     public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
+    public ICollection<LessonSeries> LessonSeries { get; set; } = new List<LessonSeries>();
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     public ICollection<Note> Notes { get; set; } = new List<Note>();
 }

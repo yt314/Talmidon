@@ -34,7 +34,8 @@ public record LessonDto(
     bool PaymentRequired,
     decimal Amount,
     bool IsPaid,
-    DateTimeOffset? CompletedAt);
+    DateTimeOffset? CompletedAt,
+    Guid? SeriesId);
 
 /// <summary>תצוגת תלמיד — ללא שדות תשלום (הרשאה: תלמיד אינו רואה סטטוס תשלומים).</summary>
 public record StudentLessonDto(

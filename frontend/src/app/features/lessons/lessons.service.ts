@@ -7,7 +7,9 @@ import {
   ChangeRequestStatus,
   CompleteLessonRequest,
   CreateLessonRequest,
+  CreateLessonSeriesRequest,
   Lesson,
+  LessonSeriesResult,
   LessonStatus,
   UpdateLessonRequest
 } from './lessons.models';
@@ -16,6 +18,7 @@ import {
 export class LessonsService {
   private readonly http = inject(HttpClient);
   private readonly api = `${environment.apiUrl}/lessons`;
+  private readonly seriesApi = `${environment.apiUrl}/lesson-series`;
 
   list(from?: Date, to?: Date, status?: LessonStatus): Observable<Lesson[]> {
     let params = new HttpParams();
@@ -27,6 +30,15 @@ export class LessonsService {
 
   create(request: CreateLessonRequest): Observable<Lesson> {
     return this.http.post<Lesson>(this.api, request);
+  }
+
+  createSeries(request: CreateLessonSeriesRequest): Observable<LessonSeriesResult> {
+    return this.http.post<LessonSeriesResult>(this.seriesApi, request);
+  }
+
+  cancelSeries(id: string, deleteFutureOccurrences: boolean): Observable<void> {
+    const params = new HttpParams().set('deleteFutureOccurrences', deleteFutureOccurrences);
+    return this.http.delete<void>(`${this.seriesApi}/${id}`, { params });
   }
 
   update(id: string, request: UpdateLessonRequest): Observable<void> {

@@ -73,6 +73,48 @@
       }
     </div>
 
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="l-recurring" formControlName="recurring" [binary]="true" />
+      <label for="l-recurring" class="m-0">🔁 חזור כל שבוע</label>
+    </div>
+
+    @if (lessonForm.controls.recurring.value) {
+      <div class="field">
+        <label>עד מתי</label>
+        <p-selectbutton [options]="endConditionOptions" optionLabel="label" optionValue="value" formControlName="endCondition" styleClass="w-full" />
+      </div>
+
+      @switch (lessonForm.controls.endCondition.value) {
+        @case (LessonSeriesEndCondition.Count) {
+          <div class="field">
+            <label for="l-occurrenceCount">מספר שיעורים *</label>
+            <p-inputnumber
+              inputId="l-occurrenceCount"
+              formControlName="occurrenceCount"
+              [min]="1"
+              styleClass="w-full"
+              inputStyleClass="w-full" />
+          </div>
+        }
+        @case (LessonSeriesEndCondition.EndDate) {
+          <div class="field">
+            <label for="l-endDate">תאריך סיום *</label>
+            <p-datepicker
+              inputId="l-endDate"
+              formControlName="endDate"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [appendTo]="'body'"
+              styleClass="w-full"
+              inputStyleClass="w-full" />
+          </div>
+        }
+        @case (LessonSeriesEndCondition.Indefinite) {
+          <p class="text-sm text-color-secondary mt-0">השיעורים ימשיכו להיווצר כל שבוע עד שתבטלי את הסדרה.</p>
+        }
+      }
+    }
+
     <div class="flex justify-content-end gap-2 mt-4">
       <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showLessonDialog.set(false)" type="button" />
       <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingLesson()" />
@@ -211,6 +253,9 @@
       <div><strong>תלמיד:</strong> {{ lesson.studentName }}</div>
       <div><strong>מועד:</strong> {{ lesson.startTime | date: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | date: 'HH:mm' }}</div>
       <div><strong>סטטוס:</strong> <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" /></div>
+      @if (lesson.seriesId) {
+        <div><p-tag value="🔁 שיעור חוזר" severity="info" /></div>
+      }
       @if (lesson.homework) {
         <div><strong>שיעורי בית:</strong> {{ lesson.homework }}</div>
       }
@@ -227,6 +272,9 @@
         <p-button label="דחה" severity="danger" [outlined]="true" [loading]="busyRequestId() === lesson.id" (onClick)="lessonDetailDecline()" />
         <p-button label="אשר" severity="success" [loading]="busyRequestId() === lesson.id" (onClick)="lessonDetailApprove()" />
       } @else if (lesson.status === LessonStatus.Scheduled) {
+        @if (lesson.seriesId) {
+          <p-button label="בטל שיעורים חוזרים" severity="danger" [text]="true" (onClick)="openCancelSeriesDialog()" />
+        }
         <p-button label="מחק" severity="danger" [text]="true" (onClick)="lessonDetailDelete()" />
         <p-button label="עדכן מועד" severity="secondary" [outlined]="true" (onClick)="lessonDetailEditTime()" />
         <p-button label="סיום שיעור" severity="success" (onClick)="lessonDetailComplete()" />
@@ -259,4 +307,21 @@
       <p-button label="אשר" severity="success" [loading]="busyRequestId() === request.id" (onClick)="changeRequestDetailApprove()" />
     </div>
   }
+</p-dialog>
+
+<p-dialog header="ביטול שיעורים חוזרים" [(visible)]="showCancelSeriesDialog" [modal]="true" [style]="{ width: '420px' }">
+  <p class="mt-0">הפעולה תפסיק את יצירת השיעורים החדשים מהסדרה הזו.</p>
+  <div class="field flex align-items-center gap-2">
+    <p-checkbox
+      inputId="cs-deleteFuture"
+      [binary]="true"
+      [ngModel]="cancelSeriesDeleteFuture()"
+      (ngModelChange)="cancelSeriesDeleteFuture.set($event)" />
+    <label for="cs-deleteFuture" class="m-0">למחוק גם שיעורים עתידיים שכבר נקבעו</label>
+  </div>
+
+  <div class="flex justify-content-end gap-2 mt-4">
+    <p-button label="סגירה" severity="secondary" [text]="true" (onClick)="showCancelSeriesDialog.set(false)" />
+    <p-button label="בטל סדרה" severity="danger" [loading]="cancellingSeries()" (onClick)="confirmCancelSeries()" />
+  </div>
 </p-dialog>

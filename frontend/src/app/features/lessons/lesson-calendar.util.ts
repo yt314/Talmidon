@@ -6,9 +6,10 @@ export function lessonToCalendarEvent(lesson: Lesson): EventInput {
   const pending = lesson.status === LessonStatus.Requested;
   const color = LESSON_STATUS_COLOR[lesson.status];
   const extendedProps: CalendarEventExtendedProps = { kind: pending ? 'request' : 'lesson', refId: lesson.id };
+  const recurringPrefix = lesson.seriesId ? '🔁 ' : '';
   return {
     id: `lesson-${lesson.id}`,
-    title: pending ? `⏳ ${lesson.studentName}` : lesson.studentName,
+    title: pending ? `⏳ ${lesson.studentName}` : `${recurringPrefix}${lesson.studentName}`,
     start: lesson.startTime,
     end: lesson.endTime,
     color: color.color,

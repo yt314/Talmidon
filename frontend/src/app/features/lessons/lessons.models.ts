@@ -22,6 +22,12 @@ export enum ChangeRequestStatus {
   Rejected = 2
 }
 
+export enum LessonSeriesEndCondition {
+  Count = 0,
+  EndDate = 1,
+  Indefinite = 2
+}
+
 export const LESSON_STATUS_LABELS: Record<LessonStatus, string> = {
   [LessonStatus.Requested]: 'ממתין לאישור',
   [LessonStatus.Scheduled]: 'מתוזמן',
@@ -70,6 +76,7 @@ export interface Lesson {
   amount: number;
   isPaid: boolean;
   completedAt: string | null;
+  seriesId: string | null;
 }
 
 export interface CreateLessonRequest {
@@ -82,6 +89,20 @@ export interface CreateLessonRequest {
 export interface UpdateLessonRequest {
   startTime: string;
   endTime: string;
+}
+
+export interface CreateLessonSeriesRequest {
+  studentId: string;
+  firstStartTime: string;
+  firstEndTime: string;
+  endCondition: LessonSeriesEndCondition;
+  occurrenceCount?: number | null;
+  endDate?: string | null;
+}
+
+export interface LessonSeriesResult {
+  id: string;
+  occurrencesCreated: number;
 }
 
 export interface CompleteLessonRequest {

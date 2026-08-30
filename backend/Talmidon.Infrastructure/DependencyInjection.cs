@@ -11,6 +11,7 @@ using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 using Talmidon.Infrastructure.Multitenancy;
+using Talmidon.Infrastructure.Scheduling;
 
 namespace Talmidon.Infrastructure;
 
@@ -73,8 +74,10 @@ public static class DependencyInjection
         // תוקף קצר יותר לאסימוני אימות מייל (ברירת מחדל של Identity היא יממה)
         services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(6));
 
-        // עבודת רקע: תזכורת תשלום חודשית (Hangfire, אחסון על אותו Postgres)
+        // עבודת רקע: תזכורת תשלום חודשית, וייצור מתגלגל של שיעורים מסדרות חוזרות (Hangfire, אחסון על אותו Postgres)
         services.AddScoped<MonthlyPaymentReminderJob>();
+        services.AddScoped<LessonSeriesGenerator>();
+        services.AddScoped<LessonSeriesGenerationJob>();
         services.AddHangfire(config => config
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()

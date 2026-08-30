@@ -56,7 +56,7 @@ public class LessonsController(
             .OrderBy(l => l.StartTime)
             .Select(l => new LessonDto(
                 l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.EndTime, l.Status, l.Origin,
-                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt))
+                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId))
             .ToListAsync();
         return Ok(lessons);
     }
@@ -69,7 +69,7 @@ public class LessonsController(
             .Where(l => l.Id == id)
             .Select(l => new LessonDto(
                 l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.EndTime, l.Status, l.Origin,
-                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt))
+                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId))
             .FirstOrDefaultAsync();
         return lesson is null ? NotFound() : Ok(lesson);
     }
@@ -307,7 +307,7 @@ public class LessonsController(
             .OrderBy(l => l.StartTime)
             .Select(l => new LessonDto(
                 l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.EndTime, l.Status, l.Origin,
-                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt))
+                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId))
             .ToListAsync();
         return Ok(lessons);
     }
@@ -421,7 +421,7 @@ public class LessonsController(
 
     private static LessonDto ToDto(Lesson l, string studentName) => new(
         l.Id, l.StudentId, studentName, l.StartTime, l.EndTime, l.Status, l.Origin,
-        l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt);
+        l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId);
 
     private static string FormatDate(DateTimeOffset dt) => dt.ToString("dd/MM/yyyy HH:mm");
 

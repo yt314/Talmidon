@@ -38,11 +38,15 @@ public class Lesson : ITenantScoped
 
     public DateTimeOffset? CompletedAt { get; set; }
 
+    /// <summary>אם השיעור נוצר אוטומטית מתוך סדרת שיעורים חוזרת. <c>null</c> = שיעור בודד רגיל.</summary>
+    public Guid? SeriesId { get; set; }
+
     // ניווט
     public Teacher Teacher { get; set; } = default!;
     public Student Student { get; set; } = default!;
     public Parent? RequestedByParent { get; set; }
     public Payment? Payment { get; set; }
+    public LessonSeries? Series { get; set; }
     public ICollection<Note> Notes { get; set; } = new List<Note>();
     public ICollection<LessonChangeRequest> ChangeRequests { get; set; } = new List<LessonChangeRequest>();
 }

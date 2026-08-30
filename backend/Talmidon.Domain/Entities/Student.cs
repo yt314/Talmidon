@@ -26,5 +26,6 @@ public class Student : ITenantScoped
     public Teacher Teacher { get; set; } = default!;
     public ICollection<StudentParent> StudentParents { get; set; } = new List<StudentParent>();
     public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
+    public ICollection<LessonSeries> LessonSeries { get; set; } = new List<LessonSeries>();
     public ICollection<Note> Notes { get; set; } = new List<Note>();
 }

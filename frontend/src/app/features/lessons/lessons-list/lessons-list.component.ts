@@ -1,12 +1,13 @@
 import { DatePipe, formatDate } from '@angular/common';
 import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
@@ -25,6 +26,7 @@ import {
   ChangeRequestStatus,
   ChangeRequestType,
   Lesson,
+  LessonSeriesEndCondition,
   LessonStatus
 } from '../lessons.models';
 import { LessonsService } from '../lessons.service';
@@ -33,12 +35,14 @@ import { LessonsService } from '../lessons.service';
   selector: 'app-lessons-list',
   imports: [
     ReactiveFormsModule,
+    FormsModule,
     DatePipe,
     ButtonModule,
     CheckboxModule,
     DatePickerModule,
     DialogModule,
     InputNumberModule,
+    SelectButtonModule,
     SelectModule,
     TagModule,
     TextareaModule,
@@ -57,8 +61,15 @@ export class LessonsListComponent implements OnInit {
   protected readonly LessonStatus = LessonStatus;
   protected readonly ChangeRequestType = ChangeRequestType;
   protected readonly ChangeRequestStatus = ChangeRequestStatus;
+  protected readonly LessonSeriesEndCondition = LessonSeriesEndCondition;
   protected readonly statusLabel = (status: LessonStatus): string => LESSON_STATUS_LABELS[status];
   protected readonly statusSeverity = (status: LessonStatus) => LESSON_STATUS_SEVERITY[status];
+
+  protected readonly endConditionOptions = [
+    { label: 'מספר שיעורים', value: LessonSeriesEndCondition.Count },
+    { label: 'עד תאריך', value: LessonSeriesEndCondition.EndDate },
+    { label: 'ללא הגבלה', value: LessonSeriesEndCondition.Indefinite }
+  ];
 
   protected readonly lessons = signal<Lesson[]>([]);
   protected readonly loading = signal(true);
@@ -86,6 +97,11 @@ export class LessonsListComponent implements OnInit {
   protected readonly showChangeRequestDialog = signal(false);
   protected readonly selectedChangeRequest = signal<ChangeRequest | null>(null);
 
+  protected readonly showCancelSeriesDialog = signal(false);
+  protected readonly cancellingSeriesId = signal<string | null>(null);
+  protected readonly cancelSeriesDeleteFuture = signal(false);
+  protected readonly cancellingSeries = signal(false);
+
   protected readonly busyRequestId = signal<string | null>(null);
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
@@ -94,7 +110,11 @@ export class LessonsListComponent implements OnInit {
     {
       studentId: ['', [Validators.required]],
       startTime: this.fb.control<Date | null>(null, Validators.required),
-      endTime: this.fb.control<Date | null>(null, Validators.required)
+      endTime: this.fb.control<Date | null>(null, Validators.required),
+      recurring: [false],
+      endCondition: [LessonSeriesEndCondition.Count],
+      occurrenceCount: [10, [Validators.min(1)]],
+      endDate: this.fb.control<Date | null>(null)
     },
     { validators: endAfterStartValidator('startTime', 'endTime') }
   );
@@ -127,12 +147,12 @@ export class LessonsListComponent implements OnInit {
   }
 
   openAddLessonDialog(): void {
-    this.lessonForm.reset({ studentId: '', startTime: null, endTime: null });
+    this.lessonForm.reset(defaultLessonFormValue());
     this.showLessonDialog.set(true);
   }
 
   onSlotSelected(range: CalendarSlotSelection): void {
-    this.lessonForm.reset({ studentId: '', startTime: range.start, endTime: range.end });
+    this.lessonForm.reset({ ...defaultLessonFormValue(), startTime: range.start, endTime: range.end });
     this.showLessonDialog.set(true);
   }
 
@@ -227,6 +247,33 @@ export class LessonsListComponent implements OnInit {
     this.deleteLesson(lesson);
   }
 
+  openCancelSeriesDialog(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson?.seriesId) return;
+    this.showLessonDetailDialog.set(false);
+    this.cancellingSeriesId.set(lesson.seriesId);
+    this.cancelSeriesDeleteFuture.set(false);
+    this.showCancelSeriesDialog.set(true);
+  }
+
+  confirmCancelSeries(): void {
+    const seriesId = this.cancellingSeriesId();
+    if (!seriesId) return;
+    this.cancellingSeries.set(true);
+    this.lessonsService.cancelSeries(seriesId, this.cancelSeriesDeleteFuture()).subscribe({
+      next: () => {
+        this.cancellingSeries.set(false);
+        this.showCancelSeriesDialog.set(false);
+        this.messageService.add({ severity: 'success', summary: 'הסדרה בוטלה' });
+        this.loadLessons();
+      },
+      error: err => {
+        this.cancellingSeries.set(false);
+        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'ביטול הסדרה נכשל.') });
+      }
+    });
+  }
+
   changeRequestDetailApprove(): void {
     const request = this.selectedChangeRequest();
     if (!request) return;
@@ -247,6 +294,12 @@ export class LessonsListComponent implements OnInit {
       return;
     }
     const raw = this.lessonForm.getRawValue();
+
+    if (raw.recurring) {
+      this.saveRecurringLesson(raw);
+      return;
+    }
+
     this.savingLesson.set(true);
     this.lessonsService
       .create({ studentId: raw.studentId, startTime: raw.startTime!.toISOString(), endTime: raw.endTime!.toISOString() })
@@ -260,6 +313,40 @@ export class LessonsListComponent implements OnInit {
         error: err => {
           this.savingLesson.set(false);
           this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'הוספת השיעור נכשלה.') });
+        }
+      });
+  }
+
+  private saveRecurringLesson(raw: ReturnType<typeof this.lessonForm.getRawValue>): void {
+    if (raw.endCondition === LessonSeriesEndCondition.Count && !raw.occurrenceCount) {
+      this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: 'יש להזין מספר שיעורים.' });
+      return;
+    }
+    if (raw.endCondition === LessonSeriesEndCondition.EndDate && !raw.endDate) {
+      this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: 'יש לבחור תאריך סיום.' });
+      return;
+    }
+
+    this.savingLesson.set(true);
+    this.lessonsService
+      .createSeries({
+        studentId: raw.studentId,
+        firstStartTime: raw.startTime!.toISOString(),
+        firstEndTime: raw.endTime!.toISOString(),
+        endCondition: raw.endCondition,
+        occurrenceCount: raw.endCondition === LessonSeriesEndCondition.Count ? raw.occurrenceCount : null,
+        endDate: raw.endCondition === LessonSeriesEndCondition.EndDate && raw.endDate ? formatDate(raw.endDate, 'yyyy-MM-dd', this.locale) : null
+      })
+      .subscribe({
+        next: result => {
+          this.savingLesson.set(false);
+          this.showLessonDialog.set(false);
+          this.messageService.add({ severity: 'success', summary: `נוצרו ${result.occurrencesCreated} שיעורים חוזרים` });
+          this.loadLessons();
+        },
+        error: err => {
+          this.savingLesson.set(false);
+          this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'יצירת הסדרה נכשלה.') });
         }
       });
   }
@@ -432,6 +519,18 @@ export class LessonsListComponent implements OnInit {
       error: () => this.changeRequestsLoading.set(false)
     });
   }
+}
+
+function defaultLessonFormValue() {
+  return {
+    studentId: '',
+    startTime: null,
+    endTime: null,
+    recurring: false,
+    endCondition: LessonSeriesEndCondition.Count,
+    occurrenceCount: 10,
+    endDate: null
+  };
 }
 
 /** כשמסמנים שיעור כהתקיים+נדרש תשלום, יש להזין סכום גדול מאפס. */

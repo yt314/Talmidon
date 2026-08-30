@@ -34,6 +34,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Parent> Parents => Set<Parent>();
     public DbSet<StudentParent> StudentParents => Set<StudentParent>();
     public DbSet<Lesson> Lessons => Set<Lesson>();
+    public DbSet<LessonSeries> LessonSeries => Set<LessonSeries>();
     public DbSet<LessonChangeRequest> LessonChangeRequests => Set<LessonChangeRequest>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Note> Notes => Set<Note>();
@@ -49,6 +50,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
         ConfigureParent(builder);
         ConfigureStudentParent(builder);
         ConfigureLesson(builder);
+        ConfigureLessonSeries(builder);
         ConfigureLessonChangeRequest(builder);
         ConfigurePayment(builder);
         ConfigureNote(builder);
@@ -211,7 +213,13 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(l => l.PaymentId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            e.HasOne(l => l.Series)
+                .WithMany(s => s.Occurrences)
+                .HasForeignKey(l => l.SeriesId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             e.HasIndex(l => l.StudentId);
+            e.HasIndex(l => l.SeriesId);
             e.HasIndex(l => new { l.TenantId, l.StartTime });
             e.HasIndex(l => l.PaymentId);
             // נתיב חם: שיעורים הפתוחים לתשלום (אינדקס חלקי)
@@ -223,6 +231,34 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
                 t.HasCheckConstraint("CK_Lessons_Amount_NonNegative", "\"Amount\" >= 0");
                 t.HasCheckConstraint("CK_Lessons_Time_Order", "\"EndTime\" > \"StartTime\"");
             });
+        });
+    }
+
+    private static void ConfigureLessonSeries(ModelBuilder builder)
+    {
+        builder.Entity<LessonSeries>(e =>
+        {
+            e.Property(s => s.DayOfWeek).HasConversion<string>().HasMaxLength(10);
+
+            e.HasAlternateKey(s => new { s.Id, s.TenantId });
+
+            e.HasOne(s => s.Teacher)
+                .WithMany(t => t.LessonSeries)
+                .HasForeignKey(s => s.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // קישור לתלמיד — באותו דייר בלבד, ובעקביות עם Lesson.Student: מחיקת תלמיד מוחקת גם את הסדרות שלו.
+            e.HasOne(s => s.Student)
+                .WithMany(st => st.LessonSeries)
+                .HasForeignKey(s => new { s.StudentId, s.TenantId })
+                .HasPrincipalKey(st => new { st.Id, st.TenantId })
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(s => new { s.TenantId, s.IsActive });
+
+            e.ToTable(t => t.HasCheckConstraint(
+                "CK_LessonSeries_EndCondition",
+                "\"EndDate\" IS NULL OR \"OccurrenceCount\" IS NULL"));
         });
     }
 

@@ -124,6 +124,13 @@ RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
     Cron.Monthly(),
     new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
+// ייצור מתגלגל של שיעורים מסדרות חוזרות, לכל הדיירים — פעם ביום.
+RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
+    "lesson-series-generation",
+    job => job.RunForAllTenantsAsync(),
+    Cron.Daily(),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
 app.Run();
 
 // זריעת התפקידים (Teacher/Parent/Student/Admin) אם חסרים

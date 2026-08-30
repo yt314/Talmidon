@@ -37,6 +37,17 @@ public enum ChangeRequestStatus
     Rejected = 2
 }
 
+/// <summary>איך נקבע הסיום של סדרת שיעורים חוזרת.</summary>
+public enum LessonSeriesEndCondition
+{
+    /// <summary>מספר שיעורים קבוע מראש.</summary>
+    Count = 0,
+    /// <summary>עד תאריך מסוים.</summary>
+    EndDate = 1,
+    /// <summary>ללא הגבלה — ממשיכה להיווצר עד ביטול ידני.</summary>
+    Indefinite = 2
+}
+
 /// <summary>
 /// מגדר — לצורך ניסוח פנייה מתאים (תלמיד/תלמידה, אבא/אמא). אופציונלי; רשומות ישנות
 /// ללא ערך יוצגו בניסוח ניטרלי.
