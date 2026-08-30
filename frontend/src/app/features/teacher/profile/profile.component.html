@@ -1,12 +1,23 @@
 <h1 class="text-2xl font-bold mb-4">הגדרות פרופיל</h1>
 
 @if (loading()) {
-  <p class="text-color-secondary">טוען...</p>
+  <p-card class="block" [style]="{ 'max-width': '640px' }">
+    <div class="flex align-items-center gap-3 mb-3">
+      <p-skeleton shape="circle" size="3rem" />
+      <p-skeleton width="40%" height="1.5rem" />
+    </div>
+    <p-skeleton width="100%" height="2.5rem" styleClass="mb-3" />
+    <p-skeleton width="100%" height="4rem" styleClass="mb-3" />
+    <p-skeleton width="60%" height="2.5rem" />
+  </p-card>
 } @else if (!profile()) {
   <p class="text-color-secondary">שגיאה בטעינת הפרופיל.</p>
 } @else {
   <p-card class="block" [style]="{ 'max-width': '640px' }">
-    <h3 class="mt-0 mb-2">{{ profile()!.fullName }}</h3>
+    <div class="flex align-items-center gap-3 mb-3">
+      <span class="avatar-circle avatar-circle-lg" [style.--avatar-color]="avatarColor(profile()!.fullName)">{{ initials(profile()!.fullName) }}</span>
+      <h3 class="m-0">{{ profile()!.fullName }}</h3>
+    </div>
 
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="field">
@@ -78,7 +89,7 @@
       @for (subject of subjects(); track subject.id) {
         <p-chip [label]="subject.name" [removable]="true" (onRemove)="removeSubject(subject)" />
       } @empty {
-        <p class="text-color-secondary m-0">לא נוספו תחומים עדיין.</p>
+        <p class="text-color-secondary m-0 flex align-items-center gap-2"><i class="pi pi-info-circle"></i> לא נוספו תחומים עדיין.</p>
       }
     </div>
 

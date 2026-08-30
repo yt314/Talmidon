@@ -7,15 +7,28 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ChipModule } from 'primeng/chip';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { SkeletonModule } from 'primeng/skeleton';
 import { TextareaModule } from 'primeng/textarea';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { Subject, TeacherProfile } from './profile.models';
 import { TeacherProfileService } from './profile.service';
 
 @Component({
   selector: 'app-teacher-profile-settings',
-  imports: [ReactiveFormsModule, FormsModule, ButtonModule, CardModule, CheckboxModule, ChipModule, InputNumberModule, InputTextModule, TextareaModule],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    ButtonModule,
+    CardModule,
+    CheckboxModule,
+    ChipModule,
+    InputNumberModule,
+    InputTextModule,
+    SkeletonModule,
+    TextareaModule
+  ],
   templateUrl: './profile.component.html'
 })
 export class TeacherProfileSettingsComponent implements OnInit {
@@ -32,6 +45,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
   protected readonly subjectNameError = signal<string | null>(null);
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
+  protected readonly initials = getInitials;
+  protected readonly avatarColor = getAvatarColor;
 
   protected readonly form = this.fb.nonNullable.group({
     phone: ['', [Validators.maxLength(40)]],

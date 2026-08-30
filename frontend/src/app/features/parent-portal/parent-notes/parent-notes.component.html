@@ -17,19 +17,38 @@
 }
 
 @if (loading()) {
-  <p class="text-color-secondary mt-3">טוען...</p>
-} @else if (notes().length === 0) {
-  <p class="text-color-secondary mt-3">אין הערות עדיין.</p>
-} @else {
   <div class="flex flex-column gap-3 mt-3">
-    @for (note of notes(); track note.id) {
+    @for (i of [1, 2]; track i) {
       <p-card>
-        <div class="flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
-          <span class="font-bold">{{ note.studentName }}</span>
-          <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+        <div class="flex align-items-center gap-2 mb-2">
+          <p-skeleton shape="circle" size="2.25rem" />
+          <p-skeleton width="30%" height="1.25rem" />
         </div>
-        <p class="m-0" style="white-space: pre-wrap">{{ note.content }}</p>
+        <p-skeleton width="100%" height="1rem" styleClass="mb-2" />
+        <p-skeleton width="70%" height="1rem" />
       </p-card>
     }
   </div>
+} @else if (notes().length === 0) {
+  <p class="text-color-secondary text-center py-5 mt-3">
+    <i class="pi pi-file-edit text-4xl mb-2 block"></i>
+    אין הערות עדיין.
+  </p>
+} @else {
+  <ul class="parent-list mt-3">
+    @for (note of notes(); track note.id) {
+      <li class="py-3 note-item">
+        <div class="flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <div class="flex align-items-center gap-2">
+            <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(note.studentName)">
+              {{ initials(note.studentName) }}
+            </span>
+            <span class="font-bold">{{ note.studentName }}</span>
+          </div>
+          <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <p class="m-0" style="white-space: pre-wrap">{{ note.content }}</p>
+      </li>
+    }
+  </ul>
 }

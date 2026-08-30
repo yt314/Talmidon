@@ -1,18 +1,29 @@
 <h1 class="text-2xl font-bold mb-4">הערות</h1>
 
 @if (loading()) {
-  <p class="text-color-secondary">טוען...</p>
-} @else if (notes().length === 0) {
-  <p class="text-color-secondary">אין הערות עדיין.</p>
-} @else {
-  <div class="flex flex-column gap-3">
-    @for (note of notes(); track note.id) {
-      <p-card>
-        <div class="mb-2">
-          <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-        </div>
-        <p class="m-0" style="white-space: pre-wrap">{{ note.content }}</p>
-      </p-card>
+  <div class="flex flex-column gap-2">
+    @for (i of [1, 2]; track i) {
+      <div class="py-3">
+        <p-skeleton width="30%" height="1rem" styleClass="mb-2" />
+        <p-skeleton width="100%" height="1rem" styleClass="mb-1" />
+        <p-skeleton width="60%" height="1rem" />
+      </div>
     }
   </div>
+} @else if (notes().length === 0) {
+  <p class="text-color-secondary text-center py-5">
+    <i class="pi pi-file-edit text-4xl mb-2 block"></i>
+    אין הערות עדיין.
+  </p>
+} @else {
+  <ul class="parent-list">
+    @for (note of notes(); track note.id) {
+      <li class="py-3 note-item">
+        <p class="m-0" style="white-space: pre-wrap">{{ note.content }}</p>
+        <div class="mt-2">
+          <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </li>
+    }
+  </ul>
 }

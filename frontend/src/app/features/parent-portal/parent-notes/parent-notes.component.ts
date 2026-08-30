@@ -3,12 +3,14 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
+import { SkeletonModule } from 'primeng/skeleton';
+import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { MyChild, ParentNote } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
 
 @Component({
   selector: 'app-parent-notes',
-  imports: [FormsModule, DatePipe, CardModule, SelectModule],
+  imports: [FormsModule, DatePipe, CardModule, SelectModule, SkeletonModule],
   templateUrl: './parent-notes.component.html'
 })
 export class ParentNotesComponent implements OnInit {
@@ -18,6 +20,8 @@ export class ParentNotesComponent implements OnInit {
   protected readonly selectedChildId = signal<string | null>(null);
   protected readonly notes = signal<ParentNote[]>([]);
   protected readonly loading = signal(true);
+  protected readonly initials = getInitials;
+  protected readonly avatarColor = getAvatarColor;
 
   ngOnInit(): void {
     this.portalService.myChildren().subscribe(children => this.children.set(children));

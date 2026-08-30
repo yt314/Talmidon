@@ -1,12 +1,12 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CardModule } from 'primeng/card';
+import { SkeletonModule } from 'primeng/skeleton';
 import { StudentNote } from '../student-portal.models';
 import { StudentPortalService } from '../student-portal.service';
 
 @Component({
   selector: 'app-student-notes',
-  imports: [DatePipe, CardModule],
+  imports: [DatePipe, SkeletonModule],
   templateUrl: './student-notes.component.html'
 })
 export class StudentNotesComponent implements OnInit {
