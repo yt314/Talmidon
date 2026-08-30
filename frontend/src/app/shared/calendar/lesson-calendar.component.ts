@@ -1,5 +1,5 @@
 import { Component, computed, input, output } from '@angular/core';
-import { CalendarOptions, EventClickInfo, EventDropInfo, EventInput } from 'fullcalendar';
+import { CalendarOptions, EventClickInfo, EventDropInfo, EventInput, EventResizeDoneInfo } from 'fullcalendar';
 import dayGridPlugin from 'fullcalendar/daygrid';
 import interactionPlugin from 'fullcalendar/interaction';
 import heLocale from 'fullcalendar/locales/he';
@@ -17,13 +17,17 @@ import { CalendarEventDrop, CalendarEventExtendedProps, CalendarSlotSelection } 
 export class LessonCalendarComponent {
   readonly events = input<EventInput[]>([]);
   readonly selectable = input(false);
-  /** מפעילה גרירה של אירועים; אילו אירועים בפועל ניתנים לגרירה נקבע פר-אירוע (startEditable) ב-EventInput עצמו. */
+  /**
+   * מפעילה גרירה/שינוי-משך של אירועים; אילו אירועים בפועל ניתנים לכך נקבע פר-אירוע
+   * (startEditable / durationEditable) ב-EventInput עצמו.
+   */
   readonly editable = input(false);
   readonly initialView = input<'timeGridWeek' | 'dayGridMonth'>('timeGridWeek');
 
   readonly eventClicked = output<CalendarEventExtendedProps>();
   readonly slotSelected = output<CalendarSlotSelection>();
   readonly eventDropped = output<CalendarEventDrop>();
+  readonly eventResized = output<CalendarEventDrop>();
 
   protected readonly calendarOptions = computed<CalendarOptions>(() => ({
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, classicTheme],
@@ -58,6 +62,15 @@ export class LessonCalendarComponent {
     eventDrop: (info: EventDropInfo) => {
       const { refId } = info.event.extendedProps as CalendarEventExtendedProps;
       this.eventDropped.emit({
+        refId,
+        start: info.event.start!,
+        end: info.event.end!,
+        revert: info.revert
+      });
+    },
+    eventResize: (info: EventResizeDoneInfo) => {
+      const { refId } = info.event.extendedProps as CalendarEventExtendedProps;
+      this.eventResized.emit({
         refId,
         start: info.event.start!,
         end: info.event.end!,

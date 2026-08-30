@@ -189,6 +189,39 @@ export class LessonsListComponent implements OnInit {
     });
   }
 
+  /** גרירת קצה השיעור לשינוי משך (רק שיעור "מתוזמן" ניתן לכך — נאכף ב-lesson-calendar.util). מבקש אישור לפני שמירה בפועל. */
+  onEventResized(resize: CalendarEventDrop): void {
+    const lesson = this.lessons().find(l => l.id === resize.refId);
+    if (!lesson) {
+      resize.revert();
+      return;
+    }
+
+    const oldEnd = formatDate(lesson.endTime, 'HH:mm', this.locale);
+    const newEnd = formatDate(resize.end, 'HH:mm', this.locale);
+
+    this.confirmationService.confirm({
+      header: 'אישור שינוי משך',
+      message: `לשנות את משך השיעור של ${lesson.studentName} כך שיסתיים ב-${newEnd} (במקום ${oldEnd})?`,
+      icon: 'pi pi-clock',
+      acceptLabel: 'עדכן',
+      rejectLabel: 'ביטול',
+      accept: () => {
+        this.lessonsService.update(lesson.id, { startTime: resize.start.toISOString(), endTime: resize.end.toISOString() }).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'המשך עודכן' });
+            this.loadLessons();
+          },
+          error: err => {
+            resize.revert();
+            this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'עדכון המשך נכשל.') });
+          }
+        });
+      },
+      reject: () => resize.revert()
+    });
+  }
+
   onEventClicked(props: CalendarEventExtendedProps): void {
     switch (props.kind) {
       case 'lesson':
