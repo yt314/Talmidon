@@ -24,7 +24,14 @@
         </ng-template>
         <ng-template pTemplate="body" let-student>
           <tr style="cursor: pointer" (click)="openStudent(student)">
-            <td>{{ student.fullName }}</td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(student.fullName)">
+                  {{ initials(student.fullName) }}
+                </span>
+                {{ student.fullName }}
+              </div>
+            </td>
             <td>{{ student.gradeLevel || '—' }}</td>
             <td>{{ student.parentCount }}</td>
             <td>
@@ -37,7 +44,10 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="5" class="text-center text-color-secondary">אין תלמידים עדיין.</td>
+            <td colspan="5" class="text-center text-color-secondary py-5">
+              <i class="pi pi-users text-4xl mb-2 block"></i>
+              אין תלמידים עדיין.
+            </td>
           </tr>
         </ng-template>
       </p-table>
@@ -60,7 +70,14 @@
         </ng-template>
         <ng-template pTemplate="body" let-parent>
           <tr>
-            <td>{{ parent.fullName }}</td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(parent.fullName)">
+                  {{ initials(parent.fullName) }}
+                </span>
+                {{ parent.fullName }}
+              </div>
+            </td>
             <td>{{ parent.email }}</td>
             <td>{{ parent.phone || '—' }}</td>
             <td>{{ parent.studentCount }}</td>
@@ -71,7 +88,10 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="5" class="text-center text-color-secondary">אין הורים עדיין.</td>
+            <td colspan="5" class="text-center text-color-secondary py-5">
+              <i class="pi pi-user-plus text-4xl mb-2 block"></i>
+              אין הורים עדיין.
+            </td>
           </tr>
         </ng-template>
       </p-table>

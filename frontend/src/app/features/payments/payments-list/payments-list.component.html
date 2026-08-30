@@ -35,10 +35,10 @@
           <ng-template pTemplate="header">
             <tr>
               <th style="width: 3rem">
-                <input
-                  type="checkbox"
-                  [checked]="openCharges().length > 0 && selectedLessonIds().size === openCharges().length"
-                  (change)="toggleAll()" />
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="openCharges().length > 0 && selectedLessonIds().size === openCharges().length"
+                  (onChange)="toggleAll()" />
               </th>
               <th>תלמיד</th>
               <th>תאריך שיעור</th>
@@ -48,24 +48,35 @@
           <ng-template pTemplate="body" let-charge>
             <tr>
               <td>
-                <input type="checkbox" [checked]="isSelected(charge.lessonId)" (change)="toggleLesson(charge.lessonId)" />
+                <p-checkbox [binary]="true" [ngModel]="isSelected(charge.lessonId)" (onChange)="toggleLesson(charge.lessonId)" />
               </td>
-              <td>{{ charge.studentName }}</td>
+              <td>
+                <div class="flex align-items-center gap-2">
+                  <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(charge.studentName)">
+                    {{ initials(charge.studentName) }}
+                  </span>
+                  {{ charge.studentName }}
+                </div>
+              </td>
               <td>{{ charge.lessonStartTime | date: 'dd/MM/yyyy' }}</td>
               <td>{{ charge.amount }} ₪</td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="4" class="text-center text-color-secondary">אין חיובים פתוחים להורה זה.</td>
+              <td colspan="4" class="text-center text-color-secondary py-5">
+                <i class="pi pi-check-circle text-4xl mb-2 block"></i>
+                אין חיובים פתוחים להורה זה.
+              </td>
             </tr>
           </ng-template>
         </p-table>
 
         @if (openCharges().length > 0) {
           <form [formGroup]="paymentForm" (ngSubmit)="markAsPaid()" class="mt-4" style="max-width: 480px">
-            <div class="flex justify-content-between align-items-center mb-3">
-              <span class="font-bold">סה"כ נבחר: {{ selectedTotal() }} ₪</span>
+            <div class="payment-summary-bar flex justify-content-between align-items-center mb-3">
+              <span class="font-medium">סה"כ נבחר</span>
+              <span class="font-bold text-xl">{{ selectedTotal() }} ₪</span>
             </div>
             @if (noSelectionError()) {
               <small class="text-red-500 block mb-3">יש לבחור לפחות שיעור אחד</small>
@@ -126,7 +137,14 @@
         </ng-template>
         <ng-template pTemplate="body" let-payment>
           <tr>
-            <td>{{ payment.parentName }}</td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(payment.parentName)">
+                  {{ initials(payment.parentName) }}
+                </span>
+                {{ payment.parentName }}
+              </div>
+            </td>
             <td>{{ payment.amount }} ₪</td>
             <td>{{ payment.paidDate | date: 'dd/MM/yyyy' }}</td>
             <td>{{ payment.method || '—' }}</td>
@@ -141,7 +159,10 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="7" class="text-center text-color-secondary">אין תשלומים רשומים עדיין.</td>
+            <td colspan="7" class="text-center text-color-secondary py-5">
+              <i class="pi pi-wallet text-4xl mb-2 block"></i>
+              אין תשלומים רשומים עדיין.
+            </td>
           </tr>
         </ng-template>
       </p-table>

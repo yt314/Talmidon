@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -11,6 +12,7 @@ import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { OpenCharge, Payment } from '../payments.models';
@@ -23,6 +25,7 @@ import { PaymentsService } from '../payments.service';
     FormsModule,
     DatePipe,
     ButtonModule,
+    CheckboxModule,
     DatePickerModule,
     InputTextModule,
     SelectModule,
@@ -38,6 +41,9 @@ export class PaymentsListComponent implements OnInit {
   private readonly parentsService = inject(ParentsService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+
+  protected readonly initials = getInitials;
+  protected readonly avatarColor = getAvatarColor;
 
   protected readonly parents = signal<Parent[]>([]);
   protected readonly selectedParentId = signal<string | null>(null);

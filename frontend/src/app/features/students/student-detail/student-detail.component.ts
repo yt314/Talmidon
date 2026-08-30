@@ -15,6 +15,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
+import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { Note } from '../../notes/notes.models';
 import { NotesService } from '../../notes/notes.service';
 import { Parent } from '../../parents/parents.models';
@@ -50,6 +51,9 @@ export class StudentDetailComponent implements OnInit {
   private readonly notesService = inject(NotesService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+
+  protected readonly initials = getInitials;
+  protected readonly avatarColor = getAvatarColor;
 
   private readonly studentId = this.route.snapshot.paramMap.get('id')!;
 

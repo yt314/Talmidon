@@ -7,11 +7,14 @@
 } @else {
   <p-card>
     <div class="flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
-      <div>
-        <h2 class="mt-0 mb-2">{{ student()!.fullName }}</h2>
-        <div class="flex gap-2">
-          <p-tag [value]="student()!.isActive ? 'פעיל' : 'לא פעיל'" [severity]="student()!.isActive ? 'success' : 'danger'" />
-          <p-tag [value]="student()!.hasLogin ? 'יש התחברות' : 'ללא התחברות'" [severity]="student()!.hasLogin ? 'success' : 'secondary'" />
+      <div class="flex align-items-center gap-3">
+        <span class="avatar-circle avatar-circle-lg" [style.--avatar-color]="avatarColor(student()!.fullName)">{{ initials(student()!.fullName) }}</span>
+        <div>
+          <h2 class="mt-0 mb-2">{{ student()!.fullName }}</h2>
+          <div class="flex gap-2">
+            <p-tag [value]="student()!.isActive ? 'פעיל' : 'לא פעיל'" [severity]="student()!.isActive ? 'success' : 'danger'" />
+            <p-tag [value]="student()!.hasLogin ? 'יש התחברות' : 'ללא התחברות'" [severity]="student()!.hasLogin ? 'success' : 'secondary'" />
+          </div>
         </div>
       </div>
       <div class="flex gap-2">
@@ -30,7 +33,7 @@
 
     <h3 class="mb-2">הורים מקושרים</h3>
     @if (student()!.parents.length === 0) {
-      <p class="text-color-secondary mb-3">אין הורים מקושרים.</p>
+      <p class="text-color-secondary mb-3 flex align-items-center gap-2"><i class="pi pi-info-circle"></i> אין הורים מקושרים.</p>
     } @else {
       <ul class="parent-list mb-3">
         @for (parent of student()!.parents; track parent.id) {
@@ -71,11 +74,14 @@
     @if (notesLoading()) {
       <p class="text-color-secondary">טוען...</p>
     } @else if (notes().length === 0) {
-      <p class="text-color-secondary">אין הערות עדיין.</p>
+      <p class="text-color-secondary text-center py-4">
+        <i class="pi pi-file-edit text-4xl mb-2 block"></i>
+        אין הערות עדיין.
+      </p>
     } @else {
       <ul class="parent-list">
         @for (note of notes(); track note.id) {
-          <li class="py-3">
+          <li class="py-3 note-item">
             <div class="flex justify-content-between align-items-start gap-2">
               <p class="m-0 flex-1" style="white-space: pre-wrap">{{ note.content }}</p>
               <div class="flex gap-1">

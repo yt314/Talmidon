@@ -14,6 +14,7 @@ import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
+import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { StudentListItem } from '../students.models';
@@ -43,6 +44,8 @@ export class StudentsListComponent implements OnInit {
   private readonly messageService = inject(MessageService);
 
   protected readonly genderOptions = GENDER_OPTIONS;
+  protected readonly initials = getInitials;
+  protected readonly avatarColor = getAvatarColor;
   protected readonly students = signal<StudentListItem[]>([]);
   protected readonly parents = signal<Parent[]>([]);
   protected readonly loading = signal(true);

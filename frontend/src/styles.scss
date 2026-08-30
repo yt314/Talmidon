@@ -149,6 +149,23 @@ body {
   border-bottom: 1px solid var(--p-content-border-color, #e5e7eb);
 }
 
+/* סרגל סיכום "סה"כ נבחר" במסך תשלומים */
+.payment-summary-bar {
+  background: var(--p-primary-50, #f0fdfa);
+  border: 1px solid var(--p-primary-200, #99f6e4);
+  border-radius: var(--p-content-border-radius, 12px);
+  padding: 0.75rem 1rem;
+}
+
+/* שורת הערה פדגוגית — הדגשה עדינה בריחוף */
+.note-item {
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+.note-item:hover {
+  background: var(--p-content-hover-background, rgba(0, 0, 0, 0.02));
+}
+
 /* שם/ברכה בכותרת העליונה — קיצוץ בשלוש נקודות במקום גלישה לכמה שורות שדוחקת את שאר הכותרת */
 .app-shell-greeting {
   white-space: nowrap;
