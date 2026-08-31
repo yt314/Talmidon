@@ -10,6 +10,7 @@ using Talmidon.Api.Multitenancy;
 using Talmidon.Infrastructure;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.BackgroundJobs;
+using Talmidon.Infrastructure.Identity;
 using Talmidon.Infrastructure.Multitenancy;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -97,6 +98,7 @@ builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
 var app = builder.Build();
 
 await SeedRolesAsync(app);
+await SeedAdminUserAsync(app);
 
 if (app.Environment.IsDevelopment())
 {
@@ -143,4 +145,27 @@ static async Task SeedRolesAsync(WebApplication app)
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole(role));
     }
+}
+
+/// <summary>
+/// זורעת משתמש-על יחיד לתחזוקת הפלטפורמה, אם מוגדר ב-Admin:Email/Admin:Password. בניגוד למורה/הורה/תלמיד,
+/// אין הרשמה עצמית או הזמנה למנהל — זו הדרך היחידה שבה חשבון כזה נוצר, ורק אם הוגדר במפורש (כלומר
+/// בפרודקשן חובה להגדיר את שני הערכים ב-secrets/סביבת ההרצה, אחרת לא ייווצר אף חשבון מנהל).
+/// </summary>
+static async Task SeedAdminUserAsync(WebApplication app)
+{
+    var email = app.Configuration["Admin:Email"];
+    var password = app.Configuration["Admin:Password"];
+    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        return;
+
+    using var scope = app.Services.CreateScope();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    if (await userManager.FindByEmailAsync(email) is not null)
+        return;
+
+    var admin = new ApplicationUser { UserName = email, Email = email, DisplayName = "מנהל מערכת", EmailConfirmed = true };
+    var createResult = await userManager.CreateAsync(admin, password);
+    if (createResult.Succeeded)
+        await userManager.AddToRoleAsync(admin, Roles.Admin);
 }

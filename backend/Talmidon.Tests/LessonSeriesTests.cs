@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Talmidon.Domain.Common;
 using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Scheduling;
@@ -160,6 +161,67 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
         var secondCall = await generator.GenerateOccurrencesAsync(series, horizon);
 
         Assert.Equal(0, secondCall);
+    }
+
+    /// <summary>
+    /// לפני התיקון, כל מופע נבנה מ"הרכבת" תאריך+שעת-יום ישירות כ-UTC — כך ששעת-היום המקומית
+    /// (ישראל) הייתה זזה שעה בכל מעבר שעון קיץ/חורף. עכשיו כל מופע נבנה מהזמן המקומי ורק אז
+    /// מומר ל-UTC, כך שהשעה המקומית נשארת קבועה וה-offset הוא זה שמשתנה.
+    /// </summary>
+    [Fact]
+    public async Task GenerateOccurrencesAsync_AcrossDstTransition_KeepsLocalWallClockHourFixed()
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TalmidonDbContext>();
+        var generator = scope.ServiceProvider.GetRequiredService<LessonSeriesGenerator>();
+
+        var (_, studentId) = await CreateTeacherWithStudentAsync("seriesDst");
+        var tenantId = (await db.Students.IgnoreQueryFilters().FirstAsync(s => s.Id == studentId)).TenantId;
+
+        var transitionDate = FindNextDstTransition(new DateOnly(2026, 1, 1));
+        var seriesStartDate = transitionDate.AddDays(-14);
+
+        var series = new LessonSeries
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            StudentId = studentId,
+            DayOfWeek = seriesStartDate.DayOfWeek,
+            StartTimeOfDay = new TimeOnly(16, 0),
+            DurationMinutes = 60,
+            SeriesStartDate = seriesStartDate,
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        db.LessonSeries.Add(series);
+        await db.SaveChangesAsync();
+
+        await generator.GenerateOccurrencesAsync(series, seriesStartDate.AddDays(28));
+
+        var occurrences = await db.Lessons.IgnoreQueryFilters()
+            .Where(l => l.SeriesId == series.Id)
+            .OrderBy(l => l.StartTime)
+            .ToListAsync();
+
+        Assert.True(occurrences.Count >= 4, "יש לוודא שנוצרו מספיק מופעים משני צדי מעבר השעון.");
+        Assert.All(occurrences, l => Assert.Equal(new TimeOnly(16, 0), TimeOnly.FromDateTime(AppTimeZone.ToLocal(l.StartTime).DateTime)));
+
+        // ה-offset עצמו כן משתנה (חורף מול קיץ) — זה מה שמוכיח שהזמן המקומי, לא ה-UTC הגולמי, הוא הקבוע.
+        Assert.NotEqual(occurrences.First().StartTime.Offset, occurrences.Last().StartTime.Offset);
+    }
+
+    /// <summary>מוצא את התאריך הקרוב ביותר (אחרי <paramref name="from"/>) שבו שעון הקיץ באזור הזמן של האפליקציה מתחלף.</summary>
+    private static DateOnly FindNextDstTransition(DateOnly from)
+    {
+        var date = from.ToDateTime(TimeOnly.MinValue);
+        var wasDst = AppTimeZone.Instance.IsDaylightSavingTime(date);
+        for (var i = 0; i < 400; i++)
+        {
+            date = date.AddDays(1);
+            if (AppTimeZone.Instance.IsDaylightSavingTime(date) != wasDst)
+                return DateOnly.FromDateTime(date);
+        }
+        throw new InvalidOperationException("No DST transition found within a year — is AppTimeZone.Instance correct?");
     }
 
     // ----- עזר -----

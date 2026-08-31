@@ -1,3 +1,4 @@
+using Talmidon.Domain.Common;
 using Talmidon.Domain.Entities;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Data;
@@ -26,14 +27,16 @@ public class LessonSeriesGenerator(TalmidonDbContext db)
             if (series.OccurrenceCount is { } count && series.OccurrencesGenerated >= count)
                 break;
 
-            var startDateTime = nextDate.ToDateTime(series.StartTimeOfDay, DateTimeKind.Utc);
+            // בונים את המופע מהזמן המקומי (תאריך + שעת-היום הקבועה של הסדרה) ורק אז ממירים ל-UTC —
+            // כך ה-offset הנכון (קיץ/חורף) נבחר מחדש לכל תאריך בנפרד, ושעת-היום המקומית לא זזה.
+            var startTime = AppTimeZone.ToUtc(nextDate, series.StartTimeOfDay);
             db.Lessons.Add(new Lesson
             {
                 Id = Guid.NewGuid(),
                 TenantId = series.TenantId,
                 StudentId = series.StudentId,
-                StartTime = new DateTimeOffset(startDateTime, TimeSpan.Zero),
-                EndTime = new DateTimeOffset(startDateTime.AddMinutes(series.DurationMinutes), TimeSpan.Zero),
+                StartTime = startTime,
+                EndTime = startTime.AddMinutes(series.DurationMinutes),
                 Status = LessonStatus.Scheduled,
                 Origin = LessonOrigin.Teacher,
                 SeriesId = series.Id

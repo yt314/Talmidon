@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Talmidon.Domain.Common;
 using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Scheduling;
 
@@ -18,7 +19,7 @@ public class LessonSeriesGenerationJob(
 
     public async Task<int> RunForAllTenantsAsync()
     {
-        var horizon = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7 * HorizonWeeks);
+        var horizon = AppTimeZone.Today.AddDays(7 * HorizonWeeks);
 
         var activeSeries = await db.LessonSeries
             .IgnoreQueryFilters()

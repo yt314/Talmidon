@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
+using Talmidon.Domain.Common;
 using Talmidon.Domain.Entities;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Auth;
@@ -42,15 +43,19 @@ public class LessonSeriesController(
         var student = await db.Students.FirstOrDefaultAsync(s => s.Id == request.StudentId);
         if (student is null) return NotFound(new { message = "תלמיד לא נמצא." });
 
+        // יום-בשבוע ושעת-היום של הסדרה נגזרים מהזמן המקומי (לא מ-UTC הגולמי) — אחרת "16:00" שנבחרה
+        // בפועל בישראל הייתה נשמרת כ"14:00" (ה-offset של UTC), ומחליקה שעה קדימה/אחורה סביב שעון קיץ/חורף.
+        var localFirstStart = AppTimeZone.ToLocal(request.FirstStartTime);
+
         var series = new LessonSeries
         {
             Id = Guid.NewGuid(),
             TenantId = TenantId,
             StudentId = student.Id,
-            DayOfWeek = request.FirstStartTime.DayOfWeek,
-            StartTimeOfDay = TimeOnly.FromDateTime(request.FirstStartTime.UtcDateTime),
+            DayOfWeek = localFirstStart.DayOfWeek,
+            StartTimeOfDay = TimeOnly.FromDateTime(localFirstStart.DateTime),
             DurationMinutes = (int)(request.FirstEndTime - request.FirstStartTime).TotalMinutes,
-            SeriesStartDate = DateOnly.FromDateTime(request.FirstStartTime.UtcDateTime),
+            SeriesStartDate = DateOnly.FromDateTime(localFirstStart.DateTime),
             EndDate = request.EndCondition == LessonSeriesEndCondition.EndDate ? request.EndDate : null,
             OccurrenceCount = request.EndCondition == LessonSeriesEndCondition.Count ? request.OccurrenceCount : null,
             IsActive = true,
@@ -58,7 +63,7 @@ public class LessonSeriesController(
         };
         db.LessonSeries.Add(series);
 
-        var horizon = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7 * HorizonWeeks);
+        var horizon = AppTimeZone.Today.AddDays(7 * HorizonWeeks);
         var created = await generator.GenerateOccurrencesAsync(series, horizon);
 
         return Ok(new LessonSeriesDto(

@@ -109,6 +109,7 @@ export class LessonsListComponent implements OnInit {
   protected readonly lessonForm = this.fb.nonNullable.group(
     {
       studentId: ['', [Validators.required]],
+      date: this.fb.control<Date | null>(null, Validators.required),
       startTime: this.fb.control<Date | null>(null, Validators.required),
       endTime: this.fb.control<Date | null>(null, Validators.required),
       recurring: [false],
@@ -121,6 +122,7 @@ export class LessonsListComponent implements OnInit {
 
   protected readonly timeForm = this.fb.nonNullable.group(
     {
+      date: this.fb.control<Date | null>(null, Validators.required),
       startTime: this.fb.control<Date | null>(null, Validators.required),
       endTime: this.fb.control<Date | null>(null, Validators.required)
     },
@@ -152,7 +154,7 @@ export class LessonsListComponent implements OnInit {
   }
 
   onSlotSelected(range: CalendarSlotSelection): void {
-    this.lessonForm.reset({ ...defaultLessonFormValue(), startTime: range.start, endTime: range.end });
+    this.lessonForm.reset({ ...defaultLessonFormValue(), date: range.start, startTime: range.start, endTime: range.end });
     this.showLessonDialog.set(true);
   }
 
@@ -333,9 +335,12 @@ export class LessonsListComponent implements OnInit {
       return;
     }
 
+    const start = combineDateTime(raw.date!, raw.startTime!);
+    const end = combineDateTime(raw.date!, raw.endTime!);
+
     this.savingLesson.set(true);
     this.lessonsService
-      .create({ studentId: raw.studentId, startTime: raw.startTime!.toISOString(), endTime: raw.endTime!.toISOString() })
+      .create({ studentId: raw.studentId, startTime: start.toISOString(), endTime: end.toISOString() })
       .subscribe({
         next: () => {
           this.savingLesson.set(false);
@@ -360,12 +365,15 @@ export class LessonsListComponent implements OnInit {
       return;
     }
 
+    const start = combineDateTime(raw.date!, raw.startTime!);
+    const end = combineDateTime(raw.date!, raw.endTime!);
+
     this.savingLesson.set(true);
     this.lessonsService
       .createSeries({
         studentId: raw.studentId,
-        firstStartTime: raw.startTime!.toISOString(),
-        firstEndTime: raw.endTime!.toISOString(),
+        firstStartTime: start.toISOString(),
+        firstEndTime: end.toISOString(),
         endCondition: raw.endCondition,
         occurrenceCount: raw.endCondition === LessonSeriesEndCondition.Count ? raw.occurrenceCount : null,
         endDate: raw.endCondition === LessonSeriesEndCondition.EndDate && raw.endDate ? formatDate(raw.endDate, 'yyyy-MM-dd', this.locale) : null
@@ -386,7 +394,9 @@ export class LessonsListComponent implements OnInit {
 
   openEditTimeDialog(lesson: Lesson): void {
     this.editingLessonId.set(lesson.id);
-    this.timeForm.reset({ startTime: new Date(lesson.startTime), endTime: new Date(lesson.endTime) });
+    const start = new Date(lesson.startTime);
+    const end = new Date(lesson.endTime);
+    this.timeForm.reset({ date: start, startTime: start, endTime: end });
     this.showEditTimeDialog.set(true);
   }
 
@@ -398,8 +408,10 @@ export class LessonsListComponent implements OnInit {
     const id = this.editingLessonId();
     if (!id) return;
     const raw = this.timeForm.getRawValue();
+    const start = combineDateTime(raw.date!, raw.startTime!);
+    const end = combineDateTime(raw.date!, raw.endTime!);
     this.savingTime.set(true);
-    this.lessonsService.update(id, { startTime: raw.startTime!.toISOString(), endTime: raw.endTime!.toISOString() }).subscribe({
+    this.lessonsService.update(id, { startTime: start.toISOString(), endTime: end.toISOString() }).subscribe({
       next: () => {
         this.savingTime.set(false);
         this.showEditTimeDialog.set(false);
@@ -557,6 +569,7 @@ export class LessonsListComponent implements OnInit {
 function defaultLessonFormValue() {
   return {
     studentId: '',
+    date: null,
     startTime: null,
     endTime: null,
     recurring: false,
@@ -564,6 +577,13 @@ function defaultLessonFormValue() {
     occurrenceCount: 10,
     endDate: null
   };
+}
+
+/** משלב תאריך (חלק היום/חודש/שנה) עם שעה (חלק השעה/דקה) לאובייקט Date אחד. */
+function combineDateTime(date: Date, time: Date): Date {
+  const combined = new Date(date);
+  combined.setHours(time.getHours(), time.getMinutes(), 0, 0);
+  return combined;
 }
 
 /** כשמסמנים שיעור כהתקיים+נדרש תשלום, יש להזין סכום גדול מאפס. */
