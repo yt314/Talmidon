@@ -8,6 +8,7 @@ import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
@@ -35,6 +36,7 @@ import { StudentsService } from '../students.service';
     CheckboxModule,
     DatePickerModule,
     DialogModule,
+    InputNumberModule,
     InputTextModule,
     SelectModule,
     TagModule,
@@ -85,6 +87,8 @@ export class StudentDetailComponent implements OnInit {
     gradeLevel: ['', [Validators.maxLength(50)]],
     birthDate: this.fb.control<Date | null>(null),
     generalInfo: ['', [Validators.maxLength(4000)]],
+    defaultPricePerLesson: this.fb.control<number | null>(null, [Validators.min(0)]),
+    defaultDurationMinutes: this.fb.control<number | null>(null, [Validators.min(1), Validators.max(1440)]),
     isActive: [true]
   });
 
@@ -109,6 +113,8 @@ export class StudentDetailComponent implements OnInit {
       gradeLevel: s.gradeLevel ?? '',
       birthDate: s.birthDate ? new Date(s.birthDate) : null,
       generalInfo: s.generalInfo ?? '',
+      defaultPricePerLesson: s.defaultPricePerLesson,
+      defaultDurationMinutes: s.defaultDurationMinutes,
       isActive: s.isActive
     });
     this.showEditDialog.set(true);
@@ -128,6 +134,8 @@ export class StudentDetailComponent implements OnInit {
         gradeLevel: raw.gradeLevel || null,
         birthDate: raw.birthDate ? this.toDateOnly(raw.birthDate) : null,
         generalInfo: raw.generalInfo || null,
+        defaultPricePerLesson: raw.defaultPricePerLesson,
+        defaultDurationMinutes: raw.defaultDurationMinutes,
         isActive: raw.isActive
       })
       .subscribe({
@@ -142,6 +150,11 @@ export class StudentDetailComponent implements OnInit {
           this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'העדכון נכשל.') });
         }
       });
+  }
+
+  /** קביעת שיעור לתלמיד זה — פותח את היומן עם התלמיד נבחר מראש. */
+  scheduleLesson(): void {
+    this.router.navigate(['/app/lessons'], { queryParams: { studentId: this.studentId } });
   }
 
   confirmDelete(): void {

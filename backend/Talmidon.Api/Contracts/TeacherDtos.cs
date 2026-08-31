@@ -6,6 +6,7 @@ public record UpdateTeacherProfileRequest(
     [MaxLength(40)] string? Phone,
     [MaxLength(2000)] string? Bio,
     [Range(0, double.MaxValue)] decimal DefaultPricePerLesson,
+    [Range(1, 1440)] int DefaultDurationMinutes,
     [MaxLength(4000)] string? RulesText,
     [MaxLength(1000)] string? ContactInfo,
     bool IsPublic);
@@ -21,6 +22,7 @@ public record TeacherProfileDto(
     string? Phone,
     string? Bio,
     decimal DefaultPricePerLesson,
+    int DefaultDurationMinutes,
     string? RulesText,
     string? ContactInfo,
     bool IsPublic,

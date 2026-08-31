@@ -21,6 +21,9 @@ public class Teacher
     /// <summary>מחיר ברירת מחדל לשיעור.</summary>
     public decimal DefaultPricePerLesson { get; set; }
 
+    /// <summary>משך ברירת מחדל לשיעור בדקות (למילוי אוטומטי של שעת הסיום ביומן).</summary>
+    public int DefaultDurationMinutes { get; set; } = 60;
+
     /// <summary>דף הכללים — כללי ביטול/תשלום.</summary>
     public string? RulesText { get; set; }
 

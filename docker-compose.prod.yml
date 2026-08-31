@@ -1,0 +1,65 @@
+# קונפיגורציית פרודקשן: db + api + web (Caddy עם Angular סטטי + reverse proxy + HTTPS אוטומטי).
+# שימוש: cp .env.example .env, למלא ערכים אמיתיים, ואז:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# בניגוד ל-docker-compose.yml (פיתוח, db+mailpit בלבד): כאן אין Mailpit — מייל אמיתי יוצא
+# דרך SendGrid (ראו README). רק ה-web חושף פורטים החוצה; db ו-api נגישים רק ברשת הפנימית.
+
+services:
+  db:
+    image: postgres:17
+    container_name: talmidon-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: talmidon
+      POSTGRES_USER: talmidon
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?missing POSTGRES_PASSWORD in .env}
+    volumes:
+      - talmidon_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U talmidon -d talmidon"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Talmidon.Api/Dockerfile
+    container_name: talmidon-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=talmidon;Username=talmidon;Password=${POSTGRES_PASSWORD:?missing POSTGRES_PASSWORD in .env}"
+      Jwt__SecretKey: ${JWT_SECRET_KEY:?missing JWT_SECRET_KEY in .env}
+      App__ApiBaseUrl: ${API_BASE_URL:?missing API_BASE_URL in .env}
+      App__ClientUrl: ${CLIENT_URL:?missing CLIENT_URL in .env}
+      Email__FromAddress: ${EMAIL_FROM_ADDRESS:?missing EMAIL_FROM_ADDRESS in .env}
+      Email__FromName: ${EMAIL_FROM_NAME:-תלמידון}
+      SendGrid__ApiKey: ${SENDGRID_API_KEY:?missing SENDGRID_API_KEY in .env}
+      Admin__Email: ${ADMIN_EMAIL:-}
+      Admin__Password: ${ADMIN_PASSWORD:-}
+
+  web:
+    build:
+      context: ./frontend
+    container_name: talmidon-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?missing DOMAIN in .env}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  talmidon_pgdata:
+  caddy_data:
+  caddy_config:

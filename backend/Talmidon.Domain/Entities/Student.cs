@@ -19,6 +19,13 @@ public class Student : ITenantScoped
     public DateOnly? BirthDate { get; set; }
     public string? GradeLevel { get; set; }
     public string? GeneralInfo { get; set; }
+
+    /// <summary>מחיר קבוע לשיעור לתלמיד זה. <c>null</c> = השתמש בברירת המחדל של המורה.</summary>
+    public decimal? DefaultPricePerLesson { get; set; }
+
+    /// <summary>משך קבוע לשיעור (בדקות) לתלמיד זה. <c>null</c> = השתמש בברירת המחדל של המורה.</summary>
+    public int? DefaultDurationMinutes { get; set; }
+
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }
 

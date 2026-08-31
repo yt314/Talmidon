@@ -1,7 +1,28 @@
 <div class="flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
   <h1 class="text-2xl font-bold m-0">יומן שיעורים</h1>
-  <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
+  <div class="flex align-items-center gap-2 flex-wrap">
+    <p-select
+      [options]="students()"
+      optionLabel="fullName"
+      optionValue="id"
+      [ngModel]="studentFilter()"
+      (ngModelChange)="studentFilter.set($event)"
+      placeholder="כל התלמידים"
+      [showClear]="true"
+      styleClass="w-15rem" />
+    <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
+  </div>
 </div>
+
+@if (pendingToMark().length > 0) {
+  <div class="pending-banner flex align-items-center justify-content-between gap-3 flex-wrap mb-3">
+    <span class="flex align-items-center gap-2">
+      <i class="pi pi-clock"></i>
+      {{ pendingToMark().length }} שיעורים שהסתיימו וממתינים לסימום (התקיים / בוטל).
+    </span>
+    <p-button label="סמן את הבא" icon="pi pi-check-circle" size="small" (onClick)="markNextPending()" />
+  </div>
+}
 
 <div class="flex gap-3 mb-3 flex-wrap text-sm align-items-center">
   <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#3b82f6"></span> מתוזמן</span>
@@ -56,6 +77,7 @@
       <div class="field flex-1">
         <label for="l-start">שעת התחלה *</label>
         <p-datepicker
+          #lStart
           inputId="l-start"
           formControlName="startTime"
           [timeOnly]="true"
@@ -63,7 +85,13 @@
           [appendTo]="'body'"
           styleClass="w-full"
           inputStyleClass="w-full"
-          [invalid]="isInvalid(lessonForm.controls.startTime)" />
+          [invalid]="isInvalid(lessonForm.controls.startTime)">
+          <ng-template pTemplate="footer">
+            <div class="flex justify-content-end p-2 pt-0">
+              <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="lStart.toggle()" />
+            </div>
+          </ng-template>
+        </p-datepicker>
         @if (fieldError(lessonForm.controls.startTime); as msg) {
           <small class="text-red-500 block mt-1">{{ msg }}</small>
         }
@@ -71,6 +99,7 @@
       <div class="field flex-1">
         <label for="l-end">שעת סיום *</label>
         <p-datepicker
+          #lEnd
           inputId="l-end"
           formControlName="endTime"
           [timeOnly]="true"
@@ -78,7 +107,13 @@
           [appendTo]="'body'"
           styleClass="w-full"
           inputStyleClass="w-full"
-          [invalid]="isInvalid(lessonForm.controls.endTime)" />
+          [invalid]="isInvalid(lessonForm.controls.endTime)">
+          <ng-template pTemplate="footer">
+            <div class="flex justify-content-end p-2 pt-0">
+              <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="lEnd.toggle()" />
+            </div>
+          </ng-template>
+        </p-datepicker>
         @if (fieldError(lessonForm.controls.endTime); as msg) {
           <small class="text-red-500 block mt-1">{{ msg }}</small>
         }
@@ -158,6 +193,7 @@
       <div class="field flex-1">
         <label for="t-start">שעת התחלה *</label>
         <p-datepicker
+          #tStart
           inputId="t-start"
           formControlName="startTime"
           [timeOnly]="true"
@@ -165,7 +201,13 @@
           [appendTo]="'body'"
           styleClass="w-full"
           inputStyleClass="w-full"
-          [invalid]="isInvalid(timeForm.controls.startTime)" />
+          [invalid]="isInvalid(timeForm.controls.startTime)">
+          <ng-template pTemplate="footer">
+            <div class="flex justify-content-end p-2 pt-0">
+              <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="tStart.toggle()" />
+            </div>
+          </ng-template>
+        </p-datepicker>
         @if (fieldError(timeForm.controls.startTime); as msg) {
           <small class="text-red-500 block mt-1">{{ msg }}</small>
         }
@@ -173,6 +215,7 @@
       <div class="field flex-1">
         <label for="t-end">שעת סיום *</label>
         <p-datepicker
+          #tEnd
           inputId="t-end"
           formControlName="endTime"
           [timeOnly]="true"
@@ -180,7 +223,13 @@
           [appendTo]="'body'"
           styleClass="w-full"
           inputStyleClass="w-full"
-          [invalid]="isInvalid(timeForm.controls.endTime)" />
+          [invalid]="isInvalid(timeForm.controls.endTime)">
+          <ng-template pTemplate="footer">
+            <div class="flex justify-content-end p-2 pt-0">
+              <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="tEnd.toggle()" />
+            </div>
+          </ng-template>
+        </p-datepicker>
         @if (fieldError(timeForm.controls.endTime); as msg) {
           <small class="text-red-500 block mt-1">{{ msg }}</small>
         }
@@ -306,6 +355,7 @@
         }
         <p-button label="מחק" severity="danger" [text]="true" (onClick)="lessonDetailDelete()" />
         <p-button label="עדכן מועד" severity="secondary" [outlined]="true" (onClick)="lessonDetailEditTime()" />
+        <p-button label="התקיים (ללא תשלום)" severity="success" [outlined]="true" (onClick)="quickComplete(lesson)" />
         <p-button label="סיום שיעור" severity="success" (onClick)="lessonDetailComplete()" />
       } @else {
         <p-button label="סגירה" severity="secondary" [text]="true" (onClick)="showLessonDetailDialog.set(false)" />

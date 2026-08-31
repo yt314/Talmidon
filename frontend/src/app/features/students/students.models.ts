@@ -7,6 +7,8 @@ export interface StudentListItem {
   isActive: boolean;
   hasLogin: boolean;
   parentCount: number;
+  defaultPricePerLesson: number | null;
+  defaultDurationMinutes: number | null;
 }
 
 export interface ParentSummary {
@@ -23,6 +25,8 @@ export interface StudentDetail {
   gradeLevel: string | null;
   birthDate: string | null;
   generalInfo: string | null;
+  defaultPricePerLesson: number | null;
+  defaultDurationMinutes: number | null;
   isActive: boolean;
   hasLogin: boolean;
   parents: ParentSummary[];
@@ -34,6 +38,8 @@ export interface CreateStudentRequest {
   gradeLevel?: string | null;
   birthDate?: string | null;
   generalInfo?: string | null;
+  defaultPricePerLesson?: number | null;
+  defaultDurationMinutes?: number | null;
   loginEmail?: string | null;
   parentIds?: string[] | null;
 }
@@ -44,6 +50,8 @@ export interface UpdateStudentRequest {
   gradeLevel?: string | null;
   birthDate?: string | null;
   generalInfo?: string | null;
+  defaultPricePerLesson?: number | null;
+  defaultDurationMinutes?: number | null;
   isActive: boolean;
 }
 

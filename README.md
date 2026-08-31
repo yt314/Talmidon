@@ -210,6 +210,69 @@ With `SendGrid__ApiKey` set, `AddInfrastructure` (`backend/Talmidon.Infrastructu
 registers `SendGridEmailSender` instead of the Mailpit-facing `SmtpEmailSender`; every call site
 uses the same `IEmailSender` interface, so no other code changes when you switch providers.
 
+## Deploying to production (single VPS + Docker)
+
+`docker-compose.prod.yml` runs the whole stack on one server: Postgres, the API, and Caddy
+(serving the built Angular app and reverse-proxying `/api/*` to the API, with fully automatic
+HTTPS via Let's Encrypt — no certbot, no manual certificates). This is a one-domain deployment;
+tenants (teachers) are separated by a JWT claim, not by subdomain, so no per-tenant DNS is needed.
+
+### 1. Buy a domain and point it at the server
+
+Register a domain with any registrar (Cloudflare Registrar and Namecheap are both simple).
+Once you have a server (next step) and its public IP, create an **A record** at your domain's
+DNS pointing your chosen hostname (e.g. `app.example.co.il`) at that IP. DNS propagation can take
+anywhere from a few minutes to a few hours.
+
+### 2. Provision the server
+
+Any VPS with Docker works. A cheap option: [Hetzner Cloud](https://www.hetzner.com/cloud) or
+[DigitalOcean](https://www.digitalocean.com), Ubuntu 24.04 LTS, 2 GB RAM minimum (4 GB is more
+comfortable). Then, over SSH:
+
+```bash
+# Install Docker + the Compose plugin (Ubuntu/Debian)
+curl -fsSL https://get.docker.com | sh
+
+# Open HTTP/HTTPS to the outside world (Caddy needs both — it issues certificates over 80/443)
+ufw allow 80/tcp && ufw allow 443/tcp && ufw allow 22/tcp && ufw enable
+```
+
+### 3. Deploy the app
+
+```bash
+git clone <this repo's URL> talmidon && cd talmidon
+cp .env.example .env
+nano .env   # fill in DOMAIN, CLIENT_URL, API_BASE_URL, POSTGRES_PASSWORD, JWT_SECRET_KEY,
+            # SENDGRID_API_KEY, EMAIL_FROM_ADDRESS (see the Configuration/SendGrid sections above)
+
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+The API applies pending EF Core migrations automatically on startup (`MigrateDatabaseAsync` in
+`Program.cs`), so there's no separate migration step. First boot: Caddy requests a certificate
+for `DOMAIN` (needs the DNS record from step 1 to already resolve), Postgres initializes, and the
+API seeds roles and — if `ADMIN_EMAIL`/`ADMIN_PASSWORD` are set — the one platform-admin account.
+
+Check it came up clean:
+
+```bash
+docker compose -f docker-compose.prod.yml ps       # all three services healthy/running
+docker compose -f docker-compose.prod.yml logs -f api   # watch for startup errors
+```
+
+Then visit `https://<DOMAIN>` in a browser.
+
+### 4. Redeploying after changes
+
+```bash
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+This rebuilds only the images whose source changed and restarts those containers; Postgres data
+persists in the `talmidon_pgdata` named volume regardless.
+
 ## Documentation
 
 See [docs/](docs/) for the original requirements specification, database schema design,

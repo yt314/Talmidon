@@ -1,7 +1,8 @@
 import { DatePipe, formatDate } from '@angular/common';
 import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -18,6 +19,7 @@ import { CalendarEventDrop, CalendarEventExtendedProps, CalendarSlotSelection } 
 import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
 import { StudentListItem } from '../../students/students.models';
 import { StudentsService } from '../../students/students.service';
+import { TeacherProfileService } from '../../teacher/profile/profile.service';
 import { buildTeacherCalendarEvents } from '../lesson-calendar.util';
 import {
   LESSON_STATUS_LABELS,
@@ -37,6 +39,7 @@ import { LessonsService } from '../lessons.service';
     ReactiveFormsModule,
     FormsModule,
     DatePipe,
+    PrimeTemplate,
     ButtonModule,
     CheckboxModule,
     DatePickerModule,
@@ -54,9 +57,17 @@ export class LessonsListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly lessonsService = inject(LessonsService);
   private readonly studentsService = inject(StudentsService);
+  private readonly profileService = inject(TeacherProfileService);
+  private readonly route = inject(ActivatedRoute);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly locale = inject(LOCALE_ID);
+
+  /** ברירות מחדל של המורה (מחיר ומשך), למילוי אוטומטי בקביעת שיעור. */
+  private readonly teacherDefaults = signal<{ price: number; durationMinutes: number }>({ price: 0, durationMinutes: 60 });
+
+  /** מדכא מילוי-אוטומטי של שעת הסיום כשהמקור הוא גרירה ביומן (הטווח כבר נבחר ידנית). */
+  private suppressAutoEnd = false;
 
   protected readonly LessonStatus = LessonStatus;
   protected readonly ChangeRequestType = ChangeRequestType;
@@ -78,7 +89,23 @@ export class LessonsListComponent implements OnInit {
   protected readonly changeRequests = signal<ChangeRequest[]>([]);
   protected readonly changeRequestsLoading = signal(true);
 
-  protected readonly calendarEvents = computed(() => buildTeacherCalendarEvents(this.lessons(), this.changeRequests()));
+  /** סינון היומן לפי תלמיד (null = כל התלמידים). */
+  protected readonly studentFilter = signal<string | null>(null);
+
+  protected readonly calendarEvents = computed(() => {
+    const filter = this.studentFilter();
+    const lessons = filter ? this.lessons().filter(l => l.studentId === filter) : this.lessons();
+    const requests = filter ? this.changeRequests().filter(r => r.studentId === filter) : this.changeRequests();
+    return buildTeacherCalendarEvents(lessons, requests);
+  });
+
+  /** שיעורים שהמועד שלהם עבר ועדיין "מתוזמן" — ממתינים לסימום (התקיים/בוטל). */
+  protected readonly pendingToMark = computed(() => {
+    const now = Date.now();
+    return this.lessons()
+      .filter(l => l.status === LessonStatus.Scheduled && new Date(l.endTime).getTime() < now)
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  });
 
   protected readonly showLessonDialog = signal(false);
   protected readonly savingLesson = signal(false);
@@ -145,7 +172,25 @@ export class LessonsListComponent implements OnInit {
   ngOnInit(): void {
     this.loadLessons();
     this.loadChangeRequests();
-    this.studentsService.list().subscribe(students => this.students.set(students));
+    this.studentsService.list().subscribe(students => {
+      this.students.set(students);
+      this.openFromQueryParam();
+    });
+    this.profileService.getMyProfile().subscribe(profile =>
+      this.teacherDefaults.set({ price: profile.defaultPricePerLesson, durationMinutes: profile.defaultDurationMinutes }));
+
+    // מילוי אוטומטי של שעת הסיום לפי משך ברירת המחדל (של התלמיד או של המורה)
+    this.lessonForm.controls.studentId.valueChanges.subscribe(() => this.applyDefaultEndTime());
+    this.lessonForm.controls.startTime.valueChanges.subscribe(() => this.applyDefaultEndTime());
+  }
+
+  /** אם הגענו מכרטיס תלמיד (?studentId=...) — פתח ישר את דיאלוג ההוספה עם התלמיד נבחר. */
+  private openFromQueryParam(): void {
+    const studentId = this.route.snapshot.queryParamMap.get('studentId');
+    if (studentId && this.students().some(s => s.id === studentId)) {
+      this.openAddLessonDialog();
+      this.lessonForm.controls.studentId.setValue(studentId);
+    }
   }
 
   openAddLessonDialog(): void {
@@ -153,8 +198,32 @@ export class LessonsListComponent implements OnInit {
     this.showLessonDialog.set(true);
   }
 
+  /** מחשב את משך/מחיר ברירת המחדל לתלמיד — ערך התלמיד גובר, ואם אין — ברירת המחדל של המורה. */
+  private resolveDuration(studentId: string): number {
+    const student = this.students().find(s => s.id === studentId);
+    return student?.defaultDurationMinutes ?? this.teacherDefaults().durationMinutes;
+  }
+
+  private resolveAmount(studentId: string): number {
+    const student = this.students().find(s => s.id === studentId);
+    return student?.defaultPricePerLesson ?? this.teacherDefaults().price;
+  }
+
+  /** קובע שעת סיום = שעת התחלה + משך ברירת המחדל (אלא אם הטווח נבחר בגרירה ביומן). */
+  private applyDefaultEndTime(): void {
+    if (this.suppressAutoEnd) return;
+    const start = this.lessonForm.controls.startTime.value;
+    if (!start) return;
+    const duration = this.resolveDuration(this.lessonForm.controls.studentId.value);
+    const end = new Date(start);
+    end.setMinutes(end.getMinutes() + duration);
+    this.lessonForm.controls.endTime.setValue(end, { emitEvent: false });
+  }
+
   onSlotSelected(range: CalendarSlotSelection): void {
+    this.suppressAutoEnd = true;
     this.lessonForm.reset({ ...defaultLessonFormValue(), date: range.start, startTime: range.start, endTime: range.end });
+    this.suppressAutoEnd = false;
     this.showLessonDialog.set(true);
   }
 
@@ -338,9 +407,18 @@ export class LessonsListComponent implements OnInit {
     const start = combineDateTime(raw.date!, raw.startTime!);
     const end = combineDateTime(raw.date!, raw.endTime!);
 
+    const conflict = this.findConflict(start, end);
+    if (conflict) {
+      this.confirmConflictThen(conflict, () => this.doCreateLesson(raw.studentId, start, end));
+      return;
+    }
+    this.doCreateLesson(raw.studentId, start, end);
+  }
+
+  private doCreateLesson(studentId: string, start: Date, end: Date): void {
     this.savingLesson.set(true);
     this.lessonsService
-      .create({ studentId: raw.studentId, startTime: start.toISOString(), endTime: end.toISOString() })
+      .create({ studentId, startTime: start.toISOString(), endTime: end.toISOString() })
       .subscribe({
         next: () => {
           this.savingLesson.set(false);
@@ -353,6 +431,31 @@ export class LessonsListComponent implements OnInit {
           this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'הוספת השיעור נכשלה.') });
         }
       });
+  }
+
+  /** מאתר שיעור פעיל (מתוזמן/התקיים/ממתין) שחופף לטווח הנתון — לאזהרת כפל-הזמנה. */
+  private findConflict(start: Date, end: Date, excludeLessonId?: string): Lesson | null {
+    return (
+      this.lessons().find(
+        l =>
+          l.id !== excludeLessonId &&
+          (l.status === LessonStatus.Scheduled || l.status === LessonStatus.Completed || l.status === LessonStatus.Requested) &&
+          start < new Date(l.endTime) &&
+          end > new Date(l.startTime)
+      ) ?? null
+    );
+  }
+
+  private confirmConflictThen(conflict: Lesson, proceed: () => void): void {
+    const range = `${formatDate(conflict.startTime, 'HH:mm', this.locale)}–${formatDate(conflict.endTime, 'HH:mm', this.locale)}`;
+    this.confirmationService.confirm({
+      header: 'התנגשות ביומן',
+      message: `כבר קיים שיעור עם ${conflict.studentName} בשעה ${range}. לקבוע בכל זאת?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'קבע בכל זאת',
+      rejectLabel: 'ביטול',
+      accept: proceed
+    });
   }
 
   private saveRecurringLesson(raw: ReturnType<typeof this.lessonForm.getRawValue>): void {
@@ -410,6 +513,16 @@ export class LessonsListComponent implements OnInit {
     const raw = this.timeForm.getRawValue();
     const start = combineDateTime(raw.date!, raw.startTime!);
     const end = combineDateTime(raw.date!, raw.endTime!);
+
+    const conflict = this.findConflict(start, end, id);
+    if (conflict) {
+      this.confirmConflictThen(conflict, () => this.doUpdateTime(id, start, end));
+      return;
+    }
+    this.doUpdateTime(id, start, end);
+  }
+
+  private doUpdateTime(id: string, start: Date, end: Date): void {
     this.savingTime.set(true);
     this.lessonsService.update(id, { startTime: start.toISOString(), endTime: end.toISOString() }).subscribe({
       next: () => {
@@ -440,13 +553,42 @@ export class LessonsListComponent implements OnInit {
     this.completeForm.reset({
       completed: true,
       paymentRequired: false,
-      amount: 0,
+      // מחיר ברירת מחדל (של התלמיד או של המורה) — מוצג אוטומטית כשמסמנים "נדרש תשלום"
+      amount: this.resolveAmount(lesson.studentId),
       homework: '',
       noteContent: '',
       noteVisibleToStudent: false,
       noteVisibleToParent: false
     });
     this.showCompleteDialog.set(true);
+  }
+
+  /** סימון מהיר "התקיים" ללא תשלום/הערה — ישירות מדיאלוג הפרטים. */
+  quickComplete(lesson: Lesson): void {
+    this.showLessonDetailDialog.set(false);
+    this.lessonsService
+      .complete(lesson.id, {
+        completed: true,
+        paymentRequired: false,
+        amount: 0,
+        homework: null,
+        noteContent: null,
+        noteVisibleToStudent: false,
+        noteVisibleToParent: false
+      })
+      .subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'השיעור סומן כהתקיים' });
+          this.loadLessons();
+        },
+        error: err => this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'העדכון נכשל.') })
+      });
+  }
+
+  /** פותח את דיאלוג הסיום עבור השיעור הראשון שממתין לסימום (מהבאנר). */
+  markNextPending(): void {
+    const next = this.pendingToMark()[0];
+    if (next) this.openCompleteDialog(next);
   }
 
   saveComplete(): void {

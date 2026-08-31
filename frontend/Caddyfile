@@ -1,0 +1,17 @@
+{$DOMAIN} {
+	encode gzip
+
+	# בקשות API עוברות ל-container של הבקאנד ברשת הפנימית של docker compose.
+	# הנתיב לא נחתך (Caddy שולח /api/... כמות שהוא) — כך שהוא תואם ל-[Route("api/...")] בקונטרולרים.
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	# שאר הבקשות: קבצי ה-Angular הסטטיים, עם נפילה ל-index.html כדי ש-Angular Router
+	# יוכל לטפל בניתוב בצד הלקוח (למשל רענון דף בכתובת פנימית כמו /students/123).
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

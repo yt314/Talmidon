@@ -70,6 +70,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
             e.Property(t => t.RulesText).HasMaxLength(4000);
             e.Property(t => t.ContactInfo).HasMaxLength(1000);
             e.Property(t => t.DefaultPricePerLesson).HasPrecision(10, 2);
+            e.Property(t => t.DefaultDurationMinutes).HasDefaultValue(60);
 
             e.HasOne<ApplicationUser>()
                 .WithMany()
@@ -79,9 +80,15 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
             e.HasIndex(t => t.UserId).IsUnique();
             e.HasIndex(t => t.IsPublic);
 
-            e.ToTable(t => t.HasCheckConstraint(
-                "CK_Teachers_DefaultPricePerLesson_NonNegative",
-                "\"DefaultPricePerLesson\" >= 0"));
+            e.ToTable(t =>
+            {
+                t.HasCheckConstraint(
+                    "CK_Teachers_DefaultPricePerLesson_NonNegative",
+                    "\"DefaultPricePerLesson\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_Teachers_DefaultDurationMinutes_Positive",
+                    "\"DefaultDurationMinutes\" > 0");
+            });
         });
     }
 
@@ -109,6 +116,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
             e.Property(s => s.Gender).HasConversion<string>().HasMaxLength(10);
             e.Property(s => s.GradeLevel).HasMaxLength(50);
             e.Property(s => s.GeneralInfo).HasMaxLength(4000);
+            e.Property(s => s.DefaultPricePerLesson).HasPrecision(10, 2);
 
             // מפתח חלופי לשמש כיעד למפתחות זרים מורכבים (Id, TenantId)
             e.HasAlternateKey(s => new { s.Id, s.TenantId });
@@ -125,6 +133,16 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
 
             e.HasIndex(s => s.TenantId);
             e.HasIndex(s => s.UserId).IsUnique();
+
+            e.ToTable(t =>
+            {
+                t.HasCheckConstraint(
+                    "CK_Students_DefaultPricePerLesson_NonNegative",
+                    "\"DefaultPricePerLesson\" IS NULL OR \"DefaultPricePerLesson\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_Students_DefaultDurationMinutes_Positive",
+                    "\"DefaultDurationMinutes\" IS NULL OR \"DefaultDurationMinutes\" > 0");
+            });
         });
     }
 

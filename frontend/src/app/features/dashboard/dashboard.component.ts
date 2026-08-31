@@ -24,6 +24,7 @@ export class DashboardComponent implements OnInit {
   protected readonly pendingLessonRequests = signal<number | null>(null);
   protected readonly pendingChangeRequests = signal<number | null>(null);
   protected readonly openCharges = signal<OpenCharge[] | null>(null);
+  protected readonly lessonsToMark = signal<number | null>(null);
 
   protected readonly pendingRequestsTotal = computed(() => {
     const a = this.pendingLessonRequests();
@@ -57,6 +58,13 @@ export class DashboardComponent implements OnInit {
     this.paymentsService.openCharges().subscribe({
       next: charges => this.openCharges.set(charges),
       error: () => this.openCharges.set([])
+    });
+
+    // שיעורים שהמועד שלהם עבר ועדיין "מתוזמן" — ממתינים לסימום
+    const now = new Date();
+    this.lessonsService.list(undefined, now, LessonStatus.Scheduled).subscribe({
+      next: lessons => this.lessonsToMark.set(lessons.filter(l => new Date(l.endTime).getTime() < now.getTime()).length),
+      error: () => this.lessonsToMark.set(0)
     });
   }
 }

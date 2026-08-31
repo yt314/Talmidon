@@ -3,13 +3,16 @@ using System.Threading.RateLimiting;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Talmidon.Api.Multitenancy;
 using Talmidon.Infrastructure;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.BackgroundJobs;
+using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Identity;
 using Talmidon.Infrastructure.Multitenancy;
 
@@ -97,6 +100,7 @@ builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
 
 var app = builder.Build();
 
+await MigrateDatabaseAsync(app);
 await SeedRolesAsync(app);
 await SeedAdminUserAsync(app);
 
@@ -110,6 +114,19 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseHsts();
+
+    // בפרודקשן ה-API יושב מאחורי Caddy (reverse proxy) שמטפל ב-TLS ומעביר בקשות פנימיות
+    // ב-HTTP רגיל בתוך רשת ה-Docker. בלי זה, UseHttpsRedirection למטה לא מזהה שהבקשה
+    // המקורית הייתה HTTPS, ומפנה כל בקשה מחדש בלולאה. הניקוי של הרשתות/פרוקסים הידועים
+    // בטוח כאן כי ה-API לא חשוף ישירות לאינטרנט — רק Caddy (שמוסיף X-Forwarded-Proto
+    // אוטומטית) יכול להגיע אליו, לפי הגדרת ה-network ב-docker-compose.prod.yml.
+    var forwardedHeadersOptions = new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    };
+    forwardedHeadersOptions.KnownIPNetworks.Clear();
+    forwardedHeadersOptions.KnownProxies.Clear();
+    app.UseForwardedHeaders(forwardedHeadersOptions);
 }
 
 app.UseHttpsRedirection();
@@ -134,6 +151,14 @@ RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
     new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
 app.Run();
+
+/// <summary>מחילה מיגרציות ממתינות באתחול — כדי שפריסה (deploy) תהיה "git pull + docker compose up" בלי צעד ידני נפרד.</summary>
+static async Task MigrateDatabaseAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<TalmidonDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 // זריעת התפקידים (Teacher/Parent/Student/Admin) אם חסרים
 static async Task SeedRolesAsync(WebApplication app)

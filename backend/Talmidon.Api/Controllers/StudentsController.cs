@@ -33,7 +33,8 @@ public class StudentsController(
         var students = await db.Students
             .OrderBy(s => s.FullName)
             .Select(s => new StudentListItemDto(
-                s.Id, s.FullName, s.GradeLevel, s.IsActive, s.UserId != null, s.StudentParents.Count))
+                s.Id, s.FullName, s.GradeLevel, s.IsActive, s.UserId != null, s.StudentParents.Count,
+                s.DefaultPricePerLesson, s.DefaultDurationMinutes))
             .ToListAsync();
         return Ok(students);
     }
@@ -45,7 +46,8 @@ public class StudentsController(
         var student = await db.Students
             .Where(s => s.Id == id)
             .Select(s => new StudentDetailDto(
-                s.Id, s.FullName, s.Gender, s.GradeLevel, s.BirthDate, s.GeneralInfo, s.IsActive, s.UserId != null,
+                s.Id, s.FullName, s.Gender, s.GradeLevel, s.BirthDate, s.GeneralInfo,
+                s.DefaultPricePerLesson, s.DefaultDurationMinutes, s.IsActive, s.UserId != null,
                 s.StudentParents.Select(sp => new ParentSummaryDto(
                     sp.Parent.Id, sp.Parent.FullName, sp.Parent.Email, sp.Parent.Phone)).ToList()))
             .FirstOrDefaultAsync();
@@ -81,6 +83,8 @@ public class StudentsController(
             GradeLevel = request.GradeLevel,
             BirthDate = request.BirthDate,
             GeneralInfo = request.GeneralInfo,
+            DefaultPricePerLesson = request.DefaultPricePerLesson,
+            DefaultDurationMinutes = request.DefaultDurationMinutes,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -126,6 +130,8 @@ public class StudentsController(
         student.GradeLevel = request.GradeLevel;
         student.BirthDate = request.BirthDate;
         student.GeneralInfo = request.GeneralInfo;
+        student.DefaultPricePerLesson = request.DefaultPricePerLesson;
+        student.DefaultDurationMinutes = request.DefaultDurationMinutes;
         student.IsActive = request.IsActive;
         await db.SaveChangesAsync();
         return NoContent();
@@ -223,7 +229,8 @@ public class StudentsController(
         await db.Students
             .Where(s => s.Id == id)
             .Select(s => new StudentDetailDto(
-                s.Id, s.FullName, s.Gender, s.GradeLevel, s.BirthDate, s.GeneralInfo, s.IsActive, s.UserId != null,
+                s.Id, s.FullName, s.Gender, s.GradeLevel, s.BirthDate, s.GeneralInfo,
+                s.DefaultPricePerLesson, s.DefaultDurationMinutes, s.IsActive, s.UserId != null,
                 s.StudentParents.Select(sp => new ParentSummaryDto(
                     sp.Parent.Id, sp.Parent.FullName, sp.Parent.Email, sp.Parent.Phone)).ToList()))
             .FirstOrDefaultAsync();

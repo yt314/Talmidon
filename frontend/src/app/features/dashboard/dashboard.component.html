@@ -1,7 +1,7 @@
 <h1 class="text-2xl font-bold mb-4">ראשי</h1>
 
 <div class="grid">
-  <div class="col-12 md:col-4">
+  <div class="col-12 sm:col-6 lg:col-3">
     <a routerLink="/app/lessons" class="block no-underline text-color">
       <p-card styleClass="h-full cursor-pointer">
         <div class="flex justify-content-between align-items-start">
@@ -15,7 +15,7 @@
     </a>
   </div>
 
-  <div class="col-12 md:col-4">
+  <div class="col-12 sm:col-6 lg:col-3">
     <a routerLink="/app/lessons" class="block no-underline text-color">
       <p-card styleClass="h-full cursor-pointer">
         <div class="flex justify-content-between align-items-start">
@@ -31,7 +31,7 @@
     </a>
   </div>
 
-  <div class="col-12 md:col-4">
+  <div class="col-12 sm:col-6 lg:col-3">
     <a routerLink="/app/payments" class="block no-underline text-color">
       <p-card styleClass="h-full cursor-pointer">
         <div class="flex justify-content-between align-items-start">
@@ -41,6 +41,22 @@
           </div>
           @if (openChargesCount(); as count) {
             <p-tag [value]="count + ' חיובים'" severity="warn" />
+          }
+        </div>
+      </p-card>
+    </a>
+  </div>
+
+  <div class="col-12 sm:col-6 lg:col-3">
+    <a routerLink="/app/lessons" class="block no-underline text-color">
+      <p-card styleClass="h-full cursor-pointer">
+        <div class="flex justify-content-between align-items-start">
+          <div>
+            <div class="text-color-secondary mb-2">שיעורים לסימום</div>
+            <div class="text-4xl font-bold">{{ lessonsToMark() === null ? '—' : lessonsToMark() }}</div>
+          </div>
+          @if (lessonsToMark(); as count) {
+            <p-tag value="דורש טיפול" severity="warn" />
           }
         </div>
       </p-card>

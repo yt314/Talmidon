@@ -28,7 +28,8 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         var profile = await db.Teachers
             .Where(t => t.Id == TenantId)
             .Select(t => new TeacherProfileDto(
-                t.Id, t.FullName, t.Phone, t.Bio, t.DefaultPricePerLesson, t.RulesText, t.ContactInfo, t.IsPublic,
+                t.Id, t.FullName, t.Phone, t.Bio, t.DefaultPricePerLesson, t.DefaultDurationMinutes,
+                t.RulesText, t.ContactInfo, t.IsPublic,
                 t.Subjects.Select(s => new SubjectDto(s.Id, s.Name)).ToList()))
             .FirstOrDefaultAsync();
         return profile is null ? NotFound() : Ok(profile);
@@ -43,6 +44,7 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         teacher.Phone = request.Phone;
         teacher.Bio = request.Bio;
         teacher.DefaultPricePerLesson = request.DefaultPricePerLesson;
+        teacher.DefaultDurationMinutes = request.DefaultDurationMinutes;
         teacher.RulesText = request.RulesText;
         teacher.ContactInfo = request.ContactInfo;
         teacher.IsPublic = request.IsPublic;

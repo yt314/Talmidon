@@ -52,6 +52,7 @@ export class TeacherProfileSettingsComponent implements OnInit {
     phone: ['', [Validators.maxLength(40)]],
     bio: ['', [Validators.maxLength(2000)]],
     defaultPricePerLesson: [0, [Validators.required, Validators.min(0)]],
+    defaultDurationMinutes: [60, [Validators.required, Validators.min(1), Validators.max(1440)]],
     rulesText: ['', [Validators.maxLength(4000)]],
     contactInfo: ['', [Validators.maxLength(1000)]],
     isPublic: [true]
@@ -73,6 +74,7 @@ export class TeacherProfileSettingsComponent implements OnInit {
         phone: raw.phone || null,
         bio: raw.bio || null,
         defaultPricePerLesson: raw.defaultPricePerLesson,
+        defaultDurationMinutes: raw.defaultDurationMinutes,
         rulesText: raw.rulesText || null,
         contactInfo: raw.contactInfo || null,
         isPublic: raw.isPublic
@@ -131,6 +133,7 @@ export class TeacherProfileSettingsComponent implements OnInit {
           phone: profile.phone ?? '',
           bio: profile.bio ?? '',
           defaultPricePerLesson: profile.defaultPricePerLesson,
+          defaultDurationMinutes: profile.defaultDurationMinutes,
           rulesText: profile.rulesText ?? '',
           contactInfo: profile.contactInfo ?? '',
           isPublic: profile.isPublic

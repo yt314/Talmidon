@@ -9,6 +9,7 @@ export interface TeacherProfile {
   phone: string | null;
   bio: string | null;
   defaultPricePerLesson: number;
+  defaultDurationMinutes: number;
   rulesText: string | null;
   contactInfo: string | null;
   isPublic: boolean;
@@ -19,6 +20,7 @@ export interface UpdateTeacherProfileRequest {
   phone?: string | null;
   bio?: string | null;
   defaultPricePerLesson: number;
+  defaultDurationMinutes: number;
   rulesText?: string | null;
   contactInfo?: string | null;
   isPublic: boolean;

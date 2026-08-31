@@ -9,6 +9,8 @@ public record CreateStudentRequest(
     [MaxLength(50)] string? GradeLevel,
     DateOnly? BirthDate,
     [MaxLength(4000)] string? GeneralInfo,
+    [Range(0, double.MaxValue)] decimal? DefaultPricePerLesson,
+    [Range(1, 1440)] int? DefaultDurationMinutes,
     [EmailAddress, MaxLength(256)] string? LoginEmail,
     List<Guid>? ParentIds);
 
@@ -18,6 +20,8 @@ public record UpdateStudentRequest(
     [MaxLength(50)] string? GradeLevel,
     DateOnly? BirthDate,
     [MaxLength(4000)] string? GeneralInfo,
+    [Range(0, double.MaxValue)] decimal? DefaultPricePerLesson,
+    [Range(1, 1440)] int? DefaultDurationMinutes,
     bool IsActive);
 
 public record StudentListItemDto(
@@ -26,7 +30,9 @@ public record StudentListItemDto(
     string? GradeLevel,
     bool IsActive,
     bool HasLogin,
-    int ParentCount);
+    int ParentCount,
+    decimal? DefaultPricePerLesson,
+    int? DefaultDurationMinutes);
 
 public record StudentDetailDto(
     Guid Id,
@@ -35,6 +41,8 @@ public record StudentDetailDto(
     string? GradeLevel,
     DateOnly? BirthDate,
     string? GeneralInfo,
+    decimal? DefaultPricePerLesson,
+    int? DefaultDurationMinutes,
     bool IsActive,
     bool HasLogin,
     List<ParentSummaryDto> Parents);
