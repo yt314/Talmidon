@@ -59,3 +59,14 @@ public enum Gender
     Male = 0,
     Female = 1
 }
+
+/// <summary>סוג התראה במרכז ההתראות של המורה (לבחירת אייקון/הקשר).</summary>
+public enum NotificationType
+{
+    /// <summary>הורה ביקש שיעור חדש.</summary>
+    LessonRequest = 0,
+    /// <summary>הורה ביקש שינוי/ביטול לשיעור קיים.</summary>
+    ChangeRequest = 1,
+    /// <summary>התראה כללית.</summary>
+    General = 2
+}

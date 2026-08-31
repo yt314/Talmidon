@@ -35,4 +35,5 @@ public class Student : ITenantScoped
     public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();
     public ICollection<LessonSeries> LessonSeries { get; set; } = new List<LessonSeries>();
     public ICollection<Note> Notes { get; set; } = new List<Note>();
+    public ICollection<StudentResource> Resources { get; set; } = new List<StudentResource>();
 }

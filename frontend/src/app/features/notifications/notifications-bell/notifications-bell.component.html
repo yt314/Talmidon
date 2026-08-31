@@ -1,0 +1,41 @@
+<p-button
+  icon="pi pi-bell"
+  [rounded]="true"
+  [text]="true"
+  severity="secondary"
+  [badge]="unreadCount() > 0 ? unreadCount().toString() : undefined"
+  badgeSeverity="danger"
+  ariaLabel="התראות"
+  (onClick)="toggle($event)" />
+
+<p-popover #panel>
+  <div class="notif-panel">
+    <div class="flex justify-content-between align-items-center mb-2">
+      <span class="font-bold">התראות</span>
+      @if (notifications().length > 0) {
+        <p-button label="סמן הכל כנקרא" [text]="true" size="small" (onClick)="markAllRead()" />
+      }
+    </div>
+
+    @if (loading()) {
+      <p class="text-color-secondary m-0">טוען...</p>
+    } @else if (notifications().length === 0) {
+      <p class="text-color-secondary m-0 flex align-items-center gap-2">
+        <i class="pi pi-check-circle"></i> אין התראות.
+      </p>
+    } @else {
+      <ul class="notif-list">
+        @for (n of notifications(); track n.id) {
+          <li class="notif-item" [class.notif-unread]="!n.isRead" (click)="open(n)">
+            <i [class]="icon(n.type)"></i>
+            <div class="flex-1">
+              <div class="font-medium">{{ n.title }}</div>
+              <div class="text-sm text-color-secondary">{{ n.message }}</div>
+              <div class="text-xs text-color-secondary mt-1">{{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</p-popover>

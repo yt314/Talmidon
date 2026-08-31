@@ -215,6 +215,39 @@ full-calendar {
   border: 2px dashed #f59e0b;
 }
 
+// מרכז ההתראות (פעמון)
+.notif-panel {
+  width: 340px;
+  max-width: 90vw;
+}
+.notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+.notif-item {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.6rem 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--surface-200, #e5e7eb);
+}
+.notif-item:last-child {
+  border-bottom: none;
+}
+.notif-item:hover {
+  background: var(--surface-100, #f3f4f6);
+}
+.notif-item.notif-unread {
+  background: #eff6ff;
+}
+.notif-item.notif-unread:hover {
+  background: #dbeafe;
+}
+
 // טבלת דוח הכנסות
 .report-table {
   border-collapse: collapse;

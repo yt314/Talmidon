@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Talmidon.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Talmidon.Infrastructure.Data;
 namespace Talmidon.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(TalmidonDbContext))]
-    partial class TalmidonDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260831160607_AddNotifications")]
+    partial class AddNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -641,46 +644,6 @@ namespace Talmidon.Infrastructure.Data.Migrations
                     b.ToTable("StudentParents");
                 });
 
-            modelBuilder.Entity("Talmidon.Domain.Entities.StudentResource", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StudentId");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("StudentId", "TenantId");
-
-                    b.ToTable("StudentResources");
-                });
-
             modelBuilder.Entity("Talmidon.Domain.Entities.Teacher", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1114,26 +1077,6 @@ namespace Talmidon.Infrastructure.Data.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Talmidon.Domain.Entities.StudentResource", b =>
-                {
-                    b.HasOne("Talmidon.Domain.Entities.Teacher", "Teacher")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Talmidon.Domain.Entities.Student", "Student")
-                        .WithMany("Resources")
-                        .HasForeignKey("StudentId", "TenantId")
-                        .HasPrincipalKey("Id", "TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Student");
-
-                    b.Navigation("Teacher");
-                });
-
             modelBuilder.Entity("Talmidon.Domain.Entities.Teacher", b =>
                 {
                     b.HasOne("Talmidon.Infrastructure.Identity.ApplicationUser", null)
@@ -1196,8 +1139,6 @@ namespace Talmidon.Infrastructure.Data.Migrations
                     b.Navigation("Lessons");
 
                     b.Navigation("Notes");
-
-                    b.Navigation("Resources");
 
                     b.Navigation("StudentParents");
                 });

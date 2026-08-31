@@ -39,6 +39,8 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<LessonChangeRequest> LessonChangeRequests => Set<LessonChangeRequest>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Note> Notes => Set<Note>();
+    public DbSet<StudentResource> StudentResources => Set<StudentResource>();
+    public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -56,6 +58,8 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
         ConfigureLessonChangeRequest(builder);
         ConfigurePayment(builder);
         ConfigureNote(builder);
+        ConfigureStudentResource(builder);
+        ConfigureNotification(builder);
         ConfigureRefreshToken(builder);
         ConfigureIdentityOverrides(builder);
 
@@ -381,6 +385,49 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.SetNull);
 
             e.HasIndex(n => n.StudentId);
+        });
+    }
+
+    private static void ConfigureStudentResource(ModelBuilder builder)
+    {
+        builder.Entity<StudentResource>(e =>
+        {
+            e.Property(r => r.Title).HasMaxLength(200).IsRequired();
+            e.Property(r => r.Url).HasMaxLength(2000).IsRequired();
+            e.Property(r => r.Description).HasMaxLength(1000);
+
+            e.HasOne(r => r.Teacher)
+                .WithMany()
+                .HasForeignKey(r => r.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // קישור לתלמיד — באותו דייר בלבד (מפתח זר מורכב, כמו Note)
+            e.HasOne(r => r.Student)
+                .WithMany(s => s.Resources)
+                .HasForeignKey(r => new { r.StudentId, r.TenantId })
+                .HasPrincipalKey(s => new { s.Id, s.TenantId })
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(r => r.StudentId);
+        });
+    }
+
+    private static void ConfigureNotification(ModelBuilder builder)
+    {
+        builder.Entity<Notification>(e =>
+        {
+            e.Property(n => n.Type).HasConversion<string>().HasMaxLength(20);
+            e.Property(n => n.Title).HasMaxLength(200).IsRequired();
+            e.Property(n => n.Message).HasMaxLength(1000).IsRequired();
+            e.Property(n => n.LinkPath).HasMaxLength(200);
+
+            e.HasOne(n => n.Teacher)
+                .WithMany()
+                .HasForeignKey(n => n.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(n => new { n.TenantId, n.IsRead });
+            e.HasIndex(n => n.CreatedAt);
         });
     }
 

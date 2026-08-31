@@ -359,6 +359,8 @@ public class LessonsController(
             RequestedByParentId = parent.Id
         };
         db.Lessons.Add(lesson);
+        AddTeacherNotification(NotificationType.LessonRequest, "בקשת שיעור חדשה",
+            $"התקבלה בקשה לקביעת שיעור עבור {student.FullName} בתאריך {FormatDate(lesson.StartTime)}.", "/app/lessons");
         await db.SaveChangesAsync();
 
         await NotifyTeacherAsync("בקשה לקביעת שיעור",
@@ -406,9 +408,11 @@ public class LessonsController(
             CreatedAt = DateTimeOffset.UtcNow
         };
         db.LessonChangeRequests.Add(changeRequest);
+        var subject = request.Type == ChangeRequestType.Cancel ? "בקשה לביטול שיעור" : "בקשה לעדכון שיעור";
+        AddTeacherNotification(NotificationType.ChangeRequest, subject,
+            $"התקבלה {subject} עבור {lesson.Student.FullName} (שיעור בתאריך {FormatDate(lesson.StartTime)}).", "/app/lessons");
         await db.SaveChangesAsync();
 
-        var subject = request.Type == ChangeRequestType.Cancel ? "בקשה לביטול שיעור" : "בקשה לעדכון שיעור";
         await NotifyTeacherAsync(subject,
             $"התקבלה {subject} עבור {lesson.Student.FullName} (שיעור בתאריך {FormatDate(lesson.StartTime)}).");
 
@@ -451,6 +455,22 @@ public class LessonsController(
           <p>{WebUtility.HtmlEncode(message)}</p>
         </div>
         """;
+
+    /// <summary>מוסיף התראה למרכז ההתראות של המורה (הדייר הנוכחי). נשמר יחד עם ה-SaveChanges הבא.</summary>
+    private void AddTeacherNotification(NotificationType type, string title, string message, string? linkPath)
+    {
+        db.Notifications.Add(new Notification
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantId,
+            Type = type,
+            Title = title,
+            Message = message,
+            LinkPath = linkPath,
+            IsRead = false,
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+    }
 
     /// <summary>שולח מייל לכל ההורים המקושרים לתלמיד (שינויים ביומן ע"י המורה).</summary>
     private async Task NotifyParentsAsync(Guid studentId, string subject, string message)
