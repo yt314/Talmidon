@@ -29,7 +29,9 @@ public class LessonSeriesGenerator(TalmidonDbContext db)
 
             // בונים את המופע מהזמן המקומי (תאריך + שעת-היום הקבועה של הסדרה) ורק אז ממירים ל-UTC —
             // כך ה-offset הנכון (קיץ/חורף) נבחר מחדש לכל תאריך בנפרד, ושעת-היום המקומית לא זזה.
-            var startTime = AppTimeZone.ToUtc(nextDate, series.StartTimeOfDay);
+            // ToUniversalTime() מנרמל ל-offset=0 בלי לשנות את הרגע עצמו — Npgsql מסרב לכתוב
+            // timestamptz עם offset שונה מ-0 (ראו AppTimeZone.ToUtc, ששומר את ה-offset המקומי בכוונה).
+            var startTime = AppTimeZone.ToUtc(nextDate, series.StartTimeOfDay).ToUniversalTime();
             db.Lessons.Add(new Lesson
             {
                 Id = Guid.NewGuid(),

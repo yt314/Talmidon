@@ -206,8 +206,10 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
         Assert.True(occurrences.Count >= 4, "יש לוודא שנוצרו מספיק מופעים משני צדי מעבר השעון.");
         Assert.All(occurrences, l => Assert.Equal(new TimeOnly(16, 0), TimeOnly.FromDateTime(AppTimeZone.ToLocal(l.StartTime).DateTime)));
 
-        // ה-offset עצמו כן משתנה (חורף מול קיץ) — זה מה שמוכיח שהזמן המקומי, לא ה-UTC הגולמי, הוא הקבוע.
-        Assert.NotEqual(occurrences.First().StartTime.Offset, occurrences.Last().StartTime.Offset);
+        // מה שנשמר ב-DB תמיד מנורמל ל-offset=0 (Npgsql דורש UTC טהור), אז ה-offset עצמו כבר לא
+        // משתנה אחרי round-trip. אבל שעת ה-UTC כן משתנה בין חורף לקיץ — וזה בדיוק מה שמוכיח
+        // שהזמן המקומי, לא ה-UTC הגולמי, הוא הקבוע (אחרת שעת ה-UTC הייתה זהה בשני הצדדים).
+        Assert.NotEqual(occurrences.First().StartTime.UtcDateTime.Hour, occurrences.Last().StartTime.UtcDateTime.Hour);
     }
 
     /// <summary>מוצא את התאריך הקרוב ביותר (אחרי <paramref name="from"/>) שבו שעון הקיץ באזור הזמן של האפליקציה מתחלף.</summary>
