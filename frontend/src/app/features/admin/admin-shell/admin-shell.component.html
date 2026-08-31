@@ -1,0 +1,20 @@
+<div class="app-shell">
+  <p-toast />
+  <p-confirmdialog />
+
+  <p-menubar [model]="menuItems">
+    <ng-template pTemplate="start">
+      <div class="flex align-items-center gap-2 mr-3">
+        <i class="pi pi-shield" style="font-size: 1.5rem; color: var(--p-primary-color)"></i>
+        <span class="font-bold text-lg">תלמידון · ניהול מערכת</span>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button icon="pi pi-sign-out" label="התנתקות" severity="secondary" [text]="true" (onClick)="logout()" />
+    </ng-template>
+  </p-menubar>
+
+  <main class="app-shell-content">
+    <router-outlet />
+  </main>
+</div>

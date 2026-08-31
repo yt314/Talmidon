@@ -35,6 +35,7 @@ export class AuthService {
   /** נתיב הבית לפי תפקיד המשתמש המחובר, לניתוב אחרי התחברות ולנפילה-בטוחה מ-roleGuard. */
   readonly homePath = computed(() => {
     const roles = this.roles();
+    if (roles.includes('Admin')) return '/admin';
     if (roles.includes('Teacher')) return '/app/dashboard';
     if (roles.includes('Parent')) return '/parent';
     if (roles.includes('Student')) return '/student';

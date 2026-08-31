@@ -107,5 +107,17 @@ export const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'admin',
+    canActivate: [roleGuard(['Admin'])],
+    loadComponent: () => import('./features/admin/admin-shell/admin-shell.component').then(m => m.AdminShellComponent),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'teachers' },
+      {
+        path: 'teachers',
+        loadComponent: () => import('./features/admin/admin-teachers/admin-teachers.component').then(m => m.AdminTeachersComponent)
+      }
+    ]
+  },
   { path: '**', redirectTo: '' }
 ];

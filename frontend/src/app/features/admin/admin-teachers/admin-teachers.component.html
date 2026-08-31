@@ -1,0 +1,65 @@
+<h1 class="text-2xl font-bold mb-4">מורות</h1>
+
+<p-table [value]="teachers()" [loading]="loading()" dataKey="id">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>שם</th>
+      <th>אימייל</th>
+      <th>תלמידים</th>
+      <th>הצטרפה</th>
+      <th>ספרייה ציבורית</th>
+      <th>סטטוס חשבון</th>
+      <th></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-teacher>
+    <tr>
+      <td>
+        <div class="flex align-items-center gap-2">
+          <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(teacher.fullName)">
+            {{ initials(teacher.fullName) }}
+          </span>
+          {{ teacher.fullName }}
+        </div>
+      </td>
+      <td>{{ teacher.email }}</td>
+      <td>{{ teacher.studentCount }}</td>
+      <td>{{ teacher.createdAt | date: 'dd/MM/yyyy' }}</td>
+      <td>
+        <p-tag [value]="teacher.isPublic ? 'מוצגת' : 'לא מוצגת'" [severity]="teacher.isPublic ? 'success' : 'secondary'" />
+      </td>
+      <td>
+        <p-tag [value]="teacher.isLockedOut ? 'נעול' : 'פעיל'" [severity]="teacher.isLockedOut ? 'danger' : 'success'" />
+      </td>
+      <td>
+        @if (teacher.isLockedOut) {
+          <p-button
+            label="שחרר נעילה"
+            icon="pi pi-lock-open"
+            size="small"
+            severity="secondary"
+            [outlined]="true"
+            [loading]="busyTeacherId() === teacher.id"
+            (onClick)="confirmUnlock(teacher)" />
+        } @else {
+          <p-button
+            label="נעל חשבון"
+            icon="pi pi-lock"
+            size="small"
+            severity="danger"
+            [outlined]="true"
+            [loading]="busyTeacherId() === teacher.id"
+            (onClick)="confirmLock(teacher)" />
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7" class="text-center text-color-secondary py-5">
+        <i class="pi pi-users text-4xl mb-2 block"></i>
+        אין מורות רשומות עדיין.
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

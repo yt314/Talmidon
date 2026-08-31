@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.Identity;
 
 namespace Talmidon.Tests;
@@ -55,6 +56,30 @@ public static class TestHelpers
         var email = UniqueEmail(emailPrefix);
         const string password = "TestPass123";
         await RegisterAndConfirmTeacherAsync(factory, anon, email, password, "מורה בדיקה");
+        var token = await LoginAsync(anon, email, password);
+        return AuthorizedClient(factory, token);
+    }
+
+    /// <summary>
+    /// יוצרת חשבון מנהל-מערכת ומחזירה קליינט HTTP מחובר כמותו. בניגוד למורה, אין הרשמה עצמית
+    /// למנהל — נוצר ישירות דרך UserManager, כמו שהזריעה האמיתית ב-Program.cs עושה.
+    /// </summary>
+    public static async Task<HttpClient> CreateAuthorizedAdminClientAsync(TalmidonWebApplicationFactory factory)
+    {
+        var email = UniqueEmail("admin");
+        const string password = "AdminTestPass123!";
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var admin = new ApplicationUser { UserName = email, Email = email, DisplayName = "מנהל בדיקה", EmailConfirmed = true };
+            var createResult = await userManager.CreateAsync(admin, password);
+            if (!createResult.Succeeded)
+                throw new InvalidOperationException(string.Join("; ", createResult.Errors.Select(e => e.Description)));
+            await userManager.AddToRoleAsync(admin, Roles.Admin);
+        }
+
+        var anon = factory.CreateClient();
         var token = await LoginAsync(anon, email, password);
         return AuthorizedClient(factory, token);
     }

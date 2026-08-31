@@ -174,7 +174,7 @@ public class AuthController(
         var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
 
         if (result.IsLockedOut)
-            return Unauthorized(new { message = "החשבון נעול זמנית עקב ריבוי ניסיונות כושלים." });
+            return Unauthorized(new { message = "החשבון נעול. אם מדובר בטעות, יש לפנות לתמיכה." });
         if (result.IsNotAllowed)
             return Unauthorized(new { message = "יש לאמת את כתובת המייל לפני התחברות." });
         if (!result.Succeeded)
