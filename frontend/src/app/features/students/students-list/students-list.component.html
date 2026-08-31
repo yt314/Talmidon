@@ -8,7 +8,14 @@
 
   <p-tabpanels>
     <p-tabpanel value="students">
-      <div class="flex justify-content-end mb-3">
+      <div class="flex justify-content-end gap-2 mb-3">
+        <p-button
+          label="ייצוא CSV"
+          icon="pi pi-download"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="students().length === 0"
+          (onClick)="exportStudents()" />
         <p-button label="הוסף תלמיד" icon="pi pi-plus" (onClick)="openStudentDialog()" />
       </div>
 

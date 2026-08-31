@@ -26,6 +26,7 @@ export class TeacherShellComponent implements OnInit {
     { label: 'תלמידים', icon: 'pi pi-users', routerLink: '/app/students' },
     { label: 'יומן שיעורים', icon: 'pi pi-calendar', routerLink: '/app/lessons' },
     { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/app/payments' },
+    { label: 'דוחות', icon: 'pi pi-chart-bar', routerLink: '/app/reports' },
     { label: 'הגדרות פרופיל', icon: 'pi pi-cog', routerLink: '/app/profile' },
     { label: 'הגדרות חשבון', icon: 'pi pi-lock', routerLink: '/app/account' }
   ];

@@ -215,6 +215,23 @@ full-calendar {
   border: 2px dashed #f59e0b;
 }
 
+// טבלת דוח הכנסות
+.report-table {
+  border-collapse: collapse;
+}
+.report-table th,
+.report-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--surface-200, #e5e7eb);
+}
+.report-table thead th {
+  color: var(--text-color-secondary, #6b7280);
+  font-weight: 600;
+}
+.report-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 // עורך שעות הזמינות בפרופיל המורה
 .availability-row {
   border-bottom: 1px solid var(--surface-200, #e5e7eb);

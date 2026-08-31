@@ -1,0 +1,88 @@
+<div class="flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+  <h1 class="text-2xl font-bold m-0">דוח הכנסות</h1>
+  <div class="flex align-items-center gap-2 flex-wrap">
+    <p-datepicker
+      view="month"
+      dateFormat="mm/yy"
+      [ngModel]="month()"
+      (ngModelChange)="onMonthChange($event)"
+      [showIcon]="true"
+      [readonlyInput]="true"
+      styleClass="w-12rem" />
+    <p-button
+      label="ייצוא CSV"
+      icon="pi pi-download"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="!report() || report()!.byStudent.length === 0"
+      (onClick)="exportCsv()" />
+  </div>
+</div>
+
+@if (loading()) {
+  <p-skeleton height="8rem" styleClass="mb-3" />
+  <p-skeleton height="16rem" />
+} @else if (report(); as r) {
+  <div class="grid mb-2">
+    <div class="col-6 lg:col-3">
+      <p-card>
+        <div class="text-color-secondary mb-2">שיעורים שהתקיימו</div>
+        <div class="text-3xl font-bold">{{ r.completedLessons }}</div>
+      </p-card>
+    </div>
+    <div class="col-6 lg:col-3">
+      <p-card>
+        <div class="text-color-secondary mb-2">סה״כ חויב</div>
+        <div class="text-3xl font-bold">{{ r.totalCharged }} ₪</div>
+      </p-card>
+    </div>
+    <div class="col-6 lg:col-3">
+      <p-card>
+        <div class="text-color-secondary mb-2">שולם</div>
+        <div class="text-3xl font-bold text-green-600">{{ r.totalPaid }} ₪</div>
+      </p-card>
+    </div>
+    <div class="col-6 lg:col-3">
+      <p-card>
+        <div class="text-color-secondary mb-2">נותר לתשלום</div>
+        <div class="text-3xl font-bold" [class.text-orange-500]="r.totalOutstanding > 0">{{ r.totalOutstanding }} ₪</div>
+      </p-card>
+    </div>
+  </div>
+
+  <p-card>
+    <h3 class="mt-0 mb-3">פילוח לפי תלמיד</h3>
+    @if (r.byStudent.length === 0) {
+      <p class="text-color-secondary m-0 flex align-items-center gap-2">
+        <i class="pi pi-info-circle"></i> אין שיעורים שהתקיימו בחודש זה.
+      </p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="report-table w-full">
+          <thead>
+            <tr>
+              <th class="text-right">תלמיד</th>
+              <th class="text-center">שיעורים</th>
+              <th class="text-center">חויב</th>
+              <th class="text-center">שולם</th>
+              <th class="text-center">נותר</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of r.byStudent; track s.studentId) {
+              <tr>
+                <td>{{ s.studentName }}</td>
+                <td class="text-center">{{ s.lessons }}</td>
+                <td class="text-center">{{ s.charged }} ₪</td>
+                <td class="text-center text-green-600">{{ s.paid }} ₪</td>
+                <td class="text-center" [class.text-orange-500]="s.charged - s.paid > 0">{{ s.charged - s.paid }} ₪</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </p-card>
+} @else {
+  <p class="text-color-secondary">לא ניתן לטעון את הדוח.</p>
+}

@@ -15,6 +15,7 @@ import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
+import { downloadCsv } from '../../../shared/export/csv.util';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { StudentListItem } from '../students.models';
@@ -190,6 +191,22 @@ export class StudentsListComponent implements OnInit {
 
   openStudent(student: StudentListItem): void {
     this.router.navigate(['/app/students', student.id]);
+  }
+
+  exportStudents(): void {
+    const rows: (string | number)[][] = [
+      ['שם', 'כיתה', 'סטטוס', 'מספר הורים', 'מחיר לשיעור', 'משך (דק׳)'],
+      ...this.students().map(s => [
+        s.fullName,
+        s.gradeLevel ?? '',
+        s.isActive ? 'פעיל' : 'לא פעיל',
+        s.parentCount,
+        s.defaultPricePerLesson ?? '',
+        s.defaultDurationMinutes ?? ''
+      ])
+    ];
+    downloadCsv('תלמידים.csv', rows);
+    this.messageService.add({ severity: 'success', summary: 'הקובץ יורד' });
   }
 
   private loadStudents(): void {
