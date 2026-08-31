@@ -46,7 +46,12 @@
         @for (parent of student()!.parents; track parent.id) {
           <li class="flex align-items-center justify-content-between py-2">
             <span>{{ parent.fullName }} · {{ parent.email }}</span>
-            <p-button icon="pi pi-times" severity="danger" [text]="true" (onClick)="unlinkParent(parent.id)" />
+            <div class="flex align-items-center gap-1">
+              @if (hasWhatsapp(parent.phone)) {
+                <p-button icon="pi pi-whatsapp" severity="success" [text]="true" (onClick)="openWhatsapp(parent)" pTooltip="שלח וואטסאפ" tooltipPosition="top" />
+              }
+              <p-button icon="pi pi-times" severity="danger" [text]="true" (onClick)="unlinkParent(parent.id)" />
+            </div>
           </li>
         }
       </ul>

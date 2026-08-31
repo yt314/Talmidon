@@ -30,6 +30,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Teacher> Teachers => Set<Teacher>();
     public DbSet<TeacherSubject> TeacherSubjects => Set<TeacherSubject>();
+    public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Parent> Parents => Set<Parent>();
     public DbSet<StudentParent> StudentParents => Set<StudentParent>();
@@ -46,6 +47,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
 
         ConfigureTeacher(builder);
         ConfigureTeacherSubject(builder);
+        ConfigureTeacherAvailability(builder);
         ConfigureStudent(builder);
         ConfigureParent(builder);
         ConfigureStudentParent(builder);
@@ -105,6 +107,25 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
 
             // תחום ייחודי לכל מורה (מונע כפילויות בספרייה הציבורית)
             e.HasIndex(s => new { s.TeacherId, s.Name }).IsUnique();
+        });
+    }
+
+    private static void ConfigureTeacherAvailability(ModelBuilder builder)
+    {
+        builder.Entity<TeacherAvailability>(e =>
+        {
+            e.Property(a => a.DayOfWeek).HasConversion<int>();
+
+            e.HasOne(a => a.Teacher)
+                .WithMany(t => t.Availabilities)
+                .HasForeignKey(a => a.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(a => a.TenantId);
+
+            e.ToTable(t => t.HasCheckConstraint(
+                "CK_TeacherAvailabilities_Time_Order",
+                "\"EndTime\" > \"StartTime\""));
         });
     }
 

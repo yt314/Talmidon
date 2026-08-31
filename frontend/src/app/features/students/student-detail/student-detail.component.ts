@@ -13,15 +13,17 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
+import { buildWhatsappLink, hasWhatsapp } from '../../../shared/whatsapp/whatsapp.util';
 import { Note } from '../../notes/notes.models';
 import { NotesService } from '../../notes/notes.service';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
-import { StudentDetail } from '../students.models';
+import { ParentSummary, StudentDetail } from '../students.models';
 import { StudentsService } from '../students.service';
 
 @Component({
@@ -40,7 +42,8 @@ import { StudentsService } from '../students.service';
     InputTextModule,
     SelectModule,
     TagModule,
-    TextareaModule
+    TextareaModule,
+    TooltipModule
   ],
   templateUrl: './student-detail.component.html'
 })
@@ -155,6 +158,16 @@ export class StudentDetailComponent implements OnInit {
   /** קביעת שיעור לתלמיד זה — פותח את היומן עם התלמיד נבחר מראש. */
   scheduleLesson(): void {
     this.router.navigate(['/app/lessons'], { queryParams: { studentId: this.studentId } });
+  }
+
+  protected readonly hasWhatsapp = hasWhatsapp;
+
+  /** פותח שיחת וואטסאפ עם ההורה, עם הודעת פתיחה מוכנה. */
+  openWhatsapp(parent: ParentSummary): void {
+    const studentName = this.student()?.fullName ?? '';
+    const text = `שלום ${parent.fullName}, אני המורה של ${studentName}.`;
+    const link = buildWhatsappLink(parent.phone, text);
+    if (link) window.open(link, '_blank', 'noopener');
   }
 
   confirmDelete(): void {

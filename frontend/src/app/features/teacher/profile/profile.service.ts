@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Subject, TeacherProfile, UpdateTeacherProfileRequest } from './profile.models';
+import { AvailabilityWindow, Subject, TeacherProfile, UpdateTeacherProfileRequest } from './profile.models';
 
 @Injectable({ providedIn: 'root' })
 export class TeacherProfileService {
@@ -23,5 +23,13 @@ export class TeacherProfileService {
 
   deleteSubject(id: string): Observable<void> {
     return this.http.delete<void>(`${this.api}/subjects/${id}`);
+  }
+
+  getAvailability(): Observable<AvailabilityWindow[]> {
+    return this.http.get<AvailabilityWindow[]>(`${this.api}/availability`);
+  }
+
+  updateAvailability(windows: AvailabilityWindow[]): Observable<void> {
+    return this.http.put<void>(`${this.api}/availability`, { windows });
   }
 }

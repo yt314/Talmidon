@@ -12,7 +12,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
-import { Subject, TeacherProfile } from './profile.models';
+import { AvailabilityWindow, Subject, TeacherProfile } from './profile.models';
 import { TeacherProfileService } from './profile.service';
 
 @Component({
@@ -58,8 +58,44 @@ export class TeacherProfileSettingsComponent implements OnInit {
     isPublic: [true]
   });
 
+  protected readonly dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  protected readonly days = [0, 1, 2, 3, 4, 5, 6];
+  protected readonly availability = signal<AvailabilityWindow[]>([]);
+  protected readonly savingAvailability = signal(false);
+
   ngOnInit(): void {
     this.load();
+    this.profileService.getAvailability().subscribe(windows => this.availability.set(windows));
+  }
+
+  windowsForDay(day: number): AvailabilityWindow[] {
+    return this.availability().filter(w => w.dayOfWeek === day);
+  }
+
+  addWindow(day: number): void {
+    this.availability.set([...this.availability(), { dayOfWeek: day, startTime: '09:00', endTime: '10:00' }]);
+  }
+
+  removeWindow(win: AvailabilityWindow): void {
+    this.availability.set(this.availability().filter(w => w !== win));
+  }
+
+  saveAvailability(): void {
+    if (this.availability().some(w => w.endTime <= w.startTime)) {
+      this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: 'בכל חלון, שעת הסיום חייבת להיות אחרי שעת ההתחלה.' });
+      return;
+    }
+    this.savingAvailability.set(true);
+    this.profileService.updateAvailability(this.availability()).subscribe({
+      next: () => {
+        this.savingAvailability.set(false);
+        this.messageService.add({ severity: 'success', summary: 'שעות הזמינות נשמרו' });
+      },
+      error: err => {
+        this.savingAvailability.set(false);
+        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'השמירה נכשלה.') });
+      }
+    });
   }
 
   save(): void {

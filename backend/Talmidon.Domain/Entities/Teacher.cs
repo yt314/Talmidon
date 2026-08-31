@@ -43,4 +43,5 @@ public class Teacher
     public ICollection<LessonSeries> LessonSeries { get; set; } = new List<LessonSeries>();
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     public ICollection<Note> Notes { get; set; } = new List<Note>();
+    public ICollection<TeacherAvailability> Availabilities { get; set; } = new List<TeacherAvailability>();
 }

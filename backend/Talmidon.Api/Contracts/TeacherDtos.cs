@@ -11,6 +11,14 @@ public record UpdateTeacherProfileRequest(
     [MaxLength(1000)] string? ContactInfo,
     bool IsPublic);
 
+/// <summary>חלון זמינות שבועי. DayOfWeek: ראשון=0 ... שבת=6. שעות בפורמט "HH:mm".</summary>
+public record AvailabilityWindowDto(
+    [Range(0, 6)] int DayOfWeek,
+    [Required] string StartTime,
+    [Required] string EndTime);
+
+public record UpdateAvailabilityRequest(List<AvailabilityWindowDto> Windows);
+
 public record AddSubjectRequest([Required, MaxLength(100)] string Name);
 
 public record SubjectDto(Guid Id, string Name);

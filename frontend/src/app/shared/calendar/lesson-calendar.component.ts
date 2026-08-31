@@ -23,6 +23,8 @@ export class LessonCalendarComponent {
    */
   readonly editable = input(false);
   readonly initialView = input<'timeGridWeek' | 'dayGridMonth'>('timeGridWeek');
+  /** שעות עבודה להדגשה (FullCalendar businessHours). ריק/undefined = ללא הדגשה. */
+  readonly businessHours = input<{ daysOfWeek: number[]; startTime: string; endTime: string }[] | undefined>(undefined);
 
   readonly eventClicked = output<CalendarEventExtendedProps>();
   readonly slotSelected = output<CalendarSlotSelection>();
@@ -44,6 +46,7 @@ export class LessonCalendarComponent {
     dayMaxEvents: true,
     selectable: this.selectable(),
     editable: this.editable(),
+    businessHours: this.businessHours() ?? false,
     events: this.events(),
     select: info => {
       if (!info.allDay) {

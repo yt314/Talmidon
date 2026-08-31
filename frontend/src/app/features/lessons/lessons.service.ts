@@ -53,6 +53,10 @@ export class LessonsService {
     return this.http.post<Lesson>(`${this.api}/${id}/complete`, request);
   }
 
+  noShow(id: string): Observable<Lesson> {
+    return this.http.post<Lesson>(`${this.api}/${id}/no-show`, {});
+  }
+
   approveRequest(id: string): Observable<void> {
     return this.http.post<void>(`${this.api}/${id}/approve`, {});
   }

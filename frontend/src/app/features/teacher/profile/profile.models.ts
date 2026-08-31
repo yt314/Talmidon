@@ -3,6 +3,13 @@ export interface Subject {
   name: string;
 }
 
+/** חלון זמינות שבועי. dayOfWeek: ראשון=0 ... שבת=6. שעות בפורמט "HH:mm". */
+export interface AvailabilityWindow {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+}
+
 export interface TeacherProfile {
   id: string;
   fullName: string;

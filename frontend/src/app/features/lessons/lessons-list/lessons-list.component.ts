@@ -19,6 +19,7 @@ import { CalendarEventDrop, CalendarEventExtendedProps, CalendarSlotSelection } 
 import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
 import { StudentListItem } from '../../students/students.models';
 import { StudentsService } from '../../students/students.service';
+import { AvailabilityWindow } from '../../teacher/profile/profile.models';
 import { TeacherProfileService } from '../../teacher/profile/profile.service';
 import { buildTeacherCalendarEvents } from '../lesson-calendar.util';
 import {
@@ -68,6 +69,15 @@ export class LessonsListComponent implements OnInit {
 
   /** מדכא מילוי-אוטומטי של שעת הסיום כשהמקור הוא גרירה ביומן (הטווח כבר נבחר ידנית). */
   private suppressAutoEnd = false;
+
+  /** חלונות זמינות שבועיים של המורה — להדגשה ביומן ולאזהרה בקביעה מחוץ לשעות. */
+  private readonly availability = signal<AvailabilityWindow[]>([]);
+
+  protected readonly businessHours = computed(() => {
+    const windows = this.availability();
+    // מערך ריק גורם ל-FullCalendar לצבוע את כל היומן כאפור — לכן undefined כשאין שעות מוגדרות.
+    return windows.length ? windows.map(w => ({ daysOfWeek: [w.dayOfWeek], startTime: w.startTime, endTime: w.endTime })) : undefined;
+  });
 
   protected readonly LessonStatus = LessonStatus;
   protected readonly ChangeRequestType = ChangeRequestType;
@@ -178,6 +188,7 @@ export class LessonsListComponent implements OnInit {
     });
     this.profileService.getMyProfile().subscribe(profile =>
       this.teacherDefaults.set({ price: profile.defaultPricePerLesson, durationMinutes: profile.defaultDurationMinutes }));
+    this.profileService.getAvailability().subscribe(windows => this.availability.set(windows));
 
     // מילוי אוטומטי של שעת הסיום לפי משך ברירת המחדל (של התלמיד או של המורה)
     this.lessonForm.controls.studentId.valueChanges.subscribe(() => this.applyDefaultEndTime());
@@ -407,9 +418,9 @@ export class LessonsListComponent implements OnInit {
     const start = combineDateTime(raw.date!, raw.startTime!);
     const end = combineDateTime(raw.date!, raw.endTime!);
 
-    const conflict = this.findConflict(start, end);
-    if (conflict) {
-      this.confirmConflictThen(conflict, () => this.doCreateLesson(raw.studentId, start, end));
+    const warning = this.preSaveWarning(start, end);
+    if (warning) {
+      this.confirmWarning(warning, () => this.doCreateLesson(raw.studentId, start, end));
       return;
     }
     this.doCreateLesson(raw.studentId, start, end);
@@ -446,11 +457,37 @@ export class LessonsListComponent implements OnInit {
     );
   }
 
-  private confirmConflictThen(conflict: Lesson, proceed: () => void): void {
-    const range = `${formatDate(conflict.startTime, 'HH:mm', this.locale)}–${formatDate(conflict.endTime, 'HH:mm', this.locale)}`;
+  /** האם הטווח נופל מחוץ לשעות הזמינות שהוגדרו. ללא הגדרות זמינות — תמיד false (אין הגבלה). */
+  private isOutsideAvailability(start: Date, end: Date): boolean {
+    const windows = this.availability();
+    if (windows.length === 0) return false;
+    const day = start.getDay();
+    const startMin = start.getHours() * 60 + start.getMinutes();
+    const endMin = end.getHours() * 60 + end.getMinutes();
+    return !windows.some(w => {
+      if (w.dayOfWeek !== day) return false;
+      const [ws, we] = [toMinutes(w.startTime), toMinutes(w.endTime)];
+      return startMin >= ws && endMin <= we;
+    });
+  }
+
+  /** מחזיר הודעת אזהרה לפני שמירה (התנגשות / מחוץ לשעות), או null אם הכל תקין. */
+  private preSaveWarning(start: Date, end: Date, excludeLessonId?: string): string | null {
+    const conflict = this.findConflict(start, end, excludeLessonId);
+    if (conflict) {
+      const range = `${formatDate(conflict.startTime, 'HH:mm', this.locale)}–${formatDate(conflict.endTime, 'HH:mm', this.locale)}`;
+      return `כבר קיים שיעור עם ${conflict.studentName} בשעה ${range}. לקבוע בכל זאת?`;
+    }
+    if (this.isOutsideAvailability(start, end)) {
+      return 'השיעור נקבע מחוץ לשעות הזמינות שהגדרת. לקבוע בכל זאת?';
+    }
+    return null;
+  }
+
+  private confirmWarning(message: string, proceed: () => void): void {
     this.confirmationService.confirm({
-      header: 'התנגשות ביומן',
-      message: `כבר קיים שיעור עם ${conflict.studentName} בשעה ${range}. לקבוע בכל זאת?`,
+      header: 'שים לב',
+      message,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'קבע בכל זאת',
       rejectLabel: 'ביטול',
@@ -514,9 +551,9 @@ export class LessonsListComponent implements OnInit {
     const start = combineDateTime(raw.date!, raw.startTime!);
     const end = combineDateTime(raw.date!, raw.endTime!);
 
-    const conflict = this.findConflict(start, end, id);
-    if (conflict) {
-      this.confirmConflictThen(conflict, () => this.doUpdateTime(id, start, end));
+    const warning = this.preSaveWarning(start, end, id);
+    if (warning) {
+      this.confirmWarning(warning, () => this.doUpdateTime(id, start, end));
       return;
     }
     this.doUpdateTime(id, start, end);
@@ -589,6 +626,18 @@ export class LessonsListComponent implements OnInit {
   markNextPending(): void {
     const next = this.pendingToMark()[0];
     if (next) this.openCompleteDialog(next);
+  }
+
+  /** סימון "לא הגיע" — התלמיד לא הופיע (ללא חיוב). */
+  markNoShow(lesson: Lesson): void {
+    this.showLessonDetailDialog.set(false);
+    this.lessonsService.noShow(lesson.id).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'סומן: לא הגיע' });
+        this.loadLessons();
+      },
+      error: err => this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'העדכון נכשל.') })
+    });
   }
 
   saveComplete(): void {
@@ -719,6 +768,12 @@ function defaultLessonFormValue() {
     occurrenceCount: 10,
     endDate: null
   };
+}
+
+/** ממיר "HH:mm" למספר דקות מתחילת היום. */
+function toMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + (m || 0);
 }
 
 /** משלב תאריך (חלק היום/חודש/שנה) עם שעה (חלק השעה/דקה) לאובייקט Date אחד. */

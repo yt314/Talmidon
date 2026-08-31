@@ -12,7 +12,9 @@ public enum LessonStatus
     /// <summary>השיעור בוטל (לאחר שהיה קבוע).</summary>
     Cancelled = 3,
     /// <summary>המורה דחתה בקשת שיעור.</summary>
-    Declined = 4
+    Declined = 4,
+    /// <summary>התלמיד לא הגיע לשיעור (הבחנה מ"בוטל").</summary>
+    NoShow = 5
 }
 
 /// <summary>מי יזם את השיעור.</summary>

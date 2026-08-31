@@ -14,7 +14,11 @@ export function lessonToCalendarEvent(lesson: Lesson): EventInput {
     end: lesson.endTime,
     color: color.color,
     contrastColor: color.contrastColor,
-    classNames: pending ? ['lesson-cal-pending'] : lesson.status === LessonStatus.Cancelled ? ['lesson-cal-muted'] : [],
+    classNames: pending
+      ? ['lesson-cal-pending']
+      : lesson.status === LessonStatus.Cancelled || lesson.status === LessonStatus.NoShow
+        ? ['lesson-cal-muted']
+        : [],
     // רק שיעור מתוזמן ניתן לגרירה למועד אחר או לשינוי משך (גרירת הקצה).
     startEditable: lesson.status === LessonStatus.Scheduled,
     durationEditable: lesson.status === LessonStatus.Scheduled,

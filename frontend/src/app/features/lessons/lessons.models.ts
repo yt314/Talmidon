@@ -3,7 +3,8 @@ export enum LessonStatus {
   Scheduled = 1,
   Completed = 2,
   Cancelled = 3,
-  Declined = 4
+  Declined = 4,
+  NoShow = 5
 }
 
 export enum LessonOrigin {
@@ -33,7 +34,8 @@ export const LESSON_STATUS_LABELS: Record<LessonStatus, string> = {
   [LessonStatus.Scheduled]: 'מתוזמן',
   [LessonStatus.Completed]: 'התקיים',
   [LessonStatus.Cancelled]: 'בוטל',
-  [LessonStatus.Declined]: 'נדחה'
+  [LessonStatus.Declined]: 'נדחה',
+  [LessonStatus.NoShow]: 'לא הגיע'
 };
 
 export type LessonStatusSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
@@ -43,7 +45,8 @@ export const LESSON_STATUS_SEVERITY: Record<LessonStatus, LessonStatusSeverity> 
   [LessonStatus.Scheduled]: 'info',
   [LessonStatus.Completed]: 'success',
   [LessonStatus.Cancelled]: 'danger',
-  [LessonStatus.Declined]: 'danger'
+  [LessonStatus.Declined]: 'danger',
+  [LessonStatus.NoShow]: 'secondary'
 };
 
 export interface LessonCalendarColor {
@@ -57,7 +60,8 @@ export const LESSON_STATUS_COLOR: Record<LessonStatus, LessonCalendarColor> = {
   [LessonStatus.Scheduled]: { color: '#3b82f6', contrastColor: '#ffffff' },
   [LessonStatus.Completed]: { color: '#22c55e', contrastColor: '#ffffff' },
   [LessonStatus.Cancelled]: { color: '#9ca3af', contrastColor: '#4b5563' },
-  [LessonStatus.Declined]: { color: '#ef4444', contrastColor: '#7f1d1d' }
+  [LessonStatus.Declined]: { color: '#ef4444', contrastColor: '#7f1d1d' },
+  [LessonStatus.NoShow]: { color: '#d8b4fe', contrastColor: '#6b21a8' }
 };
 
 /** צבע בלוקי-רפאים (ghost) של בקשות שינוי/ביטול ממתינות ביומן המורה — אותו עיצוב "ממתין לאישור". */

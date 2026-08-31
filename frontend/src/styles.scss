@@ -215,6 +215,18 @@ full-calendar {
   border: 2px dashed #f59e0b;
 }
 
+// עורך שעות הזמינות בפרופיל המורה
+.availability-row {
+  border-bottom: 1px solid var(--surface-200, #e5e7eb);
+}
+.availability-row:last-child {
+  border-bottom: none;
+}
+.availability-day {
+  width: 4rem;
+  flex-shrink: 0;
+}
+
 // באנר "שיעורים שממתינים לסימום" ביומן המורה
 .pending-banner {
   background: #fffbeb;

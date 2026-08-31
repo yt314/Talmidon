@@ -75,4 +75,48 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         await db.SaveChangesAsync();
         return NoContent();
     }
+
+    // ===== שעות זמינות (T) =====
+
+    [HttpGet("me/availability")]
+    public async Task<ActionResult<IEnumerable<AvailabilityWindowDto>>> GetMyAvailability()
+    {
+        var windows = await db.TeacherAvailabilities
+            .OrderBy(a => a.DayOfWeek).ThenBy(a => a.StartTime)
+            .Select(a => new AvailabilityWindowDto(
+                (int)a.DayOfWeek, a.StartTime.ToString("HH:mm"), a.EndTime.ToString("HH:mm")))
+            .ToListAsync();
+        return Ok(windows);
+    }
+
+    /// <summary>מחליף את כל חלונות הזמינות בבת אחת (עריכת הלוח השבועי ושמירה).</summary>
+    [HttpPut("me/availability")]
+    public async Task<IActionResult> UpdateMyAvailability(UpdateAvailabilityRequest request)
+    {
+        var parsed = new List<TeacherAvailability>();
+        foreach (var w in request.Windows)
+        {
+            if (w.DayOfWeek is < 0 or > 6)
+                return BadRequest(new { message = "יום לא תקין." });
+            if (!TimeOnly.TryParse(w.StartTime, out var start) || !TimeOnly.TryParse(w.EndTime, out var end))
+                return BadRequest(new { message = "שעה לא תקינה." });
+            if (end <= start)
+                return BadRequest(new { message = "שעת הסיום חייבת להיות אחרי שעת ההתחלה." });
+
+            parsed.Add(new TeacherAvailability
+            {
+                Id = Guid.NewGuid(),
+                TenantId = TenantId,
+                DayOfWeek = (DayOfWeek)w.DayOfWeek,
+                StartTime = start,
+                EndTime = end
+            });
+        }
+
+        var existing = await db.TeacherAvailabilities.ToListAsync();
+        db.TeacherAvailabilities.RemoveRange(existing);
+        db.TeacherAvailabilities.AddRange(parsed);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
 }

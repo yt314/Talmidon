@@ -127,4 +127,36 @@
       <small class="text-red-500 block mt-1">{{ msg }}</small>
     }
   </p-card>
+
+  <p-card class="block mt-4" [style]="{ 'max-width': '640px' }">
+    <h3 class="mt-0 mb-1">שעות זמינות</h3>
+    <p class="text-color-secondary mt-0 mb-3 text-sm">
+      הגדרת שעות עבודה תדגיש אותן ביומן ותתריע בעת קביעת שיעור מחוצה להן. ניתן להוסיף כמה חלונות ליום (למשל בוקר וערב).
+    </p>
+
+    <div class="flex flex-column gap-2">
+      @for (day of days; track day) {
+        <div class="availability-row flex align-items-start gap-3 py-2">
+          <div class="availability-day font-medium pt-1">{{ dayNames[day] }}</div>
+          <div class="flex-1 flex flex-column gap-2">
+            @for (win of windowsForDay(day); track $index) {
+              <div class="flex align-items-center gap-2">
+                <input pInputText type="time" [(ngModel)]="win.startTime" [ngModelOptions]="{ standalone: true }" />
+                <span class="text-color-secondary">עד</span>
+                <input pInputText type="time" [(ngModel)]="win.endTime" [ngModelOptions]="{ standalone: true }" />
+                <p-button icon="pi pi-times" severity="danger" [text]="true" (onClick)="removeWindow(win)" />
+              </div>
+            } @empty {
+              <span class="text-color-secondary text-sm pt-1">לא זמין</span>
+            }
+          </div>
+          <p-button icon="pi pi-plus" label="חלון" size="small" [text]="true" (onClick)="addWindow(day)" />
+        </div>
+      }
+    </div>
+
+    <div class="mt-3">
+      <p-button label="שמור זמינות" icon="pi pi-check" [loading]="savingAvailability()" (onClick)="saveAvailability()" />
+    </div>
+  </p-card>
 }

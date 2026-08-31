@@ -200,6 +200,25 @@ public class LessonsController(
         return Ok(ToDto(lesson, lesson.Student.FullName));
     }
 
+    /// <summary>סימון "לא הגיע" — שיעור מתוזמן שהתלמיד לא הופיע אליו (ללא חיוב).</summary>
+    [Authorize(Roles = Roles.Teacher)]
+    [HttpPost("{id:guid}/no-show")]
+    public async Task<ActionResult<LessonDto>> MarkNoShow(Guid id)
+    {
+        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
+        if (lesson is null) return NotFound();
+        if (lesson.Status != LessonStatus.Scheduled)
+            return Conflict(new { message = "ניתן לסמן \"לא הגיע\" רק לשיעור מתוזמן." });
+
+        lesson.Status = LessonStatus.NoShow;
+        lesson.PaymentRequired = false;
+        lesson.Amount = 0;
+        lesson.CompletedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync();
+
+        return Ok(ToDto(lesson, lesson.Student.FullName));
+    }
+
     // ===== מורה: בקשות שיעור חדש ממתינות (Origin=Parent, Status=Requested) =====
 
     [Authorize(Roles = Roles.Teacher)]
