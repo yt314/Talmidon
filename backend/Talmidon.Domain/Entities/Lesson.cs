@@ -38,6 +38,9 @@ public class Lesson : ITenantScoped
 
     public DateTimeOffset? CompletedAt { get; set; }
 
+    /// <summary>מתי נשלחה תזכורת השיעור להורים. <c>null</c> = טרם נשלחה (מונע כפילות).</summary>
+    public DateTimeOffset? ReminderSentAt { get; set; }
+
     /// <summary>אם השיעור נוצר אוטומטית מתוך סדרת שיעורים חוזרת. <c>null</c> = שיעור בודד רגיל.</summary>
     public Guid? SeriesId { get; set; }
 

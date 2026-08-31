@@ -150,6 +150,13 @@ RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
     Cron.Daily(),
     new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
+// תזכורת שיעור להורים על שיעורים ב-24 השעות הקרובות — פעם בשעה (מונע כפילות דרך ReminderSentAt).
+RecurringJob.AddOrUpdate<LessonReminderJob>(
+    "lesson-reminders",
+    job => job.RunForAllTenantsAsync(),
+    Cron.Hourly(),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
 app.Run();
 
 /// <summary>מחילה מיגרציות ממתינות באתחול — כדי שפריסה (deploy) תהיה "git pull + docker compose up" בלי צעד ידני נפרד.</summary>

@@ -76,6 +76,7 @@ public static class DependencyInjection
 
         // עבודת רקע: תזכורת תשלום חודשית, וייצור מתגלגל של שיעורים מסדרות חוזרות (Hangfire, אחסון על אותו Postgres)
         services.AddScoped<MonthlyPaymentReminderJob>();
+        services.AddScoped<LessonReminderJob>();
         services.AddScoped<LessonSeriesGenerator>();
         services.AddScoped<LessonSeriesGenerationJob>();
         services.AddHangfire(config => config
