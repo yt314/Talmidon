@@ -127,15 +127,12 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// חשוב: מפעילים את שרת Hangfire לפני שמוסיפים RecurringJob, אחרת JobStorage לא מאותחל.
-app.UseHangfireServer();
-
-app.MapControllers();
-
 if (app.Environment.IsDevelopment())
 {
-    // רק בסביבה מקומית: מונע את השגיאה "Current JobStorage instance has not been initialized yet".
-    // אם עדיין לא מוכן לייצור, יש לשמור את ההזמנות הללו רק בסביבות שבהן Hangfire already configured.
+    // Completely disable Hangfire in production on Render.
+    // This ensures the background server and recurring jobs never run outside local development.
+    app.UseHangfireServer();
+
     RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
         "monthly-payment-reminders",
         job => job.RunForAllTenantsAsync(),
@@ -154,6 +151,8 @@ if (app.Environment.IsDevelopment())
         Cron.Hourly(),
         new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 }
+
+app.MapControllers();
 
 app.Run();
 
