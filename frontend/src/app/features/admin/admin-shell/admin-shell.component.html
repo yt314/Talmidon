@@ -13,7 +13,7 @@
       <ng-template pTemplate="end">
         <div class="flex align-items-center gap-2">
           <app-theme-toggle />
-          <p-button icon="pi pi-sign-out" label="התנתקות" severity="secondary" [text]="true" (onClick)="logout()" />
+          <app-user-menu [name]="email()" roleLabel="מנהל מערכת" (logout)="logout()" />
         </div>
       </ng-template>
     </p-menubar>

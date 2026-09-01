@@ -9,10 +9,11 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { NotificationsBellComponent } from '../../notifications/notifications-bell/notifications-bell.component';
 import { TeacherProfileService } from '../profile/profile.service';
+import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
 
 @Component({
   selector: 'app-teacher-shell',
-  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent],
+  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent],
   templateUrl: './teacher-shell.component.html'
 })
 export class TeacherShellComponent implements OnInit {
@@ -20,8 +21,7 @@ export class TeacherShellComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly profileService = inject(TeacherProfileService);
 
-  private readonly fullName = signal<string | null>(null);
-  protected readonly greeting = computed(() => (this.fullName() ? `שלום, המורה ${this.fullName()}` : 'שלום, המורה'));
+  protected readonly fullName = signal<string | null>(null);
 
   protected readonly menuItems: MenuItem[] = [
     { label: 'ראשי', icon: 'pi pi-home', routerLink: '/app/dashboard' },

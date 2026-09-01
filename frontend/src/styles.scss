@@ -624,6 +624,13 @@ full-calendar {
 /* --- בלוקי השיעורים ---
    הצבע נקבע כאן ולא ב-EventInput, כי FullCalendar מזריק ‎color‎ כסגנון inline שגובר
    על טוקנים ולא מתחלף במצב כהה. כל סטטוס מקבל ‎--lesson-tone‎ משלו והשאר משותף. */
+/* --- בלוקי השיעורים ---
+   מראה "מתויג" ולא בלוק רווי: רקע בגוון עדין של צבע הסטטוס, פס צבע מלא בקצה
+   הפנימי, וטקסט כהה וקריא — כמו ביומנים מקצועיים, ובניגוד לריבוע צבעוני שמקשה
+   על קריאת השם.
+
+   ‎!important‎ נדרש כאן: FullCalendar v7 מזריק את הסגנונות שלו בזמן ריצה, אחרי
+   הגיליון הזה, ולכן כלל רגיל באותה ספציפיות מפסיד לו. */
 .lesson-cal-scheduled {
   --lesson-tone: var(--p-primary-500);
 }
@@ -632,7 +639,6 @@ full-calendar {
 }
 .lesson-cal-requested {
   --lesson-tone: var(--p-amber-500);
-  --lesson-ink: var(--p-amber-950);
 }
 .lesson-cal-cancelled {
   --lesson-tone: var(--p-surface-400);
@@ -643,24 +649,34 @@ full-calendar {
 .lesson-cal-noshow {
   --lesson-tone: var(--p-purple-500);
 }
-/* במצב כהה הגוונים המלאים בוהקים מדי על רקע כהה — מורידים מעט את הרוויה */
-.app-dark .lesson-cal-scheduled {
-  --lesson-tone: var(--p-primary-600);
-}
-.app-dark .lesson-cal-completed {
-  --lesson-tone: var(--p-green-700);
-}
-.app-dark .lesson-cal-cancelled {
-  --lesson-tone: var(--p-surface-600);
-}
 
-.lesson-cal-pending {
-  border-style: dashed !important;
-  border-width: 2px !important;
+full-calendar [class*="lesson-cal-"] {
+  background: color-mix(in srgb, var(--lesson-tone) 16%, var(--p-content-background)) !important;
+  border: 1px solid color-mix(in srgb, var(--lesson-tone) 32%, transparent) !important;
+  border-inline-start: 3px solid var(--lesson-tone) !important;
+  border-radius: var(--p-border-radius-sm) !important;
+  color: var(--p-text-color) !important;
+  padding: 2px 5px !important;
+  overflow: hidden;
+  transition:
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
 }
-.lesson-cal-muted {
-  opacity: 0.6;
-  text-decoration: line-through;
+full-calendar [class*="lesson-cal-"]:hover {
+  box-shadow: var(--p-talmidon-shadow-md);
+  filter: brightness(0.98);
+}
+.app-dark full-calendar [class*="lesson-cal-"]:hover {
+  filter: brightness(1.15);
+}
+/* השעה משנית לשם התלמיד — היא כבר מובנת ממיקום הבלוק על הציר */
+full-calendar [class*="lesson-cal-"] .fc-event-time {
+  font-size: 0.72rem;
+  opacity: 0.75;
+  font-weight: 500;
+}
+full-calendar [class*="lesson-cal-"] .fc-event-title {
+  font-weight: 600;
 }
 
 /* --- מקרא --- */
@@ -1404,4 +1420,70 @@ full-calendar {
 }
 .link-button:hover {
   text-decoration: underline;
+}
+
+/* ---------------------------------------------------- תפריט המשתמש ---- */
+
+.user-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.3rem 0.15rem 0.15rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--p-border-radius-xl);
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+  transition: background-color 0.15s ease;
+}
+.user-menu-trigger:hover {
+  background: var(--p-content-hover-background);
+}
+.user-menu-avatar {
+  width: 2.1rem;
+  height: 2.1rem;
+  font-size: 0.8rem;
+  box-shadow: none;
+}
+
+.user-menu-panel {
+  min-width: 15rem;
+}
+.user-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.85rem 0.9rem 0.6rem;
+}
+.user-menu-header .avatar-circle {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.9rem;
+  box-shadow: none;
+}
+.user-menu-header-text {
+  min-width: 0;
+}
+.user-menu-name {
+  display: block;
+  font-weight: 600;
+  color: var(--p-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 11rem;
+}
+.user-menu-role {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+/* היום הנוכחי — עמודה מודגשת בעדינות וכותרת בצבע המותג */
+.cal-today-lane {
+  background: color-mix(in srgb, var(--p-primary-color) 5%, transparent) !important;
+}
+.cal-today-header {
+  color: var(--p-primary-color) !important;
+  font-weight: 700 !important;
 }

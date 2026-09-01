@@ -11,9 +11,8 @@
       </ng-template>
       <ng-template pTemplate="end">
         <div class="flex align-items-center gap-3">
-          <span class="app-shell-greeting text-sm text-color-secondary" [title]="greeting()">{{ greeting() }}</span>
           <app-theme-toggle />
-          <p-button icon="pi pi-sign-out" label="התנתקות" severity="secondary" [text]="true" (onClick)="logout()" />
+          <app-user-menu [name]="fullName()" [roleLabel]="roleLabel()" (logout)="logout()" />
         </div>
       </ng-template>
     </p-menubar>

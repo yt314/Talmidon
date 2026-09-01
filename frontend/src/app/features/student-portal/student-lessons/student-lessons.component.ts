@@ -7,13 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { CalendarEventExtendedProps } from '../../../shared/calendar/lesson-calendar.model';
 import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
-import {
-  LESSON_STATUS_CLASS,
-  LESSON_STATUS_COLOR,
-  LESSON_STATUS_LABELS,
-  LESSON_STATUS_SEVERITY,
-  LessonStatus
-} from '../../lessons/lessons.models';
+import { LESSON_STATUS_CLASS, LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, LessonStatus } from '../../lessons/lessons.models';
 import { StudentLesson } from '../student-portal.models';
 import { StudentPortalService } from '../student-portal.service';
 
@@ -36,16 +30,13 @@ export class StudentLessonsComponent implements OnInit {
   protected readonly calendarEvents = computed<EventInput[]>(() =>
     this.lessons().map(lesson => {
       const statusClass = LESSON_STATUS_CLASS[lesson.status];
-      const color = LESSON_STATUS_COLOR[lesson.status];
       const extendedProps: CalendarEventExtendedProps = { kind: 'lesson', refId: lesson.id };
       return {
         id: lesson.id,
         title: this.statusLabel(lesson.status),
         start: lesson.startTime,
         end: lesson.endTime,
-        color: color.background,
-        contrastColor: color.text,
-        classNames: [statusClass, ...(lesson.status === LessonStatus.Cancelled ? ['lesson-cal-muted'] : [])],
+        className: lesson.status === LessonStatus.Cancelled ? `${statusClass} lesson-cal-muted` : statusClass,
         extendedProps
       };
     })

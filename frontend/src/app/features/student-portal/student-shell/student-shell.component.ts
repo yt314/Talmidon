@@ -8,10 +8,11 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { Gender } from '../../../core/models/gender';
 import { StudentPortalService } from '../student-portal.service';
+import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
 
 @Component({
   selector: 'app-student-shell',
-  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ThemeToggleComponent],
+  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ThemeToggleComponent, UserMenuComponent],
   templateUrl: './student-shell.component.html'
 })
 export class StudentShellComponent implements OnInit {
@@ -19,13 +20,12 @@ export class StudentShellComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly portalService = inject(StudentPortalService);
 
-  private readonly fullName = signal<string | null>(null);
+  protected readonly fullName = signal<string | null>(null);
   private readonly gender = signal<Gender | null>(null);
 
-  protected readonly greeting = computed(() => {
-    const label = this.gender() === Gender.Male ? 'התלמיד' : this.gender() === Gender.Female ? 'התלמידה' : 'התלמיד/ה';
-    return this.fullName() ? `שלום, ${label} ${this.fullName()}` : `שלום, ${label}`;
-  });
+  protected readonly roleLabel = computed(() =>
+    this.gender() === Gender.Male ? 'תלמיד' : this.gender() === Gender.Female ? 'תלמידה' : 'תלמיד/ה'
+  );
 
   protected readonly menuItems: MenuItem[] = [
     { label: 'ראשי', icon: 'pi pi-home', routerLink: '/student/dashboard' },

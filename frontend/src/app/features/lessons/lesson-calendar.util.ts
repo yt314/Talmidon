@@ -4,17 +4,14 @@ import {
   ChangeRequest,
   ChangeRequestType,
   LESSON_STATUS_CLASS,
-  LESSON_STATUS_COLOR,
   Lesson,
   LessonStatus,
-  PENDING_CHANGE_CLASS,
-  PENDING_CHANGE_COLOR
+  PENDING_CHANGE_CLASS
 } from './lessons.models';
 
 export function lessonToCalendarEvent(lesson: Lesson): EventInput {
   const pending = lesson.status === LessonStatus.Requested;
   const statusClass = LESSON_STATUS_CLASS[lesson.status];
-  const color = LESSON_STATUS_COLOR[lesson.status];
   const extendedProps: CalendarEventExtendedProps = { kind: pending ? 'request' : 'lesson', refId: lesson.id };
   const recurringPrefix = lesson.seriesId ? '🔁 ' : '';
   return {
@@ -22,13 +19,15 @@ export function lessonToCalendarEvent(lesson: Lesson): EventInput {
     title: pending ? `⏳ ${lesson.studentName}` : `${recurringPrefix}${lesson.studentName}`,
     start: lesson.startTime,
     end: lesson.endTime,
-    color: color.background,
-    contrastColor: color.text,
-    classNames: [
+    // ‎className‎ (יחיד, מחרוזת) ולא ‎classNames‎ — האחרון הוא שם מ-v6 שאינו קיים
+    // ב-v7, ומכיוון שהוא סתם מפתח לא-מוכר הוא נבלע בשקט והמחלקות לא הגיעו ל-DOM.
+    className: [
       statusClass,
-      ...(pending ? ['lesson-cal-pending'] : []),
-      ...(lesson.status === LessonStatus.Cancelled || lesson.status === LessonStatus.NoShow ? ['lesson-cal-muted'] : [])
-    ],
+      pending ? 'lesson-cal-pending' : '',
+      lesson.status === LessonStatus.Cancelled || lesson.status === LessonStatus.NoShow ? 'lesson-cal-muted' : ''
+    ]
+      .filter(Boolean)
+      .join(' '),
     // רק שיעור מתוזמן ניתן לגרירה למועד אחר או לשינוי משך (גרירת הקצה).
     startEditable: lesson.status === LessonStatus.Scheduled,
     durationEditable: lesson.status === LessonStatus.Scheduled,
@@ -59,9 +58,7 @@ export function buildTeacherCalendarEvents(lessons: Lesson[], pendingChangeReque
       title: `⏳ בקשת ביטול — ${lesson.studentName}`,
       start: lesson.startTime,
       end: lesson.endTime,
-      color: PENDING_CHANGE_COLOR.background,
-      contrastColor: PENDING_CHANGE_COLOR.text,
-      classNames: [PENDING_CHANGE_CLASS, 'lesson-cal-pending'],
+      className: `${PENDING_CHANGE_CLASS} lesson-cal-pending`,
       startEditable: false,
       durationEditable: false,
       extendedProps
@@ -75,9 +72,7 @@ export function buildTeacherCalendarEvents(lessons: Lesson[], pendingChangeReque
       title: `⏳ בקשת שינוי מועד — ${request.studentName}`,
       start: request.proposedStartTime!,
       end: request.proposedEndTime!,
-      color: PENDING_CHANGE_COLOR.background,
-      contrastColor: PENDING_CHANGE_COLOR.text,
-      classNames: [PENDING_CHANGE_CLASS, 'lesson-cal-pending'],
+      className: `${PENDING_CHANGE_CLASS} lesson-cal-pending`,
       startEditable: false,
       durationEditable: false,
       extendedProps
