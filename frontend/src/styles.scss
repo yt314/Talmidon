@@ -652,11 +652,13 @@ full-calendar {
 
 full-calendar [class*="lesson-cal-"] {
   background: color-mix(in srgb, var(--lesson-tone) 16%, var(--p-content-background)) !important;
-  border: 1px solid color-mix(in srgb, var(--lesson-tone) 32%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--lesson-tone) 30%, transparent) !important;
   border-inline-start: 3px solid var(--lesson-tone) !important;
-  border-radius: var(--p-border-radius-sm) !important;
+  border-radius: var(--p-border-radius-md) !important;
   color: var(--p-text-color) !important;
-  padding: 2px 5px !important;
+  padding: 3px 6px !important;
+  /* מרווח קטן מדפנות העמודה — הבלוק "מרחף" במקום להיראות כתא בטבלה */
+  margin-inline: 3px !important;
   overflow: hidden;
   transition:
     box-shadow 0.15s ease,
@@ -702,6 +704,44 @@ full-calendar [class*="lesson-cal-"] .fc-event-title {
 .legend-dot-pending {
   background: transparent;
   border: 2px dashed var(--p-amber-500);
+}
+
+/* --- ערכת הצבעים של FullCalendar ---
+   ערכת ה-classic חושפת פלטה מלאה במשתני ‎--fc-classic-*‎, וזו נקודת האחיזה
+   היחידה שיציב להישען עליה: שאר שמות המחלקות שלה מגובבים ומשתנים בין גרסאות.
+   ממפים אותה לטוקנים של האפליקציה — כך היומן מקבל את צבעי המותג ומתחלף למצב
+   כהה לבד (הפלטה שלה תלויה ב-‎[data-color-scheme=dark]‎, שאיננו מגדירים).
+
+   הקווים מוחלשים בכוונה כמעט עד היעלמות: רשת מלאה בניגודיות בינונית היא מה
+   שגרם ליומן להיראות כמו גיליון אלקטרוני. המבנה מגיע מהמרווחים ומהבלוקים. */
+full-calendar {
+  --fc-classic-border: color-mix(in srgb, var(--p-content-border-color) 24%, transparent);
+  --fc-classic-strong-border: color-mix(in srgb, var(--p-content-border-color) 55%, transparent);
+
+  --fc-classic-background: var(--p-content-background);
+  --fc-classic-faint: color-mix(in srgb, var(--p-surface-500) 4%, transparent);
+  --fc-classic-muted: color-mix(in srgb, var(--p-surface-500) 7%, transparent);
+  --fc-classic-strong: color-mix(in srgb, var(--p-surface-500) 12%, transparent);
+
+  --fc-classic-foreground: var(--p-text-color);
+  --fc-classic-faint-foreground: var(--p-text-muted-color);
+  --fc-classic-muted-foreground: var(--p-text-muted-color);
+
+  --fc-classic-primary: var(--p-primary-color);
+  --fc-classic-primary-foreground: var(--p-primary-contrast-color);
+  --fc-classic-highlight: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+  /* קו "עכשיו" בצבע המותג במקום האדום, ו"היום" שקוף — ההדגשה מגיעה מ-cal-today-lane */
+  --fc-classic-now: var(--p-primary-color);
+  --fc-classic-today: transparent;
+}
+
+/* כותרות הימים — טיפוגרפיה שקטה ומרווח נדיב; הקו התחתון היחיד הוא מה שמפריד
+   בין הכותרת לרשת, במקום מסגרת סביב כל תא */
+full-calendar th {
+  padding-block: 0.6rem !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  color: var(--p-text-muted-color);
 }
 
 /* --- כרום היומן ---
