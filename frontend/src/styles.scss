@@ -277,6 +277,15 @@ full-calendar {
   flex-shrink: 0;
 }
 
+// סיכום שעות זמינות מעל היומן
+.availability-chip {
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 12px;
+  padding: 0.15rem 0.6rem;
+  font-weight: 500;
+}
+
 // באנר "שיעורים שממתינים לסימום" ביומן המורה
 .pending-banner {
   background: #fffbeb;

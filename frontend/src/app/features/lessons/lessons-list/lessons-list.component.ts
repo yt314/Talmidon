@@ -79,6 +79,15 @@ export class LessonsListComponent implements OnInit {
     return windows.length ? windows.map(w => ({ daysOfWeek: [w.dayOfWeek], startTime: w.startTime, endTime: w.endTime })) : undefined;
   });
 
+  /** סיכום טקסטואלי של שעות הזמינות, לתצוגה מעל היומן. */
+  protected readonly availabilitySummary = computed(() => {
+    const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+    return this.availability()
+      .slice()
+      .sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime))
+      .map(w => `${dayNames[w.dayOfWeek]} ${w.startTime}–${w.endTime}`);
+  });
+
   protected readonly LessonStatus = LessonStatus;
   protected readonly ChangeRequestType = ChangeRequestType;
   protected readonly ChangeRequestStatus = ChangeRequestStatus;

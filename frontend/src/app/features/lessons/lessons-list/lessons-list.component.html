@@ -33,6 +33,16 @@
   <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#d8b4fe"></span> לא הגיע</span>
 </div>
 
+@if (availabilitySummary().length > 0) {
+  <div class="availability-summary flex align-items-center gap-2 flex-wrap mb-3 text-sm">
+    <i class="pi pi-clock text-color-secondary"></i>
+    <span class="text-color-secondary">שעות זמינות:</span>
+    @for (slot of availabilitySummary(); track slot) {
+      <span class="availability-chip">{{ slot }}</span>
+    }
+  </div>
+}
+
 <app-lesson-calendar
   [events]="calendarEvents()"
   [businessHours]="businessHours()"
