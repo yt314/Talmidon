@@ -3,16 +3,26 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
-import { MessageModule } from 'primeng/message';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
+import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { PublicTeacherDetail } from '../public.models';
 import { PublicService } from '../public.service';
 
 @Component({
   selector: 'app-teacher-profile',
-  imports: [RouterLink, ButtonModule, CardModule, DividerModule, MessageModule, SkeletonModule, TagModule],
+  imports: [
+    RouterLink,
+    ButtonModule,
+    CardModule,
+    DividerModule,
+    SkeletonModule,
+    TagModule,
+    EmptyStateComponent,
+    ThemeToggleComponent
+  ],
   templateUrl: './teacher-profile.component.html'
 })
 export class TeacherProfileComponent implements OnInit {

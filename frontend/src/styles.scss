@@ -793,3 +793,497 @@ full-calendar {
   font-size: 0.875rem;
   color: var(--p-text-muted-color);
 }
+
+/* ============================================================================
+   שכבת התנועה — חשיפה בגלילה, הילת סמן, גרדיאנט חי ופריסות דף הנחיתה.
+   כל אפקט כאן מתבטל תחת prefers-reduced-motion (הכלל הגלובלי למעלה מאפס משכים,
+   ובנוסף כל אפקט שדורש זאת מנוטרל במפורש).
+   ============================================================================ */
+
+/* ------------------------------------------------------ חשיפה בגלילה ---- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0s);
+}
+.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------- הילת סמן ---- */
+
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: var(--spot-opacity, 0);
+  transition: opacity 0.25s ease;
+  background: radial-gradient(
+    260px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in srgb, var(--p-primary-color) 16%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+/* במכשירי מגע אין סמן — ההילה הייתה נתקעת אחרי נגיעה */
+@media (hover: none) {
+  .spotlight::before {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------- גרדיאנט חי ב-hero ---- */
+
+@keyframes talmidon-aurora {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-4%, 3%, 0) scale(1.12);
+  }
+}
+
+/* שכבת "זוהר" שנעה לאט מעל הגרדיאנט הבסיסי של ה-hero */
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 46% at 22% 26%, rgba(255, 255, 255, 0.3), transparent 60%),
+    radial-gradient(34% 40% at 78% 68%, color-mix(in srgb, var(--p-cyan-300) 45%, transparent), transparent 62%),
+    radial-gradient(30% 36% at 62% 12%, color-mix(in srgb, var(--p-primary-300) 40%, transparent), transparent 60%);
+  animation: talmidon-aurora 18s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora::after {
+    animation: none;
+  }
+}
+
+/* רשת נקודות עדינה — נותנת ל-hero מרקם במקום צבע שטוח */
+.dot-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+  background-size: 22px 22px;
+  /* דוהה כלפי מטה כדי שלא יתחרה בתוכן */
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 78%);
+}
+
+/* -------------------------------------------------------- דף הנחיתה ---- */
+
+.landing-section {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 4.5rem 1.5rem;
+}
+.landing-section-tight {
+  padding-block: 3rem;
+}
+.section-eyebrow {
+  display: block;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--p-primary-color);
+  margin-bottom: 0.6rem;
+}
+.section-title {
+  text-align: center;
+  font-size: clamp(1.6rem, 3.4vw, 2.1rem);
+  font-weight: 800;
+  margin: 0 0 0.75rem;
+  text-wrap: balance;
+}
+.section-lead {
+  text-align: center;
+  color: var(--p-text-muted-color);
+  max-width: 56ch;
+  margin: 0 auto 2.75rem;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+/* רצועה בגוון שונה, להפרדה בין סקשנים סמוכים */
+.landing-band {
+  background: var(--p-content-background);
+  border-block: 1px solid var(--p-content-border-color);
+}
+
+/* שלושת השלבים של "איך זה עובד" */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  counter-reset: step;
+}
+.step {
+  position: relative;
+  padding: 1.75rem 1.5rem 1.5rem;
+  border-radius: var(--p-border-radius-xl);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+}
+.step::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  top: -1rem;
+  inset-inline-start: 1.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--p-primary-500), var(--p-primary-700));
+  box-shadow: var(--p-talmidon-shadow-md);
+}
+.step h3 {
+  margin: 0.5rem 0 0.5rem;
+  font-size: 1.1rem;
+}
+.step p {
+  margin: 0;
+  color: var(--p-text-muted-color);
+  line-height: 1.6;
+}
+
+/* רשת יתרונות בגדלים משתנים (bento) */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+.bento-item {
+  padding: 1.5rem;
+  border-radius: var(--p-border-radius-xl);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+.bento-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--p-talmidon-shadow-md);
+  border-color: color-mix(in srgb, var(--p-primary-color) 35%, transparent);
+}
+/* הפריט הראשון תופס רוחב כפול כשיש מקום — שובר את המונוטוניות של רשת אחידה */
+@media (min-width: 900px) {
+  .bento-item-wide {
+    grid-column: span 2;
+  }
+}
+.bento-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--p-border-radius-lg);
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  background: color-mix(in srgb, var(--bento-tone, var(--p-primary-color)) 14%, transparent);
+  color: var(--bento-tone, var(--p-primary-color));
+}
+.bento-item h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+.bento-item p {
+  margin: 0;
+  color: var(--p-text-muted-color);
+  line-height: 1.6;
+}
+
+/* רצועת קריאה-לפעולה בתחתית */
+.cta-band {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--p-border-radius-xl);
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--p-talmidon-hero-text);
+  background: linear-gradient(225deg, var(--p-talmidon-hero-from), var(--p-talmidon-hero-via) 60%, var(--p-talmidon-hero-to));
+}
+.cta-band > * {
+  position: relative;
+  z-index: 1;
+}
+.cta-band h2 {
+  font-size: clamp(1.5rem, 3.2vw, 2rem);
+  font-weight: 800;
+  margin: 0 0 0.6rem;
+}
+.cta-band p {
+  margin: 0 auto 1.75rem;
+  max-width: 48ch;
+  opacity: 0.92;
+}
+
+/* פוטר */
+.site-footer {
+  border-top: 1px solid var(--p-content-border-color);
+  background: var(--p-content-background);
+  padding: 2.5rem 1.5rem 2rem;
+}
+.site-footer-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: space-between;
+}
+.site-footer h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+  color: var(--p-text-color);
+}
+.site-footer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.site-footer a,
+.site-footer li {
+  color: var(--p-text-muted-color);
+  font-size: 0.9rem;
+}
+.site-footer-legal {
+  max-width: 1140px;
+  margin: 2rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--p-content-border-color);
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+}
+
+/* -------------------------------------------------- פרופיל מורה ציבורי ---- */
+
+/* רצועת פתיחה של הפרופיל — אותה שפה של ה-hero בדף הנחיתה, בגובה נמוך יותר */
+.profile-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 2.75rem 1.5rem 3.25rem;
+  color: var(--p-talmidon-hero-text);
+  background: linear-gradient(225deg, var(--p-talmidon-hero-from), var(--p-talmidon-hero-via) 60%, var(--p-talmidon-hero-to));
+}
+.profile-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.profile-hero h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.6rem, 3.4vw, 2.1rem);
+  font-weight: 800;
+}
+/* העיגול על רקע הגרדיאנט צריך טבעת לבנה, לא טבעת בצבע עצמו */
+.profile-hero .avatar-circle {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+}
+
+/* התוכן "מטפס" על הרצועה שמעליו */
+.profile-body {
+  max-width: 1140px;
+  margin: -2rem auto 0;
+  padding: 0 1.5rem 4rem;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+  .profile-body {
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    align-items: start;
+  }
+}
+
+/* כרטיס יצירת הקשר נשאר בשדה הראייה בזמן קריאת הביוגרפיה */
+.profile-aside {
+  position: sticky;
+  top: 5.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-price {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--p-primary-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-section + .profile-section {
+  margin-top: 2rem;
+}
+.profile-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+.profile-section h3 i {
+  color: var(--p-primary-color);
+}
+.profile-section p {
+  margin: 0;
+  line-height: 1.75;
+  white-space: pre-line;
+  color: var(--p-text-color);
+}
+
+/* ------------------------------------------------------- מסכי אימות ---- */
+
+.auth-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 980px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-radius: var(--p-border-radius-xl);
+  overflow: hidden;
+  box-shadow: var(--p-talmidon-shadow-xl);
+  background: var(--p-content-background);
+  animation: talmidon-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* פאנל המיתוג נסתר בנייד — אחרת הטופס נדחף מתחת לקיפול */
+.auth-brand {
+  display: none;
+}
+@media (min-width: 900px) {
+  .auth-shell {
+    grid-template-columns: 1fr 1fr;
+  }
+  .auth-brand {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    color: var(--p-talmidon-hero-text);
+    background: linear-gradient(225deg, var(--p-talmidon-hero-from), var(--p-talmidon-hero-via) 60%, var(--p-talmidon-hero-to));
+  }
+}
+.auth-brand-inner {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.auth-brand-logo,
+.auth-brand-logo:hover {
+  color: var(--p-talmidon-hero-text);
+  margin-bottom: 2rem;
+  text-decoration: none;
+}
+.auth-brand-logo .brand-mark {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+}
+.auth-brand h2 {
+  margin: 0 0 1.5rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+.auth-brand-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+.auth-brand-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  opacity: 0.94;
+  line-height: 1.5;
+}
+.auth-brand-points i {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.auth-form-side {
+  padding: 1.25rem 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+}
+.auth-form-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+/* הלוגו בצד הטופס נחוץ רק כשפאנל המיתוג מוסתר */
+@media (min-width: 900px) {
+  .auth-mobile-brand {
+    visibility: hidden;
+  }
+}
+
+/* הכרטיס יושב בתוך המעטפת, ולכן בלי מסגרת, צל או רוחב משלו */
+.auth-card {
+  box-shadow: none;
+  border: none;
+  background: transparent;
+  max-width: none;
+}
+.auth-card .p-card-body {
+  padding-inline: 0;
+}
+
+.auth-back {
+  margin-top: 1.25rem;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+}

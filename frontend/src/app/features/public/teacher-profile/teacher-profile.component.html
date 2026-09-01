@@ -1,19 +1,18 @@
 <div class="library-page">
   <header class="library-header">
-    <a routerLink="/" class="flex align-items-center gap-2 no-underline" style="color: inherit">
-      <i class="pi pi-graduation-cap" style="font-size: 1.8rem; color: var(--p-primary-color)"></i>
-      <h1 class="m-0 text-2xl font-bold">תלמידון</h1>
+    <a routerLink="/" class="brand" style="color: inherit">
+      <span class="brand-mark"><i class="pi pi-graduation-cap"></i></span>
+      תלמידון
     </a>
-    <div class="flex gap-2">
+    <div class="flex align-items-center gap-2">
+      <app-theme-toggle />
       <p-button label="הרשמה כמורה" icon="pi pi-user-plus" severity="secondary" [outlined]="true" routerLink="/register" />
       <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
     </div>
   </header>
 
-  <main class="library-content">
-    <a routerLink="/" class="inline-flex align-items-center gap-1 mb-3 no-underline"><i class="pi pi-arrow-right text-xs"></i> חזרה לספרייה</a>
-
-    @if (loading()) {
+  @if (loading()) {
+    <main class="library-content">
       <p-card>
         <div class="flex align-items-center gap-3 mb-3">
           <p-skeleton shape="circle" size="4.5rem" />
@@ -22,42 +21,78 @@
         <p-skeleton width="100%" height="1rem" styleClass="mb-2" />
         <p-skeleton width="70%" height="1rem" />
       </p-card>
-    } @else if (!teacher()) {
-      <p-message severity="warn" text="המורה לא נמצאה, או שאינה מוצגת בספרייה הציבורית." />
-    } @else {
-      <p-card>
-        <div class="flex align-items-center gap-3 mb-3 flex-wrap">
-          <span class="avatar-circle avatar-circle-lg" [style.--avatar-color]="avatarColor(teacher()!.fullName)">
-            {{ initials(teacher()!.fullName) }}
-          </span>
-          <div>
-            <h2 class="m-0 mb-2">{{ teacher()!.fullName }}</h2>
-            <div class="flex gap-2 flex-wrap">
-              @for (subject of teacher()!.subjects; track subject) {
-                <p-tag [value]="subject" severity="info" />
-              }
-            </div>
+    </main>
+  } @else if (!teacher()) {
+    <main class="library-content">
+      <app-empty-state
+        icon="pi-user"
+        title="המורה לא נמצאה"
+        hint="ייתכן שהפרופיל הוסר מהספרייה הציבורית, או שהקישור אינו תקין.">
+        <p-button label="חזרה לספרייה" icon="pi pi-arrow-right" routerLink="/" />
+      </app-empty-state>
+    </main>
+  } @else {
+    <section class="profile-hero aurora dot-grid">
+      <div class="profile-hero-inner">
+        <span class="avatar-circle avatar-circle-lg" [style.--avatar-color]="avatarColor(teacher()!.fullName)">
+          {{ initials(teacher()!.fullName) }}
+        </span>
+        <div class="flex-1">
+          <h2>{{ teacher()!.fullName }}</h2>
+          <div class="flex gap-2 flex-wrap">
+            @for (subject of teacher()!.subjects; track subject) {
+              <p-tag [value]="subject" severity="contrast" />
+            }
           </div>
         </div>
+      </div>
+    </section>
 
+    <main class="profile-body">
+      <p-card>
         @if (teacher()!.bio) {
-          <p class="line-height-3">{{ teacher()!.bio }}</p>
+          <div class="profile-section">
+            <h3><i class="pi pi-user"></i> על המורה</h3>
+            <p>{{ teacher()!.bio }}</p>
+          </div>
         }
-
-        <p-tag [value]="'₪' + teacher()!.defaultPricePerLesson + ' לשיעור'" severity="success" styleClass="text-base" />
 
         @if (teacher()!.rulesText) {
-          <p-divider />
-          <h3 class="mb-2 flex align-items-center gap-2"><i class="pi pi-file-check"></i> כללי ביטול ותשלום</h3>
-          <p style="white-space: pre-line" class="line-height-3">{{ teacher()!.rulesText }}</p>
+          <div class="profile-section">
+            <h3><i class="pi pi-file-check"></i> כללי ביטול ותשלום</h3>
+            <p>{{ teacher()!.rulesText }}</p>
+          </div>
         }
 
-        @if (teacher()!.contactInfo) {
-          <p-divider />
-          <h3 class="mb-2 flex align-items-center gap-2"><i class="pi pi-phone"></i> יצירת קשר</h3>
-          <p style="white-space: pre-line" class="line-height-3">{{ teacher()!.contactInfo }}</p>
+        @if (!teacher()!.bio && !teacher()!.rulesText) {
+          <app-empty-state
+            icon="pi-info-circle"
+            title="המורה עדיין לא הוסיפה תיאור"
+            hint="אפשר לפנות אליה ישירות בפרטי הקשר שבצד." />
         }
       </p-card>
-    }
-  </main>
+
+      <aside class="profile-aside">
+        <p-card>
+          <span class="text-color-secondary text-sm">מחיר לשיעור</span>
+          <div class="profile-price">₪{{ teacher()!.defaultPricePerLesson }}</div>
+
+          @if (teacher()!.contactInfo) {
+            <p-divider />
+            <h3 class="mt-0 mb-2 text-base flex align-items-center gap-2">
+              <i class="pi pi-phone" style="color: var(--p-primary-color)"></i> יצירת קשר
+            </h3>
+            <p class="m-0 line-height-3" style="white-space: pre-line">{{ teacher()!.contactInfo }}</p>
+          } @else {
+            <p-divider />
+            <p class="m-0 text-sm text-color-secondary">המורה לא פרסמה פרטי קשר בספרייה.</p>
+          }
+        </p-card>
+
+        <a routerLink="/" class="flex align-items-center gap-1 text-sm no-underline">
+          <i class="pi pi-arrow-right text-xs"></i> חזרה לספרייה
+        </a>
+      </aside>
+    </main>
+  }
 </div>

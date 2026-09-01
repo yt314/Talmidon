@@ -2,10 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { PasswordModule } from 'primeng/password';
+import { AuthLayoutComponent } from '../../../shared/ui/auth-layout.component';
 import { AuthService } from '../../../core/auth/auth.service';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
@@ -13,7 +13,7 @@ import { passwordPolicyValidator, passwordsMatchValidator } from '../../../core/
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink, CardModule, InputTextModule, PasswordModule, ButtonModule, MessageModule],
+  imports: [ReactiveFormsModule, RouterLink, InputTextModule, PasswordModule, ButtonModule, MessageModule, AuthLayoutComponent],
   templateUrl: './register.component.html'
 })
 export class RegisterComponent {

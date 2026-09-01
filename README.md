@@ -76,8 +76,14 @@ component may hardcode a color:
 - **Shared primitives** — `shared/ui/` holds `app-page-header`, `app-empty-state` and
   `app-stat-card`, so every screen opens with the same hierarchy and every empty list says
   something useful instead of each screen inventing its own phrasing.
-- **Motion** — staggered card entrances and shimmer skeletons, all behind
-  `prefers-reduced-motion`.
+- **Motion** — staggered card entrances, scroll-reveal (`appReveal`), animated counters
+  (`appCountUp`), a pointer-tracking spotlight (`appSpotlight`) and shimmer skeletons. Each is a
+  small directive over `IntersectionObserver` / `requestAnimationFrame` rather than a dependency,
+  and every one of them is inert under `prefers-reduced-motion`. Route changes use Angular's
+  `withViewTransitions()`.
+- **Public surface** — the login-free pages (landing, tutor profile) and the four auth screens
+  share one visual language: an animated aurora gradient over a dot grid, and, on auth, a
+  branded split panel (`app-auth-layout`) that collapses to the form alone on small screens.
 
 ## Multi-Tenancy & Security
 

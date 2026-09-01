@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -8,7 +9,10 @@ import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
+import { CountUpDirective } from '../../../shared/ui/count-up.directive';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
+import { RevealDirective } from '../../../shared/ui/reveal.directive';
+import { SpotlightDirective } from '../../../shared/ui/spotlight.directive';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { PublicTeacherSummary } from '../public.models';
 import { PublicService } from '../public.service';
@@ -24,8 +28,12 @@ import { PublicService } from '../public.service';
     SelectModule,
     SkeletonModule,
     TagModule,
+    AccordionModule,
     EmptyStateComponent,
-    ThemeToggleComponent
+    ThemeToggleComponent,
+    RevealDirective,
+    SpotlightDirective,
+    CountUpDirective
   ],
   templateUrl: './teacher-library.component.html'
 })
@@ -34,6 +42,42 @@ export class TeacherLibraryComponent implements OnInit {
 
   protected readonly initials = getInitials;
   protected readonly avatarColor = getAvatarColor;
+
+  protected readonly year = new Date().getFullYear();
+
+  /** שאלות נפוצות בדף הנחיתה. טקסט קבוע — אין לו מקור בשרת. */
+  protected readonly faq = [
+    {
+      question: 'האם השימוש בספרייה עולה כסף?',
+      answer:
+        'לא. הצפייה בספרייה והפנייה למורה חינמיות ולא דורשות הרשמה. התשלום על השיעורים עצמם מתבצע ישירות מול המורה, ותלמידון לא גובה עמלה.'
+    },
+    {
+      question: 'איך יוצרים קשר עם מורה?',
+      answer:
+        'בפרופיל של כל מורה מופיעים פרטי הקשר שהיא בחרה לפרסם — טלפון, וואטסאפ או מייל. הפנייה היא ישירה אליה.'
+    },
+    {
+      question: 'אני מורה. איך מתחילים?',
+      answer:
+        'נרשמות, מאשרות את כתובת המייל, ומוסיפות תלמיד ראשון. הפרסום בספרייה הציבורית הוא בחירה נפרדת — אפשר להשתמש במערכת לניהול בלבד, בלי להופיע בספרייה.'
+    },
+    {
+      question: 'מה ההורה והתלמיד רואים?',
+      answer:
+        'ההורה רואה את יומן השיעורים של ילדיו, את ההערות שסימנתן כגלויות להורים, את חומרי הלימוד ואת מצב התשלומים. התלמיד רואה את היומן, את ההערות שסומנו גלויות לו ואת חומרי הלימוד — בלי שום מידע על כסף.'
+    },
+    {
+      question: 'האם המידע שלי מופרד ממורות אחרות?',
+      answer:
+        'כן, בשלוש שכבות בלתי תלויות: סינון ברמת השאילתה, אכיפה בשמירה למסד, ומפתחות זרים מורכבים ברמת מסד הנתונים. גם אם שכבה אחת תיכשל, מורה אחרת לא תוכל להגיע לנתונים שלכן.'
+    },
+    {
+      question: 'אפשר לבטל או לדחות שיעור דרך המערכת?',
+      answer:
+        'כן. הורה יכול לשלוח בקשת ביטול או דחייה, המורה מקבלת התראה ומאשרת או דוחה — והיומן מתעדכן בהתאם. מדיניות הביטולים של כל מורה מופיעה בפרופיל שלה.'
+    }
+  ];
 
   protected readonly loading = signal(true);
   protected readonly allTeachers = signal<PublicTeacherSummary[]>([]);

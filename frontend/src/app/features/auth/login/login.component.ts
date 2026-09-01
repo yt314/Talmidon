@@ -2,10 +2,10 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { PasswordModule } from 'primeng/password';
+import { AuthLayoutComponent } from '../../../shared/ui/auth-layout.component';
 import { AuthService } from '../../../core/auth/auth.service';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
@@ -15,7 +15,7 @@ const EMAIL_NOT_CONFIRMED_MESSAGE = 'יש לאמת את כתובת המייל ל
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, CardModule, InputTextModule, PasswordModule, ButtonModule, MessageModule],
+  imports: [ReactiveFormsModule, RouterLink, InputTextModule, PasswordModule, ButtonModule, MessageModule, AuthLayoutComponent],
   templateUrl: './login.component.html'
 })
 export class LoginComponent implements OnInit {

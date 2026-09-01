@@ -2,14 +2,14 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
+import { AuthLayoutComponent } from '../../../shared/ui/auth-layout.component';
 import { AuthService } from '../../../core/auth/auth.service';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 
 @Component({
   selector: 'app-forgot-password',
-  imports: [ReactiveFormsModule, RouterLink, ButtonModule, CardModule, InputTextModule],
+  imports: [ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AuthLayoutComponent],
   templateUrl: './forgot-password.component.html'
 })
 export class ForgotPasswordComponent {

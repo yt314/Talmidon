@@ -1,79 +1,71 @@
-<div class="auth-page">
-  <p-card styleClass="auth-card">
-    <ng-template pTemplate="header">
-      <div class="flex align-items-center gap-2 p-4 pb-0">
-        <i class="pi pi-graduation-cap" style="font-size: 1.8rem; color: var(--p-primary-color)"></i>
-        <h1 class="m-0 text-2xl font-bold">תלמידון</h1>
+<app-auth-layout headline="ניהול שיעורים פרטיים, במקום אחד">
+  <h2 class="mt-0 mb-3 text-xl">התחברות</h2>
+
+  @if (confirmed()) {
+    <p-message severity="success" text="כתובת המייל אומתה! אפשר להתחבר." styleClass="w-full mb-3" />
+  }
+  @if (passwordChanged()) {
+    <p-message severity="success" text="הסיסמה עודכנה בהצלחה. יש להתחבר מחדש." styleClass="w-full mb-3" />
+  }
+  @if (error()) {
+    <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
+  }
+  @if (unconfirmedEmail()) {
+    @if (resendDone()) {
+      <p-message severity="success" text="אם הכתובת אינה מאומתת עדיין, נשלח אליה מייל אימות חדש." styleClass="w-full mb-3" />
+    } @else {
+      <div class="mb-3 text-center">
+        <p-button
+          label="שלח מייל אימות מחדש"
+          icon="pi pi-envelope"
+          severity="secondary"
+          [text]="true"
+          [loading]="resending()"
+          (onClick)="resendConfirmation()" />
       </div>
-    </ng-template>
+    }
+  }
 
-    <h2 class="mt-0 mb-3 text-xl">התחברות</h2>
-
-    @if (confirmed()) {
-      <p-message severity="success" text="כתובת המייל אומתה! אפשר להתחבר." styleClass="w-full mb-3" />
-    }
-    @if (passwordChanged()) {
-      <p-message severity="success" text="הסיסמה עודכנה בהצלחה. יש להתחבר מחדש." styleClass="w-full mb-3" />
-    }
-    @if (error()) {
-      <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
-    }
-    @if (unconfirmedEmail()) {
-      @if (resendDone()) {
-        <p-message severity="success" text="אם הכתובת אינה מאומתת עדיין, נשלח אליה מייל אימות חדש." styleClass="w-full mb-3" />
-      } @else {
-        <div class="mb-3 text-center">
-          <p-button
-            label="שלח מייל אימות מחדש"
-            icon="pi pi-envelope"
-            severity="secondary"
-            [text]="true"
-            [loading]="resending()"
-            (onClick)="resendConfirmation()" />
-        </div>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="email">אימייל *</label>
+      <input
+        pInputText
+        id="email"
+        type="email"
+        formControlName="email"
+        class="w-full"
+        autocomplete="username"
+        [invalid]="isInvalid(form.controls.email)" />
+      @if (fieldError(form.controls.email); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
       }
-    }
-
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="field">
-        <label for="email">אימייל *</label>
-        <input
-          pInputText
-          id="email"
-          type="email"
-          formControlName="email"
-          class="w-full"
-          autocomplete="username"
-          [invalid]="isInvalid(form.controls.email)" />
-        @if (fieldError(form.controls.email); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
-        }
-      </div>
-
-      <div class="field">
-        <label for="password">סיסמה *</label>
-        <p-password
-          inputId="password"
-          formControlName="password"
-          [feedback]="false"
-          [toggleMask]="true"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-          autocomplete="current-password"
-          [invalid]="isInvalid(form.controls.password)" />
-        @if (fieldError(form.controls.password); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
-        }
-      </div>
-
-      <p-button type="submit" label="התחבר" icon="pi pi-sign-in" [loading]="loading()" styleClass="w-full" />
-    </form>
-
-    <div class="mt-3 text-center text-sm">
-      <a routerLink="/forgot-password">שכחת סיסמה?</a>
     </div>
-    <div class="mt-2 text-center text-sm">
-      אין לך חשבון? <a routerLink="/register">הרשמה כמורה</a>
+
+    <div class="field">
+      <label for="password">סיסמה *</label>
+      <p-password
+        inputId="password"
+        formControlName="password"
+        [feedback]="false"
+        [toggleMask]="true"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        autocomplete="current-password"
+        [invalid]="isInvalid(form.controls.password)" />
+      @if (fieldError(form.controls.password); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
     </div>
-  </p-card>
-</div>
+
+    <p-button type="submit" label="התחבר" icon="pi pi-sign-in" [loading]="loading()" styleClass="w-full" />
+  </form>
+
+  <div class="mt-3 text-center text-sm">
+    <a routerLink="/forgot-password">שכחת סיסמה?</a>
+  </div>
+  <div class="mt-2 text-center text-sm">
+    אין לך חשבון? <a routerLink="/register">הרשמה כמורה</a>
+  </div>
+
+</app-auth-layout>

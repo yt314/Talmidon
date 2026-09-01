@@ -18,11 +18,10 @@
     </div>
 
     @if (loading()) {
-      <p class="text-color-secondary m-0">טוען...</p>
+      <div class="skeleton skeleton-line"></div>
+      <div class="skeleton skeleton-line"></div>
     } @else if (notifications().length === 0) {
-      <p class="text-color-secondary m-0 flex align-items-center gap-2">
-        <i class="pi pi-check-circle"></i> אין התראות.
-      </p>
+      <app-empty-state icon="pi-check-circle" title="אין התראות" hint="בקשות חדשות מהורים יופיעו כאן." />
     } @else {
       <ul class="notif-list">
         @for (n of notifications(); track n.id) {

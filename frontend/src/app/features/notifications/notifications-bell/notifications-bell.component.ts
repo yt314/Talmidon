@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { Popover, PopoverModule } from 'primeng/popover';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { timer } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { AppNotification, NOTIFICATION_ICON, NotificationType } from '../notifications.models';
@@ -11,7 +12,7 @@ import { NotificationsService } from '../notifications.service';
 
 @Component({
   selector: 'app-notifications-bell',
-  imports: [DatePipe, ButtonModule, PopoverModule],
+  imports: [DatePipe, ButtonModule, PopoverModule, EmptyStateComponent],
   templateUrl: './notifications-bell.component.html'
 })
 export class NotificationsBellComponent implements OnInit {

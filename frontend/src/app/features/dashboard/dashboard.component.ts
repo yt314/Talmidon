@@ -6,6 +6,7 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header.component';
+import { SpotlightDirective } from '../../shared/ui/spotlight.directive';
 import { StatCardComponent } from '../../shared/ui/stat-card.component';
 import { OpenCharge } from '../payments/payments.models';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestStatus, Lesson, LessonStatus } from '../lessons/lessons.models';
@@ -22,7 +23,8 @@ import { PaymentsService } from '../payments/payments.service';
     TagModule,
     EmptyStateComponent,
     PageHeaderComponent,
-    StatCardComponent
+    StatCardComponent,
+    SpotlightDirective
   ],
   templateUrl: './dashboard.component.html'
 })
