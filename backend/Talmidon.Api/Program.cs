@@ -126,28 +126,34 @@ app.UseCors(CorsPolicy);
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// חשוב: מפעילים את שרת Hangfire לפני שמוסיפים RecurringJob, אחרת JobStorage לא מאותחל.
+app.UseHangfireServer();
+
 app.MapControllers();
 
-// תזכורת תשלום חודשית לכל הדיירים — פעם בחודש, UTC (סעיף 6-7 באפיון).
-RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
-    "monthly-payment-reminders",
-    job => job.RunForAllTenantsAsync(),
-    Cron.Monthly(),
-    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+if (app.Environment.IsDevelopment())
+{
+    // רק בסביבה מקומית: מונע את השגיאה "Current JobStorage instance has not been initialized yet".
+    // אם עדיין לא מוכן לייצור, יש לשמור את ההזמנות הללו רק בסביבות שבהן Hangfire already configured.
+    RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
+        "monthly-payment-reminders",
+        job => job.RunForAllTenantsAsync(),
+        Cron.Monthly(),
+        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
-// ייצור מתגלגל של שיעורים מסדרות חוזרות, לכל הדיירים — פעם ביום.
-RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
-    "lesson-series-generation",
-    job => job.RunForAllTenantsAsync(),
-    Cron.Daily(),
-    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+    RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
+        "lesson-series-generation",
+        job => job.RunForAllTenantsAsync(),
+        Cron.Daily(),
+        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
-// תזכורת שיעור להורים על שיעורים ב-24 השעות הקרובות — פעם בשעה (מונע כפילות דרך ReminderSentAt).
-RecurringJob.AddOrUpdate<LessonReminderJob>(
-    "lesson-reminders",
-    job => job.RunForAllTenantsAsync(),
-    Cron.Hourly(),
-    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+    RecurringJob.AddOrUpdate<LessonReminderJob>(
+        "lesson-reminders",
+        job => job.RunForAllTenantsAsync(),
+        Cron.Hourly(),
+        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+}
 
 app.Run();
 
