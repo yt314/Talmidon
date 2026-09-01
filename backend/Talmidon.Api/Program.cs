@@ -78,24 +78,16 @@ builder.Services.AddRateLimiter(options =>
 
 // CORS לאפליקציית ה-Angular
 const string CorsPolicy = "TalmidonClient";
+var frontendOrigin = builder.Environment.IsDevelopment()
+    ? "http://localhost:4200"
+    : Environment.GetEnvironmentVariable("APP_CLIENT_URL")
+        ?? throw new InvalidOperationException("APP_CLIENT_URL must be configured for production CORS.");
+
 builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
 {
-    if (builder.Environment.IsDevelopment())
-    {
-        // בפיתוח מאפשרים כל פורט על localhost/127.0.0.1 — כלים כמו VS Code Simple Browser
-        // מעבירים (proxy) את ה-Angular dev server דרך פורט אקראי, לא בהכרח 4200.
-        policy.SetIsOriginAllowed(origin =>
-                Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.Host is "localhost" or "127.0.0.1")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    }
-    else
-    {
-        var clientUrl = builder.Configuration["App:ClientUrl"];
-        if (string.IsNullOrWhiteSpace(clientUrl))
-            throw new InvalidOperationException("App:ClientUrl must be configured for CORS in non-development environments.");
-        policy.WithOrigins(clientUrl).AllowAnyHeader().AllowAnyMethod();
-    }
+    policy.WithOrigins(frontendOrigin)
+        .AllowAnyHeader()
+        .AllowAnyMethod();
 }));
 
 var app = builder.Build();

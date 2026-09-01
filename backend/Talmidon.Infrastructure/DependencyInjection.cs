@@ -23,10 +23,14 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Default")
-            ?? throw new InvalidOperationException(
-                "Connection string 'Default' is not configured. Set it via appsettings.Development.json (dev) " +
-                "or the ConnectionStrings__Default environment variable (prod).");
+        var envConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+
+        var connectionString = !string.IsNullOrWhiteSpace(envConnectionString)
+            ? envConnectionString
+            : configuration.GetConnectionString("Default")
+                ?? throw new InvalidOperationException(
+                    "Connection string 'Default' is not configured. Set DB_CONNECTION_STRING in production, " +
+                    "or define ConnectionStrings:Default in appsettings.json/appsettings.Development.json.");
 
         services.AddDbContext<TalmidonDbContext>(options =>
             options
