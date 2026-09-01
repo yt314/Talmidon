@@ -8,12 +8,25 @@ import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
+import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { PublicTeacherSummary } from '../public.models';
 import { PublicService } from '../public.service';
 
 @Component({
   selector: 'app-teacher-library',
-  imports: [FormsModule, RouterLink, ButtonModule, CardModule, InputTextModule, SelectModule, SkeletonModule, TagModule],
+  imports: [
+    FormsModule,
+    RouterLink,
+    ButtonModule,
+    CardModule,
+    InputTextModule,
+    SelectModule,
+    SkeletonModule,
+    TagModule,
+    EmptyStateComponent,
+    ThemeToggleComponent
+  ],
   templateUrl: './teacher-library.component.html'
 })
 export class TeacherLibraryComponent implements OnInit {
@@ -27,6 +40,12 @@ export class TeacherLibraryComponent implements OnInit {
   protected readonly subjects = signal<string[]>([]);
   protected readonly search = signal('');
   protected readonly selectedSubject = signal<string | null>(null);
+
+  /** המחיר הזול ביותר בספרייה — מוצג כ"החל מ־" ברצועת הפתיחה. */
+  protected readonly lowestPrice = computed(() => {
+    const prices = this.allTeachers().map(t => t.defaultPricePerLesson);
+    return prices.length > 0 ? Math.min(...prices) : null;
+  });
 
   protected readonly teachers = computed(() => {
     const search = this.search().trim().toLowerCase();
@@ -47,5 +66,18 @@ export class TeacherLibraryComponent implements OnInit {
       error: () => this.loading.set(false)
     });
     this.publicService.listSubjects().subscribe(subjects => this.subjects.set(subjects));
+  }
+
+  protected clearFilters(): void {
+    this.search.set('');
+    this.selectedSubject.set(null);
+  }
+
+  /**
+   * השהיית האנימציה של כרטיס לפי מקומו ברשימה, כדי שהכרטיסים "יעלו" בזה אחר זה.
+   * נעצרת אחרי 8 כרטיסים — אחרת רשימה ארוכה נראית איטית במקום חיה.
+   */
+  protected riseDelay(index: number): string {
+    return `${Math.min(index, 8) * 0.05}s`;
   }
 }

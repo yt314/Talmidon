@@ -6,12 +6,13 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MenubarModule } from 'primeng/menubar';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { NotificationsBellComponent } from '../../notifications/notifications-bell/notifications-bell.component';
 import { TeacherProfileService } from '../profile/profile.service';
 
 @Component({
   selector: 'app-teacher-shell',
-  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent],
+  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent],
   templateUrl: './teacher-shell.component.html'
 })
 export class TeacherShellComponent implements OnInit {

@@ -1,0 +1,15 @@
+<app-page-header title="חומרי לימוד" icon="pi-folder-open" subtitle="כל מה שהמורה שיתפה איתך — דפי תרגול, סרטונים וקישורים." />
+
+<p-card>
+  @if (loading()) {
+    <div class="skeleton skeleton-line" style="height: 3rem"></div>
+    <div class="skeleton skeleton-line" style="height: 3rem"></div>
+  } @else if (resources().length === 0) {
+    <app-empty-state
+      icon="pi-folder-open"
+      title="אין חומרי לימוד עדיין"
+      hint="כשהמורה תשתף איתך דף תרגול או סרטון, הוא יופיע כאן." />
+  } @else {
+    <app-resource-list [resources]="resources()" />
+  }
+</p-card>

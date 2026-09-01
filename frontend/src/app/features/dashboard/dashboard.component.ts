@@ -1,8 +1,12 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
+import { PageHeaderComponent } from '../../shared/ui/page-header.component';
+import { StatCardComponent } from '../../shared/ui/stat-card.component';
 import { OpenCharge } from '../payments/payments.models';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestStatus, Lesson, LessonStatus } from '../lessons/lessons.models';
 import { LessonsService } from '../lessons/lessons.service';
@@ -10,7 +14,16 @@ import { PaymentsService } from '../payments/payments.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, DatePipe, CardModule, TagModule],
+  imports: [
+    RouterLink,
+    DatePipe,
+    ButtonModule,
+    CardModule,
+    TagModule,
+    EmptyStateComponent,
+    PageHeaderComponent,
+    StatCardComponent
+  ],
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {
@@ -30,6 +43,14 @@ export class DashboardComponent implements OnInit {
     const a = this.pendingLessonRequests();
     const b = this.pendingChangeRequests();
     return a === null || b === null ? null : a + b;
+  });
+
+  /** שורת ההסבר בכותרת — תמונת מצב של היום במשפט אחד. */
+  protected readonly todaySummary = computed(() => {
+    const lessons = this.todayLessons();
+    if (lessons === null) return null;
+    if (lessons.length === 0) return 'אין שיעורים מתוזמנים להיום.';
+    return lessons.length === 1 ? 'שיעור אחד מתוזמן להיום.' : `${lessons.length} שיעורים מתוזמנים להיום.`;
   });
 
   protected readonly openChargesCount = computed(() => this.openCharges()?.length ?? null);

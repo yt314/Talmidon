@@ -13,6 +13,7 @@ export function fieldError(control: AbstractControl | null | undefined): string 
   if (errors['max']) return `הערך המקסימלי הוא ${errors['max'].max}`;
   if (errors['passwordMismatch']) return 'הסיסמאות אינן זהות';
   if (errors['dateRange']) return 'שעת הסיום חייבת להיות אחרי שעת ההתחלה';
+  if (errors['httpUrl']) return 'הכתובת חייבת להתחיל ב-http:// או ב-https://';
   if (errors['passwordPolicy']) {
     const p = errors['passwordPolicy'];
     if (p.minlength) return 'הסיסמה חייבת להכיל לפחות 8 תווים';

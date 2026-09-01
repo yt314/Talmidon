@@ -44,3 +44,20 @@ export function endAfterStartValidator(startKey: string, endKey: string): Valida
     return end > start ? null : { dateRange: true };
   };
 }
+
+/**
+ * כתובת http/https תקינה — מקבילה לבדיקה בצד השרת
+ * (‎[Url]‎ + בדיקת הסכימה ב-StudentResourcesController). ריק נחשב תקין; הדרישה
+ * שהשדה יאוית נשארת בידי ‎Validators.required‎ כדי לא לשכפל הודעות.
+ */
+export function httpUrlValidator(control: AbstractControl): ValidationErrors | null {
+  const value = (control.value as string | null)?.trim();
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? null : { httpUrl: true };
+  } catch {
+    return { httpUrl: true };
+  }
+}

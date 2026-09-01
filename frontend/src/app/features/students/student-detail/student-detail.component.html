@@ -1,9 +1,13 @@
 <a routerLink="/app/students" class="inline-block mb-3">→ חזרה לרשימת התלמידים</a>
 
 @if (loading()) {
-  <p class="text-color-secondary">טוען...</p>
+  <p-card>
+    <div class="skeleton skeleton-line" style="height: 2rem; width: 40%"></div>
+    <div class="skeleton skeleton-line"></div>
+    <div class="skeleton skeleton-line"></div>
+  </p-card>
 } @else if (!student()) {
-  <p class="text-color-secondary">התלמיד לא נמצא.</p>
+  <app-empty-state icon="pi-user" title="התלמיד לא נמצא" hint="ייתכן שהרשומה נמחקה או שהקישור אינו תקין." />
 } @else {
   <p-card>
     <div class="flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
@@ -84,12 +88,15 @@
     </div>
 
     @if (notesLoading()) {
-      <p class="text-color-secondary">טוען...</p>
+      <div class="skeleton skeleton-line"></div>
+      <div class="skeleton skeleton-line"></div>
     } @else if (notes().length === 0) {
-      <p class="text-color-secondary text-center py-4">
-        <i class="pi pi-file-edit text-4xl mb-2 block"></i>
-        אין הערות עדיין.
-      </p>
+      <app-empty-state
+        icon="pi-file-edit"
+        title="אין הערות עדיין"
+        hint="תיעוד קצר אחרי כל שיעור הופך את המעקב לתמונה שלמה לאורך זמן.">
+        <p-button label="הוסף הערה ראשונה" icon="pi pi-plus" (onClick)="openAddNoteDialog()" />
+      </app-empty-state>
     } @else {
       <ul class="parent-list">
         @for (note of notes(); track note.id) {
@@ -109,6 +116,30 @@
           </li>
         }
       </ul>
+    }
+  </p-card>
+
+  <p-card class="block mt-4">
+    <div class="flex justify-content-between align-items-center mb-3">
+      <h3 class="m-0">חומרי לימוד</h3>
+      <p-button label="הוסף חומר" icon="pi pi-plus" size="small" (onClick)="openAddResourceDialog()" />
+    </div>
+    <p class="text-sm text-color-secondary mt-0 mb-3">
+      כל חומר שתוסיפי כאן גלוי לתלמיד/ה ולהוריו בפורטל שלהם.
+    </p>
+
+    @if (resourcesLoading()) {
+      <div class="skeleton skeleton-line"></div>
+      <div class="skeleton skeleton-line"></div>
+    } @else if (resources().length === 0) {
+      <app-empty-state
+        icon="pi-folder-open"
+        title="אין חומרי לימוד עדיין"
+        hint="קישור לדף תרגול, סרטון הסבר או קובץ בדרייב — כל מה שיעזור לתלמיד/ה בין השיעורים.">
+        <p-button label="הוסף חומר ראשון" icon="pi pi-plus" (onClick)="openAddResourceDialog()" />
+      </app-empty-state>
+    } @else {
+      <app-resource-list [resources]="resources()" [deletable]="true" (remove)="confirmDeleteResource($event)" />
     }
   </p-card>
 }
@@ -242,6 +273,50 @@
     <div class="flex justify-content-end gap-2 mt-4">
       <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showNoteDialog.set(false)" type="button" />
       <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingNote()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog header="הוספת חומר לימוד" [(visible)]="showResourceDialog" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="resourceForm" (ngSubmit)="saveResource()">
+    <div class="field">
+      <label for="r-title">כותרת *</label>
+      <input pInputText id="r-title" formControlName="title" class="w-full" [invalid]="isInvalid(resourceForm.controls.title)" />
+      @if (fieldError(resourceForm.controls.title); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
+      <label for="r-url">קישור *</label>
+      <input
+        pInputText
+        id="r-url"
+        formControlName="url"
+        class="w-full"
+        dir="ltr"
+        placeholder="https://..."
+        [invalid]="isInvalid(resourceForm.controls.url)" />
+      @if (fieldError(resourceForm.controls.url); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
+      <label for="r-description">תיאור</label>
+      <textarea
+        pTextarea
+        id="r-description"
+        formControlName="description"
+        rows="3"
+        class="w-full"
+        [invalid]="isInvalid(resourceForm.controls.description)"></textarea>
+      @if (fieldError(resourceForm.controls.description); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showResourceDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingResource()" />
     </div>
   </form>
 </p-dialog>

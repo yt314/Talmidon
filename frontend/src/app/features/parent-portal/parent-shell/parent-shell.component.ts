@@ -5,13 +5,14 @@ import { ButtonModule } from 'primeng/button';
 import { MenubarModule } from 'primeng/menubar';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { Gender } from '../../../core/models/gender';
 import { ParentsService } from '../../parents/parents.service';
 import { ParentPortalService } from '../parent-portal.service';
 
 @Component({
   selector: 'app-parent-shell',
-  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule],
+  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ThemeToggleComponent],
   templateUrl: './parent-shell.component.html'
 })
 export class ParentShellComponent implements OnInit {
@@ -33,6 +34,7 @@ export class ParentShellComponent implements OnInit {
     { label: 'ראשי', icon: 'pi pi-home', routerLink: '/parent/dashboard' },
     { label: 'יומן', icon: 'pi pi-calendar', routerLink: '/parent/lessons' },
     { label: 'הערות', icon: 'pi pi-book', routerLink: '/parent/notes' },
+    { label: 'חומרי לימוד', icon: 'pi pi-folder-open', routerLink: '/parent/resources' },
     { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/parent/payments' }
   ];
 

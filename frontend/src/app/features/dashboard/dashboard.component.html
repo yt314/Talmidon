@@ -1,82 +1,70 @@
-<h1 class="text-2xl font-bold mb-4">ראשי</h1>
+<app-page-header title="ראשי" icon="pi-home" [subtitle]="todaySummary()" />
 
 <div class="grid">
   <div class="col-12 sm:col-6 lg:col-3">
-    <a routerLink="/app/lessons" class="block no-underline text-color">
-      <p-card styleClass="h-full cursor-pointer">
-        <div class="flex justify-content-between align-items-start">
-          <div>
-            <div class="text-color-secondary mb-2">שיעורים היום</div>
-            <div class="text-4xl font-bold">{{ todayLessons() === null ? '—' : todayLessons()!.length }}</div>
-          </div>
-          <i class="pi pi-calendar text-2xl text-color-secondary"></i>
-        </div>
-      </p-card>
-    </a>
+    <app-stat-card
+      class="block h-full rise"
+      label="שיעורים היום"
+      icon="pi-calendar"
+      tone="primary"
+      link="/app/lessons"
+      [value]="todayLessons()?.length ?? null" />
   </div>
 
   <div class="col-12 sm:col-6 lg:col-3">
-    <a routerLink="/app/lessons" class="block no-underline text-color">
-      <p-card styleClass="h-full cursor-pointer">
-        <div class="flex justify-content-between align-items-start">
-          <div>
-            <div class="text-color-secondary mb-2">בקשות ממתינות</div>
-            <div class="text-4xl font-bold">{{ pendingRequestsTotal() === null ? '—' : pendingRequestsTotal() }}</div>
-          </div>
-          @if (pendingRequestsTotal(); as count) {
-            <p-tag value="דורש טיפול" severity="warn" />
-          }
-        </div>
-      </p-card>
-    </a>
+    <app-stat-card
+      class="block h-full rise"
+      style="--rise-delay: 0.05s"
+      label="בקשות ממתינות"
+      icon="pi-inbox"
+      tone="warn"
+      link="/app/lessons"
+      [value]="pendingRequestsTotal()"
+      [badge]="pendingRequestsTotal() ? 'דורש טיפול' : null" />
   </div>
 
   <div class="col-12 sm:col-6 lg:col-3">
-    <a routerLink="/app/payments" class="block no-underline text-color">
-      <p-card styleClass="h-full cursor-pointer">
-        <div class="flex justify-content-between align-items-start">
-          <div>
-            <div class="text-color-secondary mb-2">תשלומים פתוחים</div>
-            <div class="text-4xl font-bold">{{ openChargesTotal() === null ? '—' : openChargesTotal() + ' ₪' }}</div>
-          </div>
-          @if (openChargesCount(); as count) {
-            <p-tag [value]="count + ' חיובים'" severity="warn" />
-          }
-        </div>
-      </p-card>
-    </a>
+    <app-stat-card
+      class="block h-full rise"
+      style="--rise-delay: 0.1s"
+      label="תשלומים פתוחים"
+      icon="pi-wallet"
+      tone="accent"
+      link="/app/payments"
+      [value]="openChargesTotal() === null ? null : openChargesTotal() + ' ₪'"
+      [badge]="openChargesCount() ? openChargesCount() + ' חיובים' : null" />
   </div>
 
   <div class="col-12 sm:col-6 lg:col-3">
-    <a routerLink="/app/lessons" class="block no-underline text-color">
-      <p-card styleClass="h-full cursor-pointer">
-        <div class="flex justify-content-between align-items-start">
-          <div>
-            <div class="text-color-secondary mb-2">שיעורים לסימום</div>
-            <div class="text-4xl font-bold">{{ lessonsToMark() === null ? '—' : lessonsToMark() }}</div>
-          </div>
-          @if (lessonsToMark(); as count) {
-            <p-tag value="דורש טיפול" severity="warn" />
-          }
-        </div>
-      </p-card>
-    </a>
+    <app-stat-card
+      class="block h-full rise"
+      style="--rise-delay: 0.15s"
+      label="שיעורים לסימום"
+      icon="pi-check-square"
+      tone="info"
+      link="/app/lessons"
+      [value]="lessonsToMark()"
+      [badge]="lessonsToMark() ? 'דורש טיפול' : null" />
   </div>
 </div>
 
-<p-card styleClass="mt-4">
+<p-card styleClass="mt-4 rise" [style.--rise-delay]="'0.2s'">
   <h3 class="mt-0 mb-3">שיעורי היום</h3>
 
   @if (todayLessons() === null) {
-    <p class="text-color-secondary">טוען...</p>
+    <div class="skeleton skeleton-line"></div>
+    <div class="skeleton skeleton-line"></div>
+    <div class="skeleton skeleton-line"></div>
   } @else if (todayLessons()!.length === 0) {
-    <p class="text-color-secondary">אין שיעורים מתוזמנים היום.</p>
+    <app-empty-state icon="pi-calendar" title="אין שיעורים מתוזמנים היום" hint="יום פנוי — או הזדמנות לקבוע שיעור חדש.">
+      <p-button label="ליומן" icon="pi pi-calendar-plus" routerLink="/app/lessons" />
+    </app-empty-state>
   } @else {
     <ul class="parent-list">
       @for (lesson of todayLessons(); track lesson.id) {
         <li class="flex justify-content-between align-items-center py-2">
           <div class="flex align-items-center gap-3">
-            <span class="text-color-secondary">{{ lesson.startTime | date: 'HH:mm' }}</span>
+            <span class="text-color-secondary font-medium">{{ lesson.startTime | date: 'HH:mm' }}</span>
             <span>{{ lesson.studentName }}</span>
           </div>
           <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" />

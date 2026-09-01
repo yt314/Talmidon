@@ -1,8 +1,17 @@
-/* גלובלי — תלמידון */
+/* ============================================================================
+   תלמידון — גיליון הסגנון הגלובלי
+   ----------------------------------------------------------------------------
+   כלל אחד חוצה קובץ: אין כאן צבעים קשיחים. כל צבע מגיע מטוקן של ערכת הנושא
+   (‎--p-*‎) או מטוקן משלנו (‎--p-talmidon-*‎, מוגדר ב-core/theme/talmidon-preset.ts),
+   כדי שהמצב הכהה יעבוד מעצמו בלי גיליון נפרד ובלי כפילויות.
+   ============================================================================ */
+
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
 @import "fullcalendar/skeleton.css";
 @import "fullcalendar/themes/classic/theme.css";
+
+/* ---------------------------------------------------------------- בסיס ---- */
 
 html,
 body {
@@ -10,25 +19,143 @@ body {
   padding: 0;
   min-height: 100%;
   font-family: "Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--p-talmidon-app-background);
+  color: var(--p-text-color);
+  -webkit-font-smoothing: antialiased;
+  /* מונע קפיצת פריסה כשמסך עובר מתוכן קצר לתוכן שגולש */
+  scrollbar-gutter: stable;
 }
 
-/* פריסת מסכי התחברות/הרשמה */
+body {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.015em;
+}
+
+a {
+  color: var(--p-primary-color);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* פס גלילה דק ומותאם לערכה — כולל במצב כהה */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--p-surface-300) transparent;
+}
+.app-dark * {
+  scrollbar-color: var(--p-surface-700) transparent;
+}
+
+/* טבעת פוקוס גלובלית לכל אלמנט שנגיש במקלדת ואינו רכיב PrimeNG */
+:where(a, button, [tabindex]):focus-visible {
+  outline: var(--p-focus-ring-width) var(--p-focus-ring-style) var(--p-focus-ring-color);
+  outline-offset: var(--p-focus-ring-offset);
+  border-radius: var(--p-border-radius-sm);
+}
+
+/* ------------------------------------------------------------- תנועה ---- */
+
+@keyframes talmidon-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes talmidon-shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+/* דהייה-ועלייה עדינה לתוכן מסך. ‎--rise-delay‎ מאפשר השהיה מדורגת בין אריחים. */
+.rise {
+  animation: talmidon-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: var(--rise-delay, 0s);
+}
+
+/* מכבדים משתמשים שביקשו פחות תנועה — לא מבטלים תוכן, רק את האנימציה */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* שלד טעינה מרצד — במקום "טוען..." טקסטואלי */
+.skeleton {
+  border-radius: var(--p-border-radius-md);
+  background: linear-gradient(
+    110deg,
+    var(--p-surface-200) 8%,
+    var(--p-surface-100) 18%,
+    var(--p-surface-200) 33%
+  );
+  background-size: 200% 100%;
+  animation: talmidon-shimmer 1.4s linear infinite;
+}
+.app-dark .skeleton {
+  background: linear-gradient(110deg, var(--p-surface-800) 8%, var(--p-surface-700) 18%, var(--p-surface-800) 33%);
+  background-size: 200% 100%;
+}
+.skeleton-line {
+  height: 0.85rem;
+  margin-bottom: 0.6rem;
+}
+.skeleton-line:last-child {
+  margin-bottom: 0;
+  width: 60%;
+}
+
+/* --------------------------------------------------- מסכי התחברות/הרשמה ---- */
+
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background:
-    radial-gradient(circle at 15% 15%, color-mix(in srgb, var(--p-primary-color) 12%, transparent), transparent 45%),
-    radial-gradient(circle at 85% 85%, color-mix(in srgb, var(--p-primary-color) 8%, transparent), transparent 50%),
-    var(--p-content-background, #f4f6fb);
+  position: relative;
+  overflow: hidden;
+  background: var(--p-talmidon-app-background);
 }
+
+/* "זוהר" רקע — שני כתמי צבע רכים במקום רקע שטוח */
+.auth-page::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 18% 20%, color-mix(in srgb, var(--p-primary-color) 22%, transparent), transparent 42%),
+    radial-gradient(circle at 82% 78%, color-mix(in srgb, var(--p-talmidon-accent) 16%, transparent), transparent 45%);
+  pointer-events: none;
+}
+
 .auth-card {
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+  max-width: 430px;
+  position: relative;
+  box-shadow: var(--p-talmidon-shadow-xl);
+  animation: talmidon-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
+
 .field {
   margin-bottom: 1rem;
 }
@@ -36,55 +163,101 @@ body {
   display: block;
   margin-bottom: 0.4rem;
   font-weight: 500;
+  color: var(--p-text-color);
 }
 
-/* ספריית מורות ציבורית ופרופיל מורה */
+/* ------------------------------------------ ספרייה ציבורית ופרופיל מורה ---- */
+
 .library-page {
   min-height: 100vh;
-  background: var(--p-content-background, #f4f6fb);
+  background: var(--p-talmidon-app-background);
 }
+
+/* כותרת "זכוכית" נדבקת — מטשטשת את התוכן שגולל מתחתיה */
 .library-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem;
-  background: var(--p-surface-card, #fff);
-  border-bottom: 1px solid var(--p-content-border-color, #e5e7eb);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  gap: 1rem;
+  padding: 0.85rem 2rem;
+  background: var(--p-talmidon-glass-background);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--p-talmidon-glass-border);
   position: sticky;
   top: 0;
   z-index: 10;
 }
+
 .library-content {
-  max-width: 1100px;
+  max-width: 1140px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.5rem 4rem;
 }
 
-/* רצועת פתיחה (hero) בראש דף הספרייה הציבורית */
+/* רצועת פתיחה — גרדיאנט בשלושה עצירות + רשת עדינה מעל, כדי שלא ייראה שטוח */
 .library-hero {
-  background: linear-gradient(135deg, var(--p-primary-600), var(--p-primary-400));
-  color: var(--p-primary-contrast-color, #fff);
-  padding: 3.5rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    225deg,
+    var(--p-talmidon-hero-from),
+    var(--p-talmidon-hero-via) 55%,
+    var(--p-talmidon-hero-to)
+  );
+  color: var(--p-talmidon-hero-text);
+  padding: 4rem 1.5rem 3.5rem;
   text-align: center;
 }
+.library-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.22), transparent 45%),
+    radial-gradient(circle at 85% 100%, rgba(255, 255, 255, 0.12), transparent 40%);
+  pointer-events: none;
+}
+.library-hero > * {
+  position: relative;
+}
 .library-hero h2 {
-  font-size: 2.25rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem;
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  font-weight: 800;
+  margin: 0 0 0.6rem;
+  text-wrap: balance;
 }
 .library-hero p {
-  font-size: 1.15rem;
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
   opacity: 0.92;
-  margin: 0 0 1.75rem;
+  margin: 0 auto 1.75rem;
+  max-width: 46ch;
 }
 .library-hero .search-bar {
   max-width: 640px;
   margin: 0 auto;
-  background: var(--p-surface-card, #fff);
-  border-radius: var(--p-content-border-radius, 12px);
+  background: var(--p-content-background);
+  border-radius: var(--p-border-radius-lg);
   padding: 0.75rem;
-  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--p-talmidon-shadow-lg);
+}
+
+/* שורת נתוני-אמון מתחת ל-hero (מספר מורות, מקצועות וכו') */
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+  margin-top: 2rem;
+}
+.hero-stat-value {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.hero-stat-label {
+  font-size: 0.85rem;
+  opacity: 0.85;
 }
 
 .teachers-grid {
@@ -92,14 +265,34 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.25rem;
 }
+
+/* כרטיסי מורות בגובה אחיד בכל שורה, עם שורת המחיר/הקישור צמודה לתחתית — אחרת
+   כרטיס עם ביוגרפיה קצרה "מתקצר" ליד שכנו והרשת נראית שבורה. */
+.teachers-grid > p-card {
+  display: flex;
+}
+.teachers-grid > p-card > .p-card,
+.teachers-grid .p-card-body,
+.teachers-grid .p-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.teachers-grid .p-card-content > :last-child {
+  margin-top: auto;
+}
+
 .teacher-card {
+  border: 1px solid transparent;
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 .teacher-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--p-talmidon-shadow-lg);
+  border-color: color-mix(in srgb, var(--p-primary-color) 35%, transparent);
 }
 .teacher-card .line-clamp {
   display: -webkit-box;
@@ -108,7 +301,8 @@ body {
   overflow: hidden;
 }
 
-/* עיגול-ראשי-תיבות — תמונת פרופיל גנרית לפי שם, בצבע יציב לכל מורה (avatar-color) */
+/* ------------------------------------------------------- עיגול ראשי-תיבות ---- */
+
 .avatar-circle {
   display: inline-flex;
   align-items: center;
@@ -121,6 +315,8 @@ body {
   font-size: 1.1rem;
   color: #fff;
   background: var(--avatar-color, var(--p-primary-color));
+  /* טבעת דקה בצבע הרקע — מפרידה את העיגול מהכרטיס שמאחוריו */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--avatar-color, var(--p-primary-color)) 18%, transparent);
 }
 .avatar-circle.avatar-circle-lg {
   width: 4.5rem;
@@ -128,45 +324,63 @@ body {
   font-size: 1.6rem;
 }
 
-/* מארז מסכי המורה/הורה/תלמיד (אחרי התחברות) */
-.app-shell .p-menubar {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  border-radius: 0;
-  border-inline: none;
-  border-top: none;
+/* -------------------------------------- מעטפת האפליקציה (אחרי התחברות) ---- */
+
+.app-shell {
+  min-height: 100vh;
+  background: var(--p-talmidon-app-background);
 }
-.app-shell-content {
-  max-width: 1100px;
+
+/* הסרגל העליון — זכוכית נדבקת. הרקע האטום של p-menubar בוטל בערכה עצמה. */
+.app-shell-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 0 1.5rem;
+  background: var(--p-talmidon-glass-background);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--p-talmidon-glass-border);
+}
+.app-shell-topbar .p-menubar {
+  max-width: 1140px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-.parent-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.parent-list li:not(:last-child) {
-  border-bottom: 1px solid var(--p-content-border-color, #e5e7eb);
+  border: none;
+  background: transparent;
 }
 
-/* סרגל סיכום "סה"כ נבחר" במסך תשלומים */
-.payment-summary-bar {
-  background: var(--p-primary-50, #f0fdfa);
-  border: 1px solid var(--p-primary-200, #99f6e4);
-  border-radius: var(--p-content-border-radius, 12px);
-  padding: 0.75rem 1rem;
+.app-shell-content {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
 }
 
-/* שורת הערה פדגוגית — הדגשה עדינה בריחוף */
-.note-item {
-  border-radius: 8px;
-  transition: background-color 0.15s ease;
+/* לוגו המותג בסרגל */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--p-text-color);
+  white-space: nowrap;
 }
-.note-item:hover {
-  background: var(--p-content-hover-background, rgba(0, 0, 0, 0.02));
+.brand:hover {
+  text-decoration: none;
+}
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: var(--p-border-radius-md);
+  background: linear-gradient(135deg, var(--p-primary-500), var(--p-primary-700));
+  color: #fff;
+  font-size: 1.05rem;
+  box-shadow: var(--p-talmidon-shadow-sm);
 }
 
-/* שם/ברכה בכותרת העליונה — קיצוץ בשלוש נקודות במקום גלישה לכמה שורות שדוחקת את שאר הכותרת */
+/* שם/ברכה בסרגל — קיצוץ בשלוש נקודות במקום גלישה שדוחקת את שאר הכותרת */
 .app-shell-greeting {
   white-space: nowrap;
   overflow: hidden;
@@ -177,12 +391,202 @@ body {
   .app-shell-greeting {
     max-width: 96px;
   }
+  .app-shell-topbar,
+  .library-header {
+    padding-inline: 0.75rem;
+  }
+  .app-shell-content,
+  .library-content {
+    padding-inline: 0.9rem;
+  }
 }
 
-/* טבלאות (p-table) בפריסתן הרגילה נדחסות למחיקות על מסך צר — עדיף גלילה אופקית מודעת
-   על פני עמודות שנשברות מילה-באמצע-מילה. nowrap מכריח את הטבלה לרוחבה הטבעי כדי
-   שהגלילה תיכנס לפעולה בפועל (במקום שהדפדפן ינסה לדחוס טקסט בעמודות צרות במקום זאת).
-   חל גלובלית על כל הטבלאות באפליקציה. */
+/* ------------------------------------------------- כותרת מסך (page-header) ---- */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.page-header-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.page-header-icon {
+  color: var(--p-primary-color);
+  font-size: 1.25rem;
+}
+.page-header-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--p-text-muted-color);
+}
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------ מצב ריק ---- */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.75rem 1rem;
+}
+.empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 0.9rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+  color: var(--p-primary-color);
+  font-size: 1.4rem;
+}
+.empty-state-title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+.empty-state-hint {
+  margin: 0.35rem 0 0;
+  color: var(--p-text-muted-color);
+  max-width: 44ch;
+}
+.empty-state-action:not(:empty) {
+  margin-top: 1.1rem;
+}
+
+/* --------------------------------------------------------- אריחי מדדים ---- */
+
+.stat-card {
+  position: relative;
+  display: block;
+  height: 100%;
+  padding: 1.25rem 1.25rem 1.1rem;
+  border-radius: var(--p-border-radius-xl);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  box-shadow: var(--p-talmidon-shadow-sm);
+  color: var(--p-text-color);
+  overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+/* פס צבע דק בראש האריח — מקודד את הגוון בלי לצבוע את כל הכרטיס */
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 3px;
+  background: var(--stat-tone);
+}
+a.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--p-talmidon-shadow-md);
+  border-color: color-mix(in srgb, var(--stat-tone) 45%, transparent);
+  text-decoration: none;
+}
+.stat-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--p-border-radius-md);
+  background: color-mix(in srgb, var(--stat-tone) 14%, transparent);
+  color: var(--stat-tone);
+  margin-bottom: 0.85rem;
+}
+.stat-card-label {
+  display: block;
+  color: var(--p-text-muted-color);
+  font-size: 0.9rem;
+}
+.stat-card-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.15;
+  /* ספרות ברוחב אחיד — המספר לא "רוקד" כשהערך משתנה */
+  font-variant-numeric: tabular-nums;
+}
+.stat-card-badge {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--p-border-radius-xl);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--stat-tone) 14%, transparent);
+  color: var(--stat-tone);
+}
+
+.stat-card-primary {
+  --stat-tone: var(--p-primary-color);
+}
+.stat-card-accent {
+  --stat-tone: var(--p-talmidon-accent);
+}
+.stat-card-success {
+  --stat-tone: var(--p-green-500);
+}
+.stat-card-warn {
+  --stat-tone: var(--p-orange-500);
+}
+.stat-card-info {
+  --stat-tone: var(--p-blue-500);
+}
+
+/* --------------------------------------------------------------- רשימות ---- */
+
+.parent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.parent-list li:not(:last-child) {
+  border-bottom: 1px solid var(--p-content-border-color);
+}
+
+/* שורת הערה פדגוגית — הדגשה עדינה בריחוף */
+.note-item {
+  border-radius: var(--p-border-radius-md);
+  padding-inline: 0.5rem;
+  margin-inline: -0.5rem;
+  transition: background-color 0.15s ease;
+}
+.note-item:hover {
+  background: var(--p-content-hover-background);
+}
+
+/* סרגל סיכום "סה"כ נבחר" במסך תשלומים */
+.payment-summary-bar {
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+  border-radius: var(--p-border-radius-lg);
+  padding: 0.75rem 1rem;
+}
+
+/* --------------------------------------------------------------- טבלאות ---- */
+
+/* טבלאות בפריסתן הרגילה נדחסות למחיקות על מסך צר — עדיף גלילה אופקית מודעת
+   על פני עמודות שנשברות מילה-באמצע-מילה. */
 .p-datatable-table-container {
   overflow-x: auto;
 }
@@ -191,11 +595,32 @@ body {
   white-space: nowrap;
 }
 
-/* יומן שיעורים (FullCalendar) — עיצוב אירועים לפי סטטוס */
+/* ------------------------------------------------------ יומן (FullCalendar) ---- */
+
 full-calendar {
   font-family: inherit;
   display: block;
 }
+/* FullCalendar מגיע עם ערכה בהירה קבועה — כאן מחברים אותה לטוקנים של הערכה */
+.fc {
+  --fc-border-color: var(--p-content-border-color);
+  --fc-page-bg-color: var(--p-content-background);
+  --fc-neutral-bg-color: var(--p-surface-100);
+  --fc-today-bg-color: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+  color: var(--p-text-color);
+}
+.app-dark .fc {
+  --fc-neutral-bg-color: var(--p-surface-800);
+  --fc-small-font-size: 0.85em;
+}
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number,
+.fc .fc-list-day-text,
+.fc .fc-list-day-side-text {
+  color: var(--p-text-color);
+  text-decoration: none;
+}
+
 .lesson-cal-pending {
   border-style: dashed !important;
   border-width: 2px !important;
@@ -211,11 +636,12 @@ full-calendar {
   border-radius: 50%;
 }
 .legend-dot-pending {
-  background: #fef3c7;
-  border: 2px dashed #f59e0b;
+  background: var(--p-talmidon-warn-soft);
+  border: 2px dashed var(--p-talmidon-warn-border);
 }
 
-// מרכז ההתראות (פעמון)
+/* ------------------------------------------------- מרכז ההתראות (פעמון) ---- */
+
 .notif-panel {
   width: 340px;
   max-width: 90vw;
@@ -231,43 +657,48 @@ full-calendar {
   display: flex;
   gap: 0.6rem;
   padding: 0.6rem 0.4rem;
-  border-radius: 6px;
+  border-radius: var(--p-border-radius-sm);
   cursor: pointer;
-  border-bottom: 1px solid var(--surface-200, #e5e7eb);
+  border-bottom: 1px solid var(--p-content-border-color);
 }
 .notif-item:last-child {
   border-bottom: none;
 }
 .notif-item:hover {
-  background: var(--surface-100, #f3f4f6);
+  background: var(--p-content-hover-background);
 }
 .notif-item.notif-unread {
-  background: #eff6ff;
+  background: var(--p-talmidon-info-soft);
 }
 .notif-item.notif-unread:hover {
-  background: #dbeafe;
+  background: color-mix(in srgb, var(--p-talmidon-info-soft) 70%, var(--p-content-hover-background));
 }
 
-// טבלת דוח הכנסות
+/* ------------------------------------------------------- דוח הכנסות ---- */
+
 .report-table {
   border-collapse: collapse;
 }
 .report-table th,
 .report-table td {
   padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid var(--surface-200, #e5e7eb);
+  border-bottom: 1px solid var(--p-content-border-color);
 }
 .report-table thead th {
-  color: var(--text-color-secondary, #6b7280);
+  color: var(--p-text-muted-color);
   font-weight: 600;
 }
 .report-table tbody tr:last-child td {
   border-bottom: none;
 }
+.report-table tbody td {
+  font-variant-numeric: tabular-nums;
+}
 
-// עורך שעות הזמינות בפרופיל המורה
+/* ------------------------------------------------ שעות זמינות בפרופיל ---- */
+
 .availability-row {
-  border-bottom: 1px solid var(--surface-200, #e5e7eb);
+  border-bottom: 1px solid var(--p-content-border-color);
 }
 .availability-row:last-child {
   border-bottom: none;
@@ -277,21 +708,88 @@ full-calendar {
   flex-shrink: 0;
 }
 
-// סיכום שעות זמינות מעל היומן
 .availability-chip {
-  background: #dcfce7;
-  color: #166534;
-  border-radius: 12px;
+  background: var(--p-talmidon-success-soft);
+  color: var(--p-talmidon-success-text);
+  border-radius: var(--p-border-radius-xl);
   padding: 0.15rem 0.6rem;
   font-weight: 500;
 }
 
-// באנר "שיעורים שממתינים לסימום" ביומן המורה
+/* באנר "שיעורים שממתינים לסימום" ביומן המורה */
 .pending-banner {
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
-  color: #92400e;
-  border-radius: 8px;
+  background: var(--p-talmidon-warn-soft);
+  border: 1px solid var(--p-talmidon-warn-border);
+  color: var(--p-talmidon-warn-text);
+  border-radius: var(--p-border-radius-md);
   padding: 0.75rem 1rem;
 }
 
+/* ------------------------------------------------------ חומרי לימוד ---- */
+
+.resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.resource-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-lg);
+  background: var(--p-content-background);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+.resource-item:hover {
+  border-color: color-mix(in srgb, var(--resource-tone, var(--p-primary-color)) 45%, transparent);
+  box-shadow: var(--p-talmidon-shadow-sm);
+  transform: translateY(-1px);
+}
+/* אייקון מרובע צבוע לפי סוג הקישור (יוטיוב / דרייב / PDF / כללי) */
+.resource-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--p-border-radius-md);
+  font-size: 1.15rem;
+  background: color-mix(in srgb, var(--resource-tone, var(--p-primary-color)) 14%, transparent);
+  color: var(--resource-tone, var(--p-primary-color));
+}
+.resource-body {
+  flex: 1;
+  min-width: 0;
+}
+.resource-title {
+  display: block;
+  font-weight: 600;
+  color: var(--p-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.resource-title:hover {
+  color: var(--p-primary-color);
+}
+.resource-meta {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.resource-description {
+  margin: 0.2rem 0 0;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}

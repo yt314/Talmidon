@@ -87,6 +87,11 @@ export const routes: Routes = [
       {
         path: 'payments',
         loadComponent: () => import('./features/parent-portal/parent-payments/parent-payments.component').then(m => m.ParentPaymentsComponent)
+      },
+      {
+        path: 'resources',
+        loadComponent: () =>
+          import('./features/parent-portal/parent-resources/parent-resources.component').then(m => m.ParentResourcesComponent)
       }
     ]
   },
@@ -108,6 +113,11 @@ export const routes: Routes = [
       {
         path: 'notes',
         loadComponent: () => import('./features/student-portal/student-notes/student-notes.component').then(m => m.StudentNotesComponent)
+      },
+      {
+        path: 'resources',
+        loadComponent: () =>
+          import('./features/student-portal/student-resources/student-resources.component').then(m => m.StudentResourcesComponent)
       }
     ]
   },

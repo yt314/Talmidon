@@ -14,3 +14,16 @@ public record StudentResourceDto(
     string Url,
     string? Description,
     DateTimeOffset CreatedAt);
+
+/// <summary>
+/// חומר לימוד כפי שהוא מוצג בפורטל ההורה/התלמיד — כולל שם התלמיד, כי בפורטל ההורה
+/// מוצגים חומרים של כמה ילדים יחד.
+/// </summary>
+public record PortalResourceDto(
+    Guid Id,
+    Guid StudentId,
+    string StudentName,
+    string Title,
+    string Url,
+    string? Description,
+    DateTimeOffset CreatedAt);

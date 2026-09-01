@@ -16,13 +16,18 @@ import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
+import { httpUrlValidator } from '../../../core/forms/validators';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { buildWhatsappLink, hasWhatsapp } from '../../../shared/whatsapp/whatsapp.util';
 import { Note } from '../../notes/notes.models';
 import { NotesService } from '../../notes/notes.service';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
+import { ResourceListComponent } from '../../resources/resource-list.component';
+import { StudentResource } from '../../resources/resources.models';
+import { ResourcesService } from '../../resources/resources.service';
 import { ParentSummary, StudentDetail } from '../students.models';
 import { StudentsService } from '../students.service';
 
@@ -43,7 +48,9 @@ import { StudentsService } from '../students.service';
     SelectModule,
     TagModule,
     TextareaModule,
-    TooltipModule
+    TooltipModule,
+    EmptyStateComponent,
+    ResourceListComponent
   ],
   templateUrl: './student-detail.component.html'
 })
@@ -54,6 +61,7 @@ export class StudentDetailComponent implements OnInit {
   private readonly studentsService = inject(StudentsService);
   private readonly parentsService = inject(ParentsService);
   private readonly notesService = inject(NotesService);
+  private readonly resourcesService = inject(ResourcesService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
 
@@ -75,6 +83,11 @@ export class StudentDetailComponent implements OnInit {
   protected readonly showNoteDialog = signal(false);
   protected readonly savingNote = signal(false);
   protected readonly editingNoteId = signal<string | null>(null);
+  protected readonly resources = signal<StudentResource[]>([]);
+  protected readonly resourcesLoading = signal(true);
+  protected readonly showResourceDialog = signal(false);
+  protected readonly savingResource = signal(false);
+
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
   protected readonly genderOptions = GENDER_OPTIONS;
@@ -95,6 +108,12 @@ export class StudentDetailComponent implements OnInit {
     isActive: [true]
   });
 
+  protected readonly resourceForm = this.fb.nonNullable.group({
+    title: ['', [Validators.required, Validators.maxLength(200)]],
+    url: ['', [Validators.required, Validators.maxLength(2000), httpUrlValidator]],
+    description: ['', [Validators.maxLength(1000)]]
+  });
+
   protected readonly noteForm = this.fb.nonNullable.group({
     content: ['', [Validators.required, Validators.maxLength(4000)]],
     visibleToStudent: [false],
@@ -104,6 +123,7 @@ export class StudentDetailComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.loadNotes();
+    this.loadResources();
     this.parentsService.list().subscribe(parents => this.allParents.set(parents));
   }
 
@@ -259,6 +279,72 @@ export class StudentDetailComponent implements OnInit {
       },
       error: err =>
         this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'המחיקה נכשלה.') })
+    });
+  }
+
+  openAddResourceDialog(): void {
+    this.resourceForm.reset({ title: '', url: '', description: '' });
+    this.showResourceDialog.set(true);
+  }
+
+  saveResource(): void {
+    if (this.resourceForm.invalid) {
+      this.resourceForm.markAllAsTouched();
+      return;
+    }
+    this.savingResource.set(true);
+    const raw = this.resourceForm.getRawValue();
+    this.resourcesService
+      .create(this.studentId, {
+        title: raw.title,
+        url: raw.url.trim(),
+        description: raw.description || null
+      })
+      .subscribe({
+        next: () => {
+          this.savingResource.set(false);
+          this.showResourceDialog.set(false);
+          this.messageService.add({ severity: 'success', summary: 'החומר נוסף' });
+          this.loadResources();
+        },
+        error: err => {
+          this.savingResource.set(false);
+          this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'הוספת החומר נכשלה.') });
+        }
+      });
+  }
+
+  confirmDeleteResource(resource: StudentResource): void {
+    this.confirmationService.confirm({
+      message: `למחוק את "${resource.title}"? הפעולה אינה הפיכה.`,
+      header: 'אישור מחיקה',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'מחק',
+      rejectLabel: 'ביטול',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.deleteResource(resource.id)
+    });
+  }
+
+  private deleteResource(resourceId: string): void {
+    this.resourcesService.delete(this.studentId, resourceId).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'החומר נמחק' });
+        this.loadResources();
+      },
+      error: err =>
+        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'המחיקה נכשלה.') })
+    });
+  }
+
+  private loadResources(): void {
+    this.resourcesLoading.set(true);
+    this.resourcesService.listForStudent(this.studentId).subscribe({
+      next: resources => {
+        this.resources.set(resources);
+        this.resourcesLoading.set(false);
+      },
+      error: () => this.resourcesLoading.set(false)
     });
   }
 

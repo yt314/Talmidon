@@ -2,21 +2,24 @@
   <p-toast />
   <p-confirmdialog />
 
-  <p-menubar [model]="menuItems">
-    <ng-template pTemplate="start">
-      <div class="flex align-items-center gap-2 mr-3">
-        <i class="pi pi-graduation-cap" style="font-size: 1.5rem; color: var(--p-primary-color)"></i>
-        <span class="font-bold text-lg">תלמידון</span>
-      </div>
-    </ng-template>
-    <ng-template pTemplate="end">
-      <div class="flex align-items-center gap-3">
-        <span class="app-shell-greeting text-sm text-color-secondary" [title]="greeting()">{{ greeting() }}</span>
-        <app-notifications-bell />
-        <p-button icon="pi pi-sign-out" label="התנתקות" severity="secondary" [text]="true" (onClick)="logout()" />
-      </div>
-    </ng-template>
-  </p-menubar>
+  <header class="app-shell-topbar">
+    <p-menubar [model]="menuItems">
+      <ng-template pTemplate="start">
+        <span class="brand ml-3">
+          <span class="brand-mark"><i class="pi pi-graduation-cap"></i></span>
+          תלמידון
+        </span>
+      </ng-template>
+      <ng-template pTemplate="end">
+        <div class="flex align-items-center gap-3">
+          <span class="app-shell-greeting text-sm text-color-secondary" [title]="greeting()">{{ greeting() }}</span>
+          <app-notifications-bell />
+          <app-theme-toggle />
+          <p-button icon="pi pi-sign-out" label="התנתקות" severity="secondary" [text]="true" (onClick)="logout()" />
+        </div>
+      </ng-template>
+    </p-menubar>
+  </header>
 
   <main class="app-shell-content">
     <router-outlet />
