@@ -21,13 +21,13 @@
   </div>
 }
 
-<div class="flex gap-3 mb-3 flex-wrap text-sm align-items-center">
-  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#3b82f6"></span> מתוזמן</span>
-  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#22c55e"></span> התקיים</span>
+<div class="calendar-legend">
+  <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-scheduled"></span> מתוזמן</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-completed"></span> התקיים</span>
   <span class="flex align-items-center gap-1"><span class="legend-dot legend-dot-pending"></span> ממתין לאישור</span>
-  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#e5e7eb"></span> בוטל</span>
-  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#fecaca"></span> נדחה</span>
-  <span class="flex align-items-center gap-1"><span class="legend-dot" style="background:#d8b4fe"></span> לא הגיע</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-cancelled"></span> בוטל</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-declined"></span> נדחה</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-noshow"></span> לא הגיע</span>
 </div>
 
 @if (availabilitySummary().length > 0) {
@@ -40,15 +40,17 @@
   </div>
 }
 
-<app-lesson-calendar
-  [events]="calendarEvents()"
-  [businessHours]="businessHours()"
-  [selectable]="true"
-  [editable]="true"
-  (eventClicked)="onEventClicked($event)"
-  (slotSelected)="onSlotSelected($event)"
-  (eventDropped)="onEventDropped($event)"
-  (eventResized)="onEventResized($event)" />
+<div class="calendar-card">
+  <app-lesson-calendar
+    [events]="calendarEvents()"
+    [businessHours]="businessHours()"
+    [selectable]="true"
+    [editable]="true"
+    (eventClicked)="onEventClicked($event)"
+    (slotSelected)="onSlotSelected($event)"
+    (eventDropped)="onEventDropped($event)"
+    (eventResized)="onEventResized($event)" />
+</div>
 
 <p-dialog header="הוספת שיעור" [(visible)]="showLessonDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="lessonForm" (ngSubmit)="saveLesson()">

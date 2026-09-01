@@ -18,7 +18,9 @@
   </div>
 }
 
-<app-lesson-calendar class="block mt-3" [events]="calendarEvents()" [selectable]="false" (eventClicked)="onEventClicked($event)" />
+<div class="calendar-card mt-3">
+  <app-lesson-calendar [events]="calendarEvents()" [selectable]="false" (eventClicked)="onEventClicked($event)" />
+</div>
 
 <p-dialog header="בקשת שיעור חדש" [(visible)]="showRequestDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">

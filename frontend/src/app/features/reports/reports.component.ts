@@ -6,13 +6,15 @@ import { CardModule } from 'primeng/card';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SkeletonModule } from 'primeng/skeleton';
 import { PageHeaderComponent } from '../../shared/ui/page-header.component';
+import { SpotlightDirective } from '../../shared/ui/spotlight.directive';
+import { StatCardComponent } from '../../shared/ui/stat-card.component';
 import { downloadCsv } from '../../shared/export/csv.util';
 import { IncomeReport } from './reports.models';
 import { ReportsService } from './reports.service';
 
 @Component({
   selector: 'app-reports',
-  imports: [FormsModule, ButtonModule, CardModule, DatePickerModule, SkeletonModule, PageHeaderComponent],
+  imports: [FormsModule, ButtonModule, CardModule, DatePickerModule, SkeletonModule, PageHeaderComponent, StatCardComponent, SpotlightDirective],
   templateUrl: './reports.component.html'
 })
 export class ReportsComponent implements OnInit {

@@ -1,6 +1,8 @@
 <app-page-header title="יומן שיעורים" icon="pi-calendar" />
 
-<app-lesson-calendar [events]="calendarEvents()" [selectable]="false" (eventClicked)="onEventClicked($event)" />
+<div class="calendar-card">
+  <app-lesson-calendar [events]="calendarEvents()" [selectable]="false" (eventClicked)="onEventClicked($event)" />
+</div>
 
 <p-dialog header="פרטי שיעור" [(visible)]="showLessonDetailDialog" [modal]="true" [style]="{ width: '380px' }">
   @if (selectedLesson(); as lesson) {

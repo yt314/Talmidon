@@ -22,28 +22,44 @@
 } @else if (report(); as r) {
   <div class="grid mb-2">
     <div class="col-6 lg:col-3">
-      <p-card>
-        <div class="text-color-secondary mb-2">שיעורים שהתקיימו</div>
-        <div class="text-3xl font-bold">{{ r.completedLessons }}</div>
-      </p-card>
+      <app-stat-card
+        class="block h-full rise"
+        appSpotlight
+        label="שיעורים שהתקיימו"
+        icon="pi-check-circle"
+        tone="primary"
+        [value]="r.completedLessons" />
     </div>
     <div class="col-6 lg:col-3">
-      <p-card>
-        <div class="text-color-secondary mb-2">סה״כ חויב</div>
-        <div class="text-3xl font-bold">{{ r.totalCharged }} ₪</div>
-      </p-card>
+      <app-stat-card
+        class="block h-full rise"
+        style="--rise-delay: 0.05s"
+        appSpotlight
+        label="סה״כ חויב"
+        icon="pi-file-edit"
+        tone="info"
+        [value]="r.totalCharged + ' ₪'" />
     </div>
     <div class="col-6 lg:col-3">
-      <p-card>
-        <div class="text-color-secondary mb-2">שולם</div>
-        <div class="text-3xl font-bold text-green-600">{{ r.totalPaid }} ₪</div>
-      </p-card>
+      <app-stat-card
+        class="block h-full rise"
+        style="--rise-delay: 0.1s"
+        appSpotlight
+        label="שולם"
+        icon="pi-check-square"
+        tone="success"
+        [value]="r.totalPaid + ' ₪'" />
     </div>
     <div class="col-6 lg:col-3">
-      <p-card>
-        <div class="text-color-secondary mb-2">נותר לתשלום</div>
-        <div class="text-3xl font-bold" [class.text-orange-500]="r.totalOutstanding > 0">{{ r.totalOutstanding }} ₪</div>
-      </p-card>
+      <app-stat-card
+        class="block h-full rise"
+        style="--rise-delay: 0.15s"
+        appSpotlight
+        label="נותר לתשלום"
+        icon="pi-wallet"
+        [tone]="r.totalOutstanding > 0 ? 'warn' : 'success'"
+        [value]="r.totalOutstanding + ' ₪'"
+        [badge]="r.totalOutstanding > 0 ? 'לגבייה' : null" />
     </div>
   </div>
 

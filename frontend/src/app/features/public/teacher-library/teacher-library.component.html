@@ -6,7 +6,13 @@
     </span>
     <div class="flex align-items-center gap-2">
       <app-theme-toggle />
-      <p-button label="הרשמה כמורה" icon="pi pi-user-plus" severity="secondary" [outlined]="true" routerLink="/register" />
+      <p-button
+        label="הרשמה כמורה"
+        icon="pi pi-user-plus"
+        severity="secondary"
+        [outlined]="true"
+        routerLink="/register"
+      />
       <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
     </div>
   </header>
@@ -24,14 +30,16 @@
         class="flex-1"
         style="min-width: 220px"
         [ngModel]="search()"
-        (ngModelChange)="search.set($event)" />
+        (ngModelChange)="search.set($event)"
+      />
       <p-select
         [options]="subjects()"
         [ngModel]="selectedSubject()"
         (ngModelChange)="selectedSubject.set($event)"
         placeholder="כל התחומים"
         [showClear]="true"
-        style="min-width: 200px" />
+        style="min-width: 200px"
+      />
     </div>
 
     @if (!loading() && allTeachers().length > 0) {
@@ -54,161 +62,187 @@
     }
   </section>
 
-  <!-- ===== איך זה עובד ===== -->
-  <section class="landing-section">
-    <span class="section-eyebrow" appReveal>איך זה עובד</span>
-    <h2 class="section-title" appReveal="0.05s">שלושה צעדים עד השיעור הראשון</h2>
-    <p class="section-lead" appReveal="0.1s">
-      בלי מתווכים ובלי דמי רישום. הספרייה מחברת אתכם למורה, וכל השאר קורה ביניכם.
+  <!-- ===== רשימת המורות ===== -->
+  <section class="landing-section" id="teachers">
+    <h2 class="section-title">{{ resultsTitle() }}</h2>
+    <p class="section-lead">
+      @if (search() || selectedSubject()) {
+        <button type="button" class="link-button" (click)="clearFilters()">
+          <i class="pi pi-filter-slash text-xs"></i> ניקוי הסינון
+        </button>
+      } @else {
+        אפשר לסנן למעלה לפי שם או תחום.
+      }
     </p>
 
-    <div class="steps">
-      <article class="step" appReveal="0.15s">
-        <h3>מוצאים מורה</h3>
-        <p>מסננים לפי תחום ומחיר, קוראים על כל מורה — ניסיון, מקצועות ומדיניות ביטולים — ובוחרים.</p>
-      </article>
-      <article class="step" appReveal="0.25s">
-        <h3>יוצרים קשר ישיר</h3>
-        <p>טלפון, וואטסאפ או מייל — כפי שהמורה בחרה לפרסם. אין צורך בחשבון כדי לפנות.</p>
-      </article>
-      <article class="step" appReveal="0.35s">
-        <h3>מקבלים גישה למערכת</h3>
-        <p>המורה פותחת לכם חשבון, ומשם רואים את היומן, את חומרי הלימוד ואת מצב התשלומים.</p>
-      </article>
-    </div>
+    @if (loading()) {
+      <div class="teachers-grid">
+        @for (i of [1, 2, 3]; track i) {
+          <p-card>
+            <div class="flex align-items-center gap-3 mb-3">
+              <p-skeleton shape="circle" size="3rem" />
+              <p-skeleton width="60%" height="1.5rem" />
+            </div>
+            <p-skeleton width="100%" height="1rem" styleClass="mb-2" />
+            <p-skeleton width="80%" height="1rem" styleClass="mb-3" />
+            <p-skeleton width="40%" height="1.5rem" />
+          </p-card>
+        }
+      </div>
+    } @else if (teachers().length === 0) {
+      <app-empty-state
+        icon="pi-search"
+        title="לא נמצאו מורות מתאימות"
+        hint="נסו לנקות את הסינון או לחפש בתחום אחר."
+      >
+        @if (search() || selectedSubject()) {
+          <p-button
+            label="נקה סינון"
+            icon="pi pi-filter-slash"
+            [outlined]="true"
+            (onClick)="clearFilters()"
+          />
+        }
+      </app-empty-state>
+    } @else {
+      <div class="teachers-grid">
+        @for (teacher of teachers(); track teacher.id; let i = $index) {
+          <p-card styleClass="teacher-card h-full" [appReveal]="riseDelay(i)" appSpotlight>
+            <div class="flex align-items-center gap-3 mb-3">
+              <span class="avatar-circle" [style.--avatar-color]="avatarColor(teacher.fullName)">{{
+                initials(teacher.fullName)
+              }}</span>
+              <h3 class="m-0">{{ teacher.fullName }}</h3>
+            </div>
+            @if (teacher.bio) {
+              <p class="text-color-secondary line-clamp">{{ teacher.bio }}</p>
+            }
+            <div class="flex gap-2 flex-wrap mb-3">
+              @for (subject of teacher.subjects; track subject) {
+                <p-tag [value]="subject" severity="info" />
+              }
+            </div>
+            <div class="flex align-items-center justify-content-between">
+              <p-tag
+                [value]="'₪' + teacher.defaultPricePerLesson + ' לשיעור'"
+                severity="success"
+                styleClass="text-base"
+              />
+              <a
+                [routerLink]="['/teachers', teacher.id]"
+                class="flex align-items-center gap-1 font-medium no-underline"
+              >
+                לפרופיל המלא <i class="pi pi-arrow-left text-xs"></i>
+              </a>
+            </div>
+          </p-card>
+        }
+      </div>
+    }
   </section>
 
-  <!-- ===== למה מורות בוחרות בתלמידון ===== -->
+  <!-- ===== איך זה עובד ===== -->
   <section class="landing-band">
     <div class="landing-section">
-      <span class="section-eyebrow" appReveal>למורות פרטיות</span>
-      <h2 class="section-title" appReveal="0.05s">כל הניהול במקום אחד</h2>
+      <span class="section-eyebrow" appReveal>איך זה עובד</span>
+      <h2 class="section-title" appReveal="0.05s">שלושה צעדים עד השיעור הראשון</h2>
       <p class="section-lead" appReveal="0.1s">
-        יומן, מעקב פדגוגי, חיובים ותקשורת עם ההורים — במקום מחברת, אקסל וקבוצת וואטסאפ.
+        בלי מתווכים ובלי דמי רישום. הספרייה מחברת אתכם למורה, וכל השאר קורה ביניכם.
       </p>
 
-      <div class="bento">
-        <article class="bento-item bento-item-wide" appReveal="0.15s">
-          <span class="bento-icon"><i class="pi pi-calendar"></i></span>
-          <h3>יומן שיעורים חכם</h3>
+      <div class="steps">
+        <article class="step" appReveal="0.15s">
+          <h3>מוצאים מורה</h3>
           <p>
-            גרירה לשינוי מועד, שינוי משך בגרירת הקצה, שיעורים חוזרים שבועיים, ושעות זמינות
-            שמסמנות מתי אתן פנויות. הורה יכול לבקש שיעור או ביטול — ואתן מאשרות בלחיצה.
+            מסננים לפי תחום ומחיר, קוראים על כל מורה — ניסיון, מקצועות ומדיניות ביטולים — ובוחרים.
           </p>
         </article>
-
-        <article class="bento-item" appReveal="0.2s" style="--bento-tone: var(--p-blue-500)">
-          <span class="bento-icon"><i class="pi pi-book"></i></span>
-          <h3>מעקב פדגוגי</h3>
-          <p>הערה אחרי כל שיעור, עם בחירה מי רואה אותה — רק אתן, גם ההורה, או גם התלמיד.</p>
+        <article class="step" appReveal="0.25s">
+          <h3>יוצרים קשר ישיר</h3>
+          <p>טלפון, וואטסאפ או מייל — כפי שהמורה בחרה לפרסם. אין צורך בחשבון כדי לפנות.</p>
         </article>
-
-        <article class="bento-item" appReveal="0.25s" style="--bento-tone: var(--p-amber-500)">
-          <span class="bento-icon"><i class="pi pi-wallet"></i></span>
-          <h3>חיוב לפי שיעור</h3>
-          <p>בלי מנויים. מסמנות שיעור כבוצע, המערכת אוספת את החיובים הפתוחים לפי הורה ושולחת קבלה.</p>
-        </article>
-
-        <article class="bento-item" appReveal="0.3s" style="--bento-tone: var(--p-green-500)">
-          <span class="bento-icon"><i class="pi pi-chart-bar"></i></span>
-          <h3>דוח הכנסות</h3>
-          <p>כמה נכנס החודש, ממי, ומה עדיין פתוח לגבייה. עם ייצוא לאקסל לרואה החשבון.</p>
-        </article>
-
-        <article class="bento-item" appReveal="0.35s" style="--bento-tone: var(--p-purple-500)">
-          <span class="bento-icon"><i class="pi pi-folder-open"></i></span>
-          <h3>חומרי לימוד</h3>
-          <p>דף תרגול, סרטון או תיקייה בדרייב — נשלחים לתלמיד ולהורה ונשארים זמינים תמיד.</p>
+        <article class="step" appReveal="0.35s">
+          <h3>מקבלים גישה למערכת</h3>
+          <p>המורה פותחת לכם חשבון, ומשם רואים את היומן, את חומרי הלימוד ואת מצב התשלומים.</p>
         </article>
       </div>
     </div>
   </section>
 
-  <!-- ===== מה מקבלים הורים ותלמידים ===== -->
+  <!-- ===== למה מורות בוחרות בתלמידון ===== -->
   <section class="landing-section">
-    <span class="section-eyebrow" appReveal>להורים ולתלמידים</span>
-    <h2 class="section-title" appReveal="0.05s">שקיפות מלאה, בלי להטריד את המורה</h2>
+    <span class="section-eyebrow" appReveal>למורות פרטיות</span>
+    <h2 class="section-title" appReveal="0.05s">כל הניהול במקום אחד</h2>
     <p class="section-lead" appReveal="0.1s">
-      לכל הורה ולכל תלמיד יש כניסה משלהם, שמראה בדיוק את מה שנוגע להם — ולא יותר.
+      יומן, מעקב פדגוגי, חיובים ותקשורת עם ההורים — במקום מחברת, אקסל וקבוצת וואטסאפ.
     </p>
 
     <div class="bento">
-      <article class="bento-item" appReveal="0.15s">
-        <span class="bento-icon"><i class="pi pi-calendar-clock"></i></span>
-        <h3>היומן תמיד מעודכן</h3>
-        <p>מתי השיעור הבא, ומה השיעורים שהיו. אפשר לבקש שיעור, לבקש דחייה או לבטל — והמורה מאשרת.</p>
+      <article class="bento-item bento-item-wide" appReveal="0.15s">
+        <span class="bento-icon"><i class="pi pi-calendar"></i></span>
+        <h3>יומן שיעורים חכם</h3>
+        <p>
+          גרירה לשינוי מועד, שינוי משך בגרירת הקצה, שיעורים חוזרים שבועיים, ושעות זמינות שמסמנות מתי
+          אתן פנויות. הורה יכול לבקש שיעור או ביטול — ואתן מאשרות בלחיצה.
+        </p>
       </article>
 
       <article class="bento-item" appReveal="0.2s" style="--bento-tone: var(--p-blue-500)">
-        <span class="bento-icon"><i class="pi pi-comments"></i></span>
-        <h3>לדעת מה קורה בשיעור</h3>
-        <p>ההערות שהמורה בחרה לשתף, ושיעורי הבית — במקום לשאול "אז מה למדתם?" בכל ערב.</p>
+        <span class="bento-icon"><i class="pi pi-book"></i></span>
+        <h3>מעקב פדגוגי</h3>
+        <p>הערה אחרי כל שיעור, עם בחירה מי רואה אותה — רק אתן, גם ההורה, או גם התלמיד.</p>
       </article>
 
       <article class="bento-item" appReveal="0.25s" style="--bento-tone: var(--p-amber-500)">
-        <span class="bento-icon"><i class="pi pi-receipt"></i></span>
-        <h3>מצב תשלומים ברור</h3>
-        <p>מה שולם, מה פתוח ועל אילו שיעורים. הורים בלבד — תלמידים לא רואים כסף.</p>
+        <span class="bento-icon"><i class="pi pi-wallet"></i></span>
+        <h3>חיוב לפי שיעור</h3>
+        <p>בלי מנויים. מסמנות שיעור כבוצע, המערכת אוספת את החיובים הפתוחים לפי הורה ושולחת קבלה.</p>
+      </article>
+
+      <article class="bento-item" appReveal="0.3s" style="--bento-tone: var(--p-green-500)">
+        <span class="bento-icon"><i class="pi pi-chart-bar"></i></span>
+        <h3>דוח הכנסות</h3>
+        <p>כמה נכנס החודש, ממי, ומה עדיין פתוח לגבייה. עם ייצוא לאקסל לרואה החשבון.</p>
+      </article>
+
+      <article class="bento-item" appReveal="0.35s" style="--bento-tone: var(--p-purple-500)">
+        <span class="bento-icon"><i class="pi pi-folder-open"></i></span>
+        <h3>חומרי לימוד</h3>
+        <p>דף תרגול, סרטון או תיקייה בדרייב — נשלחים לתלמיד ולהורה ונשארים זמינים תמיד.</p>
       </article>
     </div>
   </section>
 
-  <!-- ===== רשימת המורות ===== -->
-  <section class="landing-band" id="teachers">
+  <!-- ===== מה מקבלים הורים ותלמידים ===== -->
+  <section class="landing-band">
     <div class="landing-section">
-      <span class="section-eyebrow">הספרייה</span>
-      <h2 class="section-title">המורות שלנו</h2>
-      <p class="section-lead">אפשר לסנן למעלה לפי שם או תחום.</p>
+      <span class="section-eyebrow" appReveal>להורים ולתלמידים</span>
+      <h2 class="section-title" appReveal="0.05s">שקיפות מלאה, בלי להטריד את המורה</h2>
+      <p class="section-lead" appReveal="0.1s">
+        לכל הורה ולכל תלמיד יש כניסה משלהם, שמראה בדיוק את מה שנוגע להם — ולא יותר.
+      </p>
 
-      @if (loading()) {
-        <div class="teachers-grid">
-          @for (i of [1, 2, 3]; track i) {
-            <p-card>
-              <div class="flex align-items-center gap-3 mb-3">
-                <p-skeleton shape="circle" size="3rem" />
-                <p-skeleton width="60%" height="1.5rem" />
-              </div>
-              <p-skeleton width="100%" height="1rem" styleClass="mb-2" />
-              <p-skeleton width="80%" height="1rem" styleClass="mb-3" />
-              <p-skeleton width="40%" height="1.5rem" />
-            </p-card>
-          }
-        </div>
-      } @else if (teachers().length === 0) {
-        <app-empty-state
-          icon="pi-search"
-          title="לא נמצאו מורות מתאימות"
-          hint="נסו לנקות את הסינון או לחפש בתחום אחר.">
-          @if (search() || selectedSubject()) {
-            <p-button label="נקה סינון" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearFilters()" />
-          }
-        </app-empty-state>
-      } @else {
-        <div class="teachers-grid">
-          @for (teacher of teachers(); track teacher.id; let i = $index) {
-            <p-card styleClass="teacher-card h-full" [appReveal]="riseDelay(i)" appSpotlight>
-              <div class="flex align-items-center gap-3 mb-3">
-                <span class="avatar-circle" [style.--avatar-color]="avatarColor(teacher.fullName)">{{ initials(teacher.fullName) }}</span>
-                <h3 class="m-0">{{ teacher.fullName }}</h3>
-              </div>
-              @if (teacher.bio) {
-                <p class="text-color-secondary line-clamp">{{ teacher.bio }}</p>
-              }
-              <div class="flex gap-2 flex-wrap mb-3">
-                @for (subject of teacher.subjects; track subject) {
-                  <p-tag [value]="subject" severity="info" />
-                }
-              </div>
-              <div class="flex align-items-center justify-content-between">
-                <p-tag [value]="'₪' + teacher.defaultPricePerLesson + ' לשיעור'" severity="success" styleClass="text-base" />
-                <a [routerLink]="['/teachers', teacher.id]" class="flex align-items-center gap-1 font-medium no-underline">
-                  לפרופיל המלא <i class="pi pi-arrow-left text-xs"></i>
-                </a>
-              </div>
-            </p-card>
-          }
-        </div>
-      }
+      <div class="bento">
+        <article class="bento-item" appReveal="0.15s">
+          <span class="bento-icon"><i class="pi pi-calendar-clock"></i></span>
+          <h3>היומן תמיד מעודכן</h3>
+          <p>
+            מתי השיעור הבא, ומה השיעורים שהיו. אפשר לבקש שיעור, לבקש דחייה או לבטל — והמורה מאשרת.
+          </p>
+        </article>
+
+        <article class="bento-item" appReveal="0.2s" style="--bento-tone: var(--p-blue-500)">
+          <span class="bento-icon"><i class="pi pi-comments"></i></span>
+          <h3>לדעת מה קורה בשיעור</h3>
+          <p>ההערות שהמורה בחרה לשתף, ושיעורי הבית — במקום לשאול "אז מה למדתם?" בכל ערב.</p>
+        </article>
+
+        <article class="bento-item" appReveal="0.25s" style="--bento-tone: var(--p-amber-500)">
+          <span class="bento-icon"><i class="pi pi-receipt"></i></span>
+          <h3>מצב תשלומים ברור</h3>
+          <p>מה שולם, מה פתוח ועל אילו שיעורים. הורים בלבד — תלמידים לא רואים כסף.</p>
+        </article>
+      </div>
     </div>
   </section>
 
@@ -237,7 +271,13 @@
     <div class="cta-band aurora" appReveal>
       <h2>מלמדת פרטי? נסי את תלמידון</h2>
       <p>ההרשמה חינם ולוקחת דקה. אפשר להתחיל עם תלמיד אחד ולראות אם זה מתאים לך.</p>
-      <p-button label="הרשמה כמורה" icon="pi pi-user-plus" size="large" severity="contrast" routerLink="/register" />
+      <p-button
+        label="הרשמה כמורה"
+        icon="pi pi-user-plus"
+        size="large"
+        severity="contrast"
+        routerLink="/register"
+      />
     </div>
   </section>
 

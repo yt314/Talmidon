@@ -621,6 +621,39 @@ full-calendar {
   text-decoration: none;
 }
 
+/* --- בלוקי השיעורים ---
+   הצבע נקבע כאן ולא ב-EventInput, כי FullCalendar מזריק ‎color‎ כסגנון inline שגובר
+   על טוקנים ולא מתחלף במצב כהה. כל סטטוס מקבל ‎--lesson-tone‎ משלו והשאר משותף. */
+.lesson-cal-scheduled {
+  --lesson-tone: var(--p-primary-500);
+}
+.lesson-cal-completed {
+  --lesson-tone: var(--p-green-600);
+}
+.lesson-cal-requested {
+  --lesson-tone: var(--p-amber-500);
+  --lesson-ink: var(--p-amber-950);
+}
+.lesson-cal-cancelled {
+  --lesson-tone: var(--p-surface-400);
+}
+.lesson-cal-declined {
+  --lesson-tone: var(--p-red-500);
+}
+.lesson-cal-noshow {
+  --lesson-tone: var(--p-purple-500);
+}
+/* במצב כהה הגוונים המלאים בוהקים מדי על רקע כהה — מורידים מעט את הרוויה */
+.app-dark .lesson-cal-scheduled {
+  --lesson-tone: var(--p-primary-600);
+}
+.app-dark .lesson-cal-completed {
+  --lesson-tone: var(--p-green-700);
+}
+.app-dark .lesson-cal-cancelled {
+  --lesson-tone: var(--p-surface-600);
+}
+
 .lesson-cal-pending {
   border-style: dashed !important;
   border-width: 2px !important;
@@ -629,15 +662,84 @@ full-calendar {
   opacity: 0.6;
   text-decoration: line-through;
 }
+
+/* --- מקרא --- */
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+  border-radius: var(--p-border-radius-lg);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color);
+}
 .legend-dot {
   display: inline-block;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: 3px;
+  background: var(--lesson-tone, var(--p-surface-400));
 }
 .legend-dot-pending {
-  background: var(--p-talmidon-warn-soft);
-  border: 2px dashed var(--p-talmidon-warn-border);
+  background: transparent;
+  border: 2px dashed var(--p-amber-500);
+}
+
+/* --- כרום היומן ---
+   FullCalendar מגיע עם כפתורי bootstrap-ish; כאן מיישרים אותם לשפת PrimeNG. */
+.calendar-card {
+  padding: 1rem;
+  border-radius: var(--p-border-radius-xl);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  box-shadow: var(--p-talmidon-shadow-sm);
+}
+.fc .fc-toolbar {
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.fc .fc-toolbar-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.fc .fc-button {
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  color: var(--p-text-color);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--p-border-radius-md);
+  box-shadow: none;
+  text-transform: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+.fc .fc-button:hover:not(:disabled) {
+  background: var(--p-content-hover-background);
+  border-color: var(--p-surface-400);
+}
+.fc .fc-button:disabled {
+  opacity: var(--p-disabled-opacity, 0.6);
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: var(--p-primary-color);
+  border-color: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+.fc .fc-button:focus-visible {
+  outline: var(--p-focus-ring-width) var(--p-focus-ring-style) var(--p-focus-ring-color);
+  outline-offset: var(--p-focus-ring-offset);
+  box-shadow: none;
+}
+/* קו "עכשיו" — בצבע המותג במקום האדום של ברירת המחדל */
+.fc .fc-timegrid-now-indicator-line,
+.fc .fc-timegrid-now-indicator-arrow {
+  border-color: var(--p-primary-color);
 }
 
 /* ------------------------------------------------- מרכז ההתראות (פעמון) ---- */
@@ -1286,4 +1388,20 @@ full-calendar {
   align-items: center;
   gap: 0.35rem;
   font-size: 0.875rem;
+}
+
+/* כפתור שנראה כמו קישור — לפעולות טקסטואליות בתוך פסקה, כמו "ניקוי הסינון" */
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--p-primary-color);
+  cursor: pointer;
+}
+.link-button:hover {
+  text-decoration: underline;
 }

@@ -43,6 +43,17 @@ export class TeacherLibraryComponent implements OnInit {
   protected readonly initials = getInitials;
   protected readonly avatarColor = getAvatarColor;
 
+  /**
+   * כותרת אזור התוצאות. כשיש סינון פעיל היא מדווחת כמה נמצאו — הרשת יושבת מיד
+   * מתחת לשדה החיפוש, ובלי מספר לא ברור אם המסנן בכלל תפס.
+   */
+  protected readonly resultsTitle = computed(() => {
+    if (!this.search().trim() && !this.selectedSubject()) return 'המורות שלנו';
+    const count = this.teachers().length;
+    if (count === 0) return 'לא נמצאו מורות';
+    return count === 1 ? 'נמצאה מורה אחת' : `נמצאו ${count} מורות`;
+  });
+
   protected readonly year = new Date().getFullYear();
 
   /** שאלות נפוצות בדף הנחיתה. טקסט קבוע — אין לו מקור בשרת. */
