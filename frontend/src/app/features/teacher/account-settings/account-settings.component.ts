@@ -5,6 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { MessageModule } from 'primeng/message';
 import { PasswordModule } from 'primeng/password';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { AuthService } from '../../../core/auth/auth.service';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
@@ -12,7 +13,7 @@ import { passwordPolicyValidator, passwordsMatchValidator } from '../../../core/
 
 @Component({
   selector: 'app-account-settings',
-  imports: [ReactiveFormsModule, ButtonModule, CardModule, MessageModule, PasswordModule],
+  imports: [ReactiveFormsModule, ButtonModule, CardModule, MessageModule, PasswordModule, PageHeaderComponent],
   templateUrl: './account-settings.component.html'
 })
 export class AccountSettingsComponent {

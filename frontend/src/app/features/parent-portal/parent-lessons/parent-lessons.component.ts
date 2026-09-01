@@ -8,6 +8,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { endAfterStartValidator } from '../../../core/forms/validators';
@@ -20,8 +21,7 @@ import { ParentPortalService } from '../parent-portal.service';
 
 @Component({
   selector: 'app-parent-lessons',
-  imports: [
-    ReactiveFormsModule,
+  imports: [ReactiveFormsModule,
     FormsModule,
     DatePipe,
     ButtonModule,
@@ -30,8 +30,7 @@ import { ParentPortalService } from '../parent-portal.service';
     InputTextModule,
     SelectModule,
     TagModule,
-    LessonCalendarComponent
-  ],
+    LessonCalendarComponent, PageHeaderComponent],
   templateUrl: './parent-lessons.component.html'
 })
 export class ParentLessonsComponent implements OnInit {

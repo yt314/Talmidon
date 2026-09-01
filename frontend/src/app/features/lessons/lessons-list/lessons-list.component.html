@@ -1,18 +1,15 @@
-<div class="flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
-  <h1 class="text-2xl font-bold m-0">יומן שיעורים</h1>
-  <div class="flex align-items-center gap-2 flex-wrap">
-    <p-select
-      [options]="students()"
-      optionLabel="fullName"
-      optionValue="id"
-      [ngModel]="studentFilter()"
-      (ngModelChange)="studentFilter.set($event)"
-      placeholder="כל התלמידים"
-      [showClear]="true"
-      styleClass="w-15rem" />
-    <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
-  </div>
-</div>
+<app-page-header title="יומן שיעורים" icon="pi-calendar">
+  <p-select
+    [options]="students()"
+    optionLabel="fullName"
+    optionValue="id"
+    [ngModel]="studentFilter()"
+    (ngModelChange)="studentFilter.set($event)"
+    placeholder="כל התלמידים"
+    [showClear]="true"
+    styleClass="w-15rem" />
+  <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
+</app-page-header>
 
 @if (pendingToMark().length > 0) {
   <div class="pending-banner flex align-items-center justify-content-between gap-3 flex-wrap mb-3">

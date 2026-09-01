@@ -30,7 +30,9 @@
 
     <div class="mb-4">
       <div class="mb-1"><span class="text-color-secondary">כיתה: </span>{{ student()!.gradeLevel || '—' }}</div>
-      <div class="mb-1"><span class="text-color-secondary">תאריך לידה: </span>{{ student()!.birthDate || '—' }}</div>
+      <div class="mb-1">
+        <span class="text-color-secondary">תאריך לידה: </span>{{ (student()!.birthDate | date: 'dd/MM/yyyy') || '—' }}
+      </div>
       <div class="mb-1">
         <span class="text-color-secondary">מחיר לשיעור: </span>{{ student()!.defaultPricePerLesson != null ? student()!.defaultPricePerLesson + ' ₪' : 'ברירת מחדל של המורה' }}
       </div>

@@ -3,13 +3,14 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, LessonStatus } from '../../lessons/lessons.models';
 import { StudentLesson } from '../student-portal.models';
 import { StudentPortalService } from '../student-portal.service';
 
 @Component({
   selector: 'app-student-dashboard',
-  imports: [RouterLink, DatePipe, CardModule, TagModule],
+  imports: [RouterLink, DatePipe, CardModule, TagModule, PageHeaderComponent],
   templateUrl: './student-dashboard.component.html'
 })
 export class StudentDashboardComponent implements OnInit {

@@ -26,11 +26,19 @@ export class TeacherShellComponent implements OnInit {
   protected readonly menuItems: MenuItem[] = [
     { label: 'ראשי', icon: 'pi pi-home', routerLink: '/app/dashboard' },
     { label: 'תלמידים', icon: 'pi pi-users', routerLink: '/app/students' },
-    { label: 'יומן שיעורים', icon: 'pi pi-calendar', routerLink: '/app/lessons' },
+    { label: 'יומן', icon: 'pi pi-calendar', routerLink: '/app/lessons' },
     { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/app/payments' },
     { label: 'דוחות', icon: 'pi pi-chart-bar', routerLink: '/app/reports' },
-    { label: 'הגדרות פרופיל', icon: 'pi pi-cog', routerLink: '/app/profile' },
-    { label: 'הגדרות חשבון', icon: 'pi pi-lock', routerLink: '/app/account' }
+    // שתי מסכי ההגדרות מקובצים לתפריט משנה — שבעה פריטים ברצף שברו את הסרגל
+    // לשתי שורות על מסך רגיל.
+    {
+      label: 'הגדרות',
+      icon: 'pi pi-cog',
+      items: [
+        { label: 'פרופיל ציבורי', icon: 'pi pi-id-card', routerLink: '/app/profile' },
+        { label: 'חשבון וסיסמה', icon: 'pi pi-lock', routerLink: '/app/account' }
+      ]
+    }
   ];
 
   ngOnInit(): void {

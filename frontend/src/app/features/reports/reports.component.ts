@@ -5,13 +5,14 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SkeletonModule } from 'primeng/skeleton';
+import { PageHeaderComponent } from '../../shared/ui/page-header.component';
 import { downloadCsv } from '../../shared/export/csv.util';
 import { IncomeReport } from './reports.models';
 import { ReportsService } from './reports.service';
 
 @Component({
   selector: 'app-reports',
-  imports: [FormsModule, ButtonModule, CardModule, DatePickerModule, SkeletonModule],
+  imports: [FormsModule, ButtonModule, CardModule, DatePickerModule, SkeletonModule, PageHeaderComponent],
   templateUrl: './reports.component.html'
 })
 export class ReportsComponent implements OnInit {

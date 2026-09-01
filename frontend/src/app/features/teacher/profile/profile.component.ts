@@ -9,6 +9,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TextareaModule } from 'primeng/textarea';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
@@ -17,8 +18,7 @@ import { TeacherProfileService } from './profile.service';
 
 @Component({
   selector: 'app-teacher-profile-settings',
-  imports: [
-    ReactiveFormsModule,
+  imports: [ReactiveFormsModule,
     FormsModule,
     ButtonModule,
     CardModule,
@@ -27,8 +27,7 @@ import { TeacherProfileService } from './profile.service';
     InputNumberModule,
     InputTextModule,
     SkeletonModule,
-    TextareaModule
-  ],
+    TextareaModule, PageHeaderComponent],
   templateUrl: './profile.component.html'
 })
 export class TeacherProfileSettingsComponent implements OnInit {

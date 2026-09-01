@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, Lesson, LessonStatus } from '../../lessons/lessons.models';
 import { OpenCharge } from '../../payments/payments.models';
 import { MyChild } from '../parent-portal.models';
@@ -10,7 +11,7 @@ import { ParentPortalService } from '../parent-portal.service';
 
 @Component({
   selector: 'app-parent-dashboard',
-  imports: [RouterLink, DatePipe, CardModule, TagModule],
+  imports: [RouterLink, DatePipe, CardModule, TagModule, PageHeaderComponent],
   templateUrl: './parent-dashboard.component.html'
 })
 export class ParentDashboardComponent implements OnInit {

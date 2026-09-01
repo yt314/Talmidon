@@ -10,6 +10,8 @@ import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
@@ -20,8 +22,7 @@ import { PaymentsService } from '../payments.service';
 
 @Component({
   selector: 'app-payments-list',
-  imports: [
-    ReactiveFormsModule,
+  imports: [ReactiveFormsModule,
     FormsModule,
     DatePipe,
     ButtonModule,
@@ -31,8 +32,7 @@ import { PaymentsService } from '../payments.service';
     SelectModule,
     TableModule,
     TabsModule,
-    TagModule
-  ],
+    TagModule, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './payments-list.component.html'
 })
 export class PaymentsListComponent implements OnInit {

@@ -1,4 +1,4 @@
-<h1 class="text-2xl font-bold mb-4">הערות</h1>
+<app-page-header title="הערות" icon="pi-book" subtitle="מה שהמורה שיתפה איתך אחרי השיעורים." />
 
 @if (loading()) {
   <div class="flex flex-column gap-2">
@@ -11,10 +11,10 @@
     }
   </div>
 } @else if (notes().length === 0) {
-  <p class="text-color-secondary text-center py-5">
-    <i class="pi pi-file-edit text-4xl mb-2 block"></i>
-    אין הערות עדיין.
-  </p>
+  <app-empty-state
+    icon="pi-file-edit"
+    title="אין הערות עדיין"
+    hint="הערות שהמורה תסמן כגלויות לך יופיעו כאן." />
 } @else {
   <ul class="parent-list">
     @for (note of notes(); track note.id) {

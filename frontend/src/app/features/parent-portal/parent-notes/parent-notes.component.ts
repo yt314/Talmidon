@@ -4,13 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { MyChild, ParentNote } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
 
 @Component({
   selector: 'app-parent-notes',
-  imports: [FormsModule, DatePipe, CardModule, SelectModule, SkeletonModule],
+  imports: [FormsModule, DatePipe, CardModule, SelectModule, SkeletonModule, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './parent-notes.component.html'
 })
 export class ParentNotesComponent implements OnInit {

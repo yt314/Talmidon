@@ -4,6 +4,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { AdminService } from '../admin.service';
@@ -11,7 +13,7 @@ import { AdminTeacher } from '../admin.models';
 
 @Component({
   selector: 'app-admin-teachers',
-  imports: [DatePipe, ButtonModule, TableModule, TagModule],
+  imports: [DatePipe, ButtonModule, TableModule, TagModule, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './admin-teachers.component.html'
 })
 export class AdminTeachersComponent implements OnInit {

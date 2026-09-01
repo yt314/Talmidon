@@ -1,5 +1,4 @@
-<div class="flex justify-content-between align-items-center mb-4">
-  <h1 class="text-2xl font-bold m-0">תשלומים</h1>
+<app-page-header title="תשלומים" icon="pi-wallet" subtitle="חיובים פתוחים לגבייה והיסטוריית התשלומים.">
   <p-button
     label="שלח תזכורות תשלום חודשיות"
     icon="pi pi-envelope"
@@ -7,7 +6,7 @@
     [outlined]="true"
     [loading]="sendingReminders()"
     (onClick)="sendMonthlyReminders()" />
-</div>
+</app-page-header>
 
 <p-tabs value="open">
   <p-tablist>
@@ -64,9 +63,8 @@
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="4" class="text-center text-color-secondary py-5">
-                <i class="pi pi-check-circle text-4xl mb-2 block"></i>
-                אין חיובים פתוחים להורה זה.
+              <td colspan="4">
+                <app-empty-state icon="pi-check-circle" title="אין חיובים פתוחים להורה זה" />
               </td>
             </tr>
           </ng-template>
@@ -159,9 +157,8 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="7" class="text-center text-color-secondary py-5">
-              <i class="pi pi-wallet text-4xl mb-2 block"></i>
-              אין תשלומים רשומים עדיין.
+            <td colspan="7">
+              <app-empty-state icon="pi-wallet" title="אין תשלומים רשומים עדיין" />
             </td>
           </tr>
         </ng-template>

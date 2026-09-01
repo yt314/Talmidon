@@ -1,4 +1,4 @@
-<h1 class="text-2xl font-bold mb-4">מורות</h1>
+<app-page-header title="מורות" icon="pi-users" subtitle="כל המורות הרשומות בפלטפורמה." />
 
 <p-table [value]="teachers()" [loading]="loading()" dataKey="id">
   <ng-template pTemplate="header">
@@ -56,9 +56,8 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="7" class="text-center text-color-secondary py-5">
-        <i class="pi pi-users text-4xl mb-2 block"></i>
-        אין מורות רשומות עדיין.
+      <td colspan="7">
+        <app-empty-state icon="pi-users" title="אין מורות רשומות עדיין" />
       </td>
     </tr>
   </ng-template>

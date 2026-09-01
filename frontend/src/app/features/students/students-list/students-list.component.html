@@ -1,4 +1,4 @@
-<h1 class="text-2xl font-bold mb-4">תלמידים</h1>
+<app-page-header title="תלמידים" icon="pi-users" subtitle="כרטיסי התלמידים והורים מקושרים." />
 
 <p-tabs value="students">
   <p-tablist>
@@ -51,9 +51,11 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="5" class="text-center text-color-secondary py-5">
-              <i class="pi pi-users text-4xl mb-2 block"></i>
-              אין תלמידים עדיין.
+            <td colspan="5">
+              <app-empty-state
+                icon="pi-users"
+                title="אין תלמידים עדיין"
+                hint="הוספת תלמיד/ה היא הצעד הראשון — משם אפשר לקבוע שיעורים, לתעד ולגבות." />
             </td>
           </tr>
         </ng-template>
@@ -95,9 +97,11 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="5" class="text-center text-color-secondary py-5">
-              <i class="pi pi-user-plus text-4xl mb-2 block"></i>
-              אין הורים עדיין.
+            <td colspan="5">
+              <app-empty-state
+                icon="pi-user-plus"
+                title="אין הורים עדיין"
+                hint="הורה מקושר מקבל גישה ליומן, להערות הגלויות ולמצב התשלומים." />
             </td>
           </tr>
         </ng-template>

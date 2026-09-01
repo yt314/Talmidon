@@ -11,6 +11,8 @@ import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
@@ -23,8 +25,7 @@ import { StudentsService } from '../students.service';
 
 @Component({
   selector: 'app-students-list',
-  imports: [
-    ReactiveFormsModule,
+  imports: [ReactiveFormsModule,
     ButtonModule,
     DatePickerModule,
     DialogModule,
@@ -33,8 +34,7 @@ import { StudentsService } from '../students.service';
     SelectModule,
     TableModule,
     TabsModule,
-    TagModule
-  ],
+    TagModule, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './students-list.component.html'
 })
 export class StudentsListComponent implements OnInit {

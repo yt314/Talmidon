@@ -4,6 +4,7 @@ import { EventInput } from 'fullcalendar';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { CalendarEventExtendedProps } from '../../../shared/calendar/lesson-calendar.model';
 import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
 import { LESSON_STATUS_COLOR, LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, LessonStatus } from '../../lessons/lessons.models';
@@ -12,7 +13,7 @@ import { StudentPortalService } from '../student-portal.service';
 
 @Component({
   selector: 'app-student-lessons',
-  imports: [DatePipe, ButtonModule, DialogModule, TagModule, LessonCalendarComponent],
+  imports: [DatePipe, ButtonModule, DialogModule, TagModule, LessonCalendarComponent, PageHeaderComponent],
   templateUrl: './student-lessons.component.html'
 })
 export class StudentLessonsComponent implements OnInit {

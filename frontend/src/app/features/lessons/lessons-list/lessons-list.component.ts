@@ -12,6 +12,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
+import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { endAfterStartValidator } from '../../../core/forms/validators';
@@ -36,8 +37,7 @@ import { LessonsService } from '../lessons.service';
 
 @Component({
   selector: 'app-lessons-list',
-  imports: [
-    ReactiveFormsModule,
+  imports: [ReactiveFormsModule,
     FormsModule,
     DatePipe,
     PrimeTemplate,
@@ -50,8 +50,7 @@ import { LessonsService } from '../lessons.service';
     SelectModule,
     TagModule,
     TextareaModule,
-    LessonCalendarComponent
-  ],
+    LessonCalendarComponent, PageHeaderComponent],
   templateUrl: './lessons-list.component.html'
 })
 export class LessonsListComponent implements OnInit {

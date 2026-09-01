@@ -7,7 +7,7 @@ login-free directory sitting on top so prospective students can discover tutors 
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
 ![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
-![PrimeNG](https://img.shields.io/badge/PrimeNG-Aura-06B6D4)
+![PrimeNG](https://img.shields.io/badge/PrimeNG-custom%20preset-06B6D4)
 ![License](https://img.shields.io/badge/license-private-lightgrey)
 
 ---
@@ -38,7 +38,12 @@ exactly what concerns them — nothing more.
   confirmation automatically
 - **Teacher profile** — price per lesson, cancellation policy, contact info, and subject
   list, all optionally published to the public directory
+- **Study materials** — a tutor attaches links (a practice sheet, an explainer video, a Drive
+  folder) to a student; the student and their parents each get a materials screen of their own.
+  Unlike a pedagogical note, a material is shared by definition and carries no visibility flags
 - **Public directory** — a login-free page listing every opted-in tutor, filterable by subject
+- **Light and dark mode** — follows the operating system by default, with a toggle in every
+  shell; the choice is remembered and applied before first paint, so there is no white flash
 
 ## Tech Stack
 
@@ -47,9 +52,32 @@ exactly what concerns them — nothing more.
 | Backend | ASP.NET Core Web API (.NET 10, C#) |
 | ORM | Entity Framework Core |
 | Auth | ASP.NET Core Identity + JWT access tokens + rotating refresh tokens |
-| Frontend | Angular 21 + PrimeNG (Aura theme), RTL Hebrew UI |
+| Frontend | Angular 21 + PrimeNG (custom preset over Aura, light/dark), RTL Hebrew UI |
 | Database | PostgreSQL |
 | Local dev infra | Docker Compose — PostgreSQL + Mailpit (SMTP sandbox with a web inbox) |
+
+## Design System
+
+The UI is not stock Aura. `frontend/src/app/core/theme/talmidon-preset.ts` defines the product's
+whole visual language through PrimeNG's `definePreset`, and the rule in `styles.scss` is that no
+component may hardcode a color:
+
+- **Palette** — teal primary; warm `stone` surfaces in light mode (a "paper" feel that suits a
+  learning product and sets off the cool teal), and a hand-tuned deep blue-charcoal ramp in dark
+  mode rather than an automatic inversion.
+- **Component tokens** — card, button, menubar, tag, dialog, datatable, toast, popover, menu and
+  tooltip are tuned at the token level, so screens rarely need local CSS to override PrimeNG.
+- **Custom tokens** — elevation, hero gradient, glass, and state tints are declared under the
+  preset's `extend` block, which publishes them as `--p-talmidon-*` CSS variables that flip with
+  the color scheme. This is what lets one stylesheet serve both themes.
+- **Dark mode** — `ThemeService` toggles `.app-dark` on `<html>`, the same selector passed to
+  `providePrimeNG`. A small inline script in `index.html` applies the stored choice before Angular
+  boots, which is the only way to avoid a flash of light theme on load.
+- **Shared primitives** — `shared/ui/` holds `app-page-header`, `app-empty-state` and
+  `app-stat-card`, so every screen opens with the same hierarchy and every empty list says
+  something useful instead of each screen inventing its own phrasing.
+- **Motion** — staggered card entrances and shimmer skeletons, all behind
+  `prefers-reduced-motion`.
 
 ## Multi-Tenancy & Security
 
@@ -78,7 +106,8 @@ Talmidon/
 │   └── Talmidon.Tests/           # xUnit integration tests — tenant isolation, auth, IDOR
 ├── frontend/
 │   └── src/app/
-│       ├── core/                 # Auth, HTTP interceptors, shared form-validation helpers
+│       ├── core/                 # Auth, HTTP interceptors, form validation, theme preset + dark mode
+│       ├── shared/               # Cross-feature UI primitives and utilities
 │       └── features/
 │           ├── auth/             # Login, registration
 │           ├── public/           # Login-free tutor directory
@@ -87,8 +116,9 @@ Talmidon/
 │           ├── notes/            # Pedagogical notes
 │           ├── lessons/          # Lesson calendar, requests, change requests
 │           ├── payments/         # Open charges, payment history
-│           ├── parent-portal/    # Parent-facing schedule / notes / payments
-│           └── student-portal/   # Student-facing schedule / notes (read-only)
+│           ├── resources/       # Study materials — service + shared list, used by all three roles
+│           ├── parent-portal/    # Parent-facing schedule / notes / payments / materials
+│           └── student-portal/   # Student-facing schedule / notes / materials (read-only)
 └── docs/                         # Requirements, database schema, screen designs
 ```
 
@@ -173,6 +203,10 @@ core domain rules that are easy to silently break in a refactor:
 - **Rate limiting:** the per-IP limit on `/api/auth/*` actually returns 429 once exceeded
   (`RateLimitingTests`) — this needs its own `WebApplicationFactory` with a small permit limit,
   since the shared test fixture intentionally inflates the limit for every other test.
+- **Study materials:** a material reaches the student it was written for and that student's
+  parents, and nobody else — not a second student of the same tutor, not a second parent under
+  that tutor, and not another tutor at all (`StudentResourcesTests`). Creation is restricted to
+  `http`/`https`, since the link is rendered as a clickable anchor inside someone else's portal.
 - **Student IDOR:** two students under the same tutor never see each other's lessons or notes
   through their own-schedule/own-notes endpoints, and a student can't reach a teacher-only
   by-id endpoint at all, even for their own record (`StudentIdorTests`).

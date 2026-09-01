@@ -1,7 +1,6 @@
-<div class="flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-  <h1 class="text-2xl font-bold m-0">יומן שיעורים</h1>
+<app-page-header title="יומן שיעורים" icon="pi-calendar">
   <p-button label="בקש שיעור חדש" icon="pi pi-plus" (onClick)="openRequestDialog()" />
-</div>
+</app-page-header>
 
 @if (children().length > 1) {
   <div class="field" style="max-width: 300px">
