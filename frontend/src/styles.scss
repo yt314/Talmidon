@@ -735,13 +735,40 @@ full-calendar {
   --fc-classic-today: transparent;
 }
 
-/* כותרות הימים — טיפוגרפיה שקטה ומרווח נדיב; הקו התחתון היחיד הוא מה שמפריד
-   בין הכותרת לרשת, במקום מסגרת סביב כל תא */
+/* כותרות הימים — אות היום מעל מספר התאריך, בלי מסגרת סביב כל תא */
 full-calendar th {
-  padding-block: 0.6rem !important;
-  font-weight: 600 !important;
-  font-size: 0.85rem !important;
+  padding-block: 0.8rem 0.6rem !important;
+  border-inline-width: 0 !important;
+}
+.cal-dayhead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  line-height: 1.1;
+}
+.cal-dayhead-dow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--p-text-muted-color);
+}
+.cal-dayhead-num {
+  display: grid;
+  place-items: center;
+  min-width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+  font-variant-numeric: tabular-nums;
+}
+/* היום הנוכחי — עיגול מלא, הסימון המקובל ביומנים */
+.cal-dayhead-today {
+  background: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+  font-weight: 700;
 }
 
 /* --- כרום היומן ---
@@ -761,13 +788,31 @@ full-calendar th {
   font-size: 1.15rem;
   font-weight: 700;
 }
+/* הכפתורים מגיעים מ-FullCalendar כתיבות נפרדות עם מרווח ביניהן. כאן הם הופכים
+   לקבוצה מחוברת אחת — מסגרת חיצונית אחת, ומפריד דק בין הפריטים — כך שהסרגל
+   נראה כמו רכיב אחד ולא כמו שורת תאים. */
+.fc .fc-button-group {
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md);
+  overflow: hidden;
+}
+.fc .fc-button-group .fc-button {
+  border: none !important;
+  border-radius: 0 !important;
+}
+.fc .fc-button-group .fc-button + .fc-button {
+  border-inline-start: 1px solid var(--p-content-border-color) !important;
+}
+
 .fc .fc-button {
   background: var(--p-content-background);
   border: 1px solid var(--p-content-border-color);
   color: var(--p-text-color);
   font-weight: 500;
   font-size: 0.875rem;
-  padding: 0.4rem 0.75rem;
+  padding: 0.4rem 0.85rem;
   border-radius: var(--p-border-radius-md);
   box-shadow: none;
   text-transform: none;

@@ -8,6 +8,27 @@ import timeGridPlugin from 'fullcalendar/timegrid';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarEventDrop, CalendarEventExtendedProps, CalendarSlotSelection } from './lesson-calendar.model';
 
+/**
+ * כותרת עמודה ליום: אות היום בשורה עליונה שקטה, ומספר התאריך מתחתיה. ביום הנוכחי
+ * המספר מקבל עיגול מלא בצבע המותג — הסימון המקובל ביומנים, וקריא יותר מהדגשת
+ * הטקסט בלבד.
+ */
+function buildDayHeader(date: Date, isToday: boolean): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'cal-dayhead';
+
+  const dow = document.createElement('span');
+  dow.className = 'cal-dayhead-dow';
+  dow.textContent = new Intl.DateTimeFormat('he-IL', { weekday: 'narrow' }).format(date);
+
+  const day = document.createElement('span');
+  day.className = isToday ? 'cal-dayhead-num cal-dayhead-today' : 'cal-dayhead-num';
+  day.textContent = String(date.getDate());
+
+  wrapper.append(dow, day);
+  return wrapper;
+}
+
 /** עטיפה משותפת סביב FullCalendar — RTL/עברית, צביעה לפי סטטוס וטיפול בלחיצות. משמשת את יומני המורה/הורה/תלמיד. */
 @Component({
   selector: 'app-lesson-calendar',
@@ -56,8 +77,10 @@ export class LessonCalendarComponent {
     eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
     // שורת "כל היום" תמיד ריקה כאן — לשיעור יש תמיד שעה — והיא רק גזלה גובה
     allDaySlot: false,
-    // כותרת עמודה: שם היום ומספרו בשתי שורות, במקום "יום ג׳ ה-1" בשורה אחת
-    dayHeaderFormat: { weekday: 'short', day: 'numeric' },
+    // כותרת עמודה בשתי שורות — אות היום מעל מספר התאריך, במקום "יום ג׳ ה-1"
+    // בשורה אחת. ‎dayHeaderFormat‎ לבדו לא מספיק כי הוא מייצר מחרוזת אחת ואי אפשר
+    // לעצב את שני החלקים בנפרד.
+    dayHeaderContent: info => ({ domNodes: [buildDayHeader(info.date, info.isToday)] }),
     nowIndicator: true,
     // נפתח על שעות הפעילות במקום על 07:00, שבדרך כלל ריק
     scrollTime: '08:00:00',
