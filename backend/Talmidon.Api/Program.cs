@@ -193,8 +193,10 @@ static async Task SeedRolesAsync(WebApplication app)
 /// </summary>
 static async Task SeedAdminUserAsync(WebApplication app)
 {
-    var email = app.Configuration["Admin:Email"];
-    var password = app.Configuration["Admin:Password"];
+    var email = app.Configuration["Admin:Email"]
+        ?? Environment.GetEnvironmentVariable("ADMIN_EMAIL");
+    var password = app.Configuration["Admin:Password"]
+        ?? Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
     if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         return;
 
@@ -205,6 +207,16 @@ static async Task SeedAdminUserAsync(WebApplication app)
 
     var admin = new ApplicationUser { UserName = email, Email = email, DisplayName = "מנהל מערכת", EmailConfirmed = true };
     var createResult = await userManager.CreateAsync(admin, password);
-    if (createResult.Succeeded)
-        await userManager.AddToRoleAsync(admin, Roles.Admin);
+    if (!createResult.Succeeded)
+    {
+        var errors = string.Join("; ", createResult.Errors.Select(error => error.Description));
+        throw new InvalidOperationException($"Admin user could not be created: {errors}");
+    }
+
+    var roleResult = await userManager.AddToRoleAsync(admin, Roles.Admin);
+    if (!roleResult.Succeeded)
+    {
+        var errors = string.Join("; ", roleResult.Errors.Select(error => error.Description));
+        throw new InvalidOperationException($"Admin role could not be assigned: {errors}");
+    }
 }
