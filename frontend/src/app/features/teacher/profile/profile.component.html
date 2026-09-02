@@ -134,20 +134,11 @@
       התחילי להקליד וההצעות יופיעו. אם התחום שלך לא ברשימה — פשוט הקלידי אותו והקישי Enter.
     </p>
 
-    <p-autocomplete
-      [ngModel]="subjectNames()"
-      (ngModelChange)="onSubjectsChange($event)"
-      [ngModelOptions]="{ standalone: true }"
-      [suggestions]="subjectSuggestions()"
-      (completeMethod)="filterSubjects($event)"
-      [multiple]="true"
-      [unique]="true"
-      [completeOnFocus]="true"
-      [addOnBlur]="true"
-      [showEmptyMessage]="false"
-      placeholder="למשל: מתמטיקה"
-      styleClass="w-full"
-      inputStyleClass="w-full" />
+    <app-subject-picker
+      inputId="t-subjects"
+      [selected]="subjectNames()"
+      (selectedChange)="onSubjectsChange($event)"
+      [suggestions]="allSuggestions()" />
 
     @if (subjectsError(); as msg) {
       <small class="text-red-500 block mt-1">{{ msg }}</small>

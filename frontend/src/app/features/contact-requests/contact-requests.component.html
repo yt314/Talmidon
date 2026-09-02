@@ -1,0 +1,60 @@
+<app-page-header title="פניות" icon="pi-inbox" subtitle="הורים שפנו אלייך דרך הספרייה הציבורית.">
+  <p-selectbutton
+    [options]="filterOptions"
+    optionLabel="label"
+    optionValue="value"
+    [allowEmpty]="false"
+    [ngModel]="filter()"
+    (ngModelChange)="filter.set($event)" />
+</app-page-header>
+
+@if (loading()) {
+  <div class="skeleton skeleton-line" style="height: 5rem"></div>
+  <div class="skeleton skeleton-line" style="height: 5rem"></div>
+} @else if (visible().length === 0) {
+  <app-empty-state
+    icon="pi-inbox"
+    title="אין פניות להצגה"
+    hint="פניות שיגיעו מהכרטיס שלך בספרייה הציבורית יופיעו כאן." />
+} @else {
+  <div class="contact-list">
+    @for (contact of visible(); track contact.id) {
+      <p-card styleClass="contact-card">
+        <div class="flex justify-content-between align-items-start gap-2 flex-wrap mb-2">
+          <div>
+            <h3 class="m-0">{{ contact.fullName }}</h3>
+            <span class="text-sm text-color-secondary">
+              {{ contact.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+              @if (contact.subject) {
+                · {{ contact.subject }}
+              }
+            </span>
+          </div>
+          <p-tag [value]="statusLabel(contact.status)" [severity]="statusSeverity(contact.status)" />
+        </div>
+
+        <p class="contact-message">{{ contact.message }}</p>
+
+        <div class="flex align-items-center gap-2 flex-wrap mt-3">
+          <a [href]="'tel:' + contact.phone" class="contact-link"><i class="pi pi-phone text-xs"></i> {{ contact.phone }}</a>
+          @if (contact.email) {
+            <a [href]="'mailto:' + contact.email" class="contact-link"><i class="pi pi-envelope text-xs"></i> {{ contact.email }}</a>
+          }
+        </div>
+
+        <div class="flex gap-2 flex-wrap mt-3">
+          @if (hasWhatsapp(contact.phone)) {
+            <p-button label="וואטסאפ" icon="pi pi-whatsapp" severity="success" [outlined]="true" size="small" (onClick)="openWhatsapp(contact)" />
+          }
+          @if (contact.status === Status.New) {
+            <p-button label="סמן בטיפול" icon="pi pi-check" size="small" (onClick)="setStatus(contact, Status.Handled)" />
+          }
+          @if (contact.status !== Status.Closed) {
+            <p-button label="סגירה" icon="pi pi-times-circle" severity="secondary" [text]="true" size="small" (onClick)="setStatus(contact, Status.Closed)" />
+          }
+          <p-button icon="pi pi-trash" severity="danger" [text]="true" size="small" pTooltip="מחיקה" tooltipPosition="top" (onClick)="confirmDelete(contact)" />
+        </div>
+      </p-card>
+    }
+  </div>
+}

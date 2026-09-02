@@ -1671,3 +1671,93 @@ full-calendar th {
   border: 1px solid var(--p-talmidon-warn-border);
   color: var(--p-talmidon-warn-text);
 }
+
+/* -------------------------------------------------- בורר תחומי לימוד ---- */
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.subject-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--p-border-radius-xl);
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+  color: var(--p-primary-color);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.subject-chip i {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+.subject-chip:hover {
+  background: color-mix(in srgb, var(--p-primary-color) 20%, transparent);
+}
+.subject-chip:focus-visible {
+  outline: var(--p-focus-ring-width) var(--p-focus-ring-style) var(--p-focus-ring-color);
+  outline-offset: var(--p-focus-ring-offset);
+}
+
+/* הצעה שטרם נבחרה — נייטרלית ומתוחמת, כדי שההבדל מהנבחרות יהיה מיידי */
+.subject-chip-add {
+  background: transparent;
+  border-color: var(--p-content-border-color);
+  color: var(--p-text-muted-color);
+}
+.subject-chip-add:hover {
+  background: var(--p-content-hover-background);
+  border-color: color-mix(in srgb, var(--p-primary-color) 40%, transparent);
+  color: var(--p-text-color);
+}
+
+.subject-suggest-label {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+/* אישור שליחה בטופס הפנייה הציבורי */
+.contact-sent {
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+}
+.contact-sent i {
+  font-size: 2rem;
+  color: var(--p-green-500);
+  margin-bottom: 0.6rem;
+  display: block;
+}
+
+/* -------------------------------------------------------- תיבת פניות ---- */
+
+.contact-list {
+  display: grid;
+  gap: 1rem;
+}
+.contact-message {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.65;
+  color: var(--p-text-color);
+}
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+.contact-link:hover {
+  color: var(--p-primary-color);
+}

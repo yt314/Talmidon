@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -13,6 +12,7 @@ import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
+import { SubjectPickerComponent } from '../../../shared/ui/subject-picker.component';
 import { cropToSquareJpeg } from '../../../shared/avatar/image-resize.util';
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { AvailabilityWindow, TeacherProfile } from './profile.models';
@@ -23,7 +23,6 @@ import { TeacherProfileService } from './profile.service';
   imports: [
     ReactiveFormsModule,
     FormsModule,
-    AutoCompleteModule,
     ButtonModule,
     CardModule,
     CheckboxModule,
@@ -32,7 +31,8 @@ import { TeacherProfileService } from './profile.service';
     SkeletonModule,
     TextareaModule,
     PageHeaderComponent,
-    AvatarComponent
+    AvatarComponent,
+    SubjectPickerComponent
   ],
   templateUrl: './profile.component.html'
 })
@@ -46,9 +46,7 @@ export class TeacherProfileSettingsComponent implements OnInit {
   protected readonly profile = signal<TeacherProfile | null>(null);
   /** שמות התחומים כפי שהם נערכים כרגע — ה-autocomplete עובד על מחרוזות. */
   protected readonly subjectNames = signal<string[]>([]);
-  /** ההצעות המסוננות שמוצגות כרגע ברשימה הנפתחת. */
-  protected readonly subjectSuggestions = signal<string[]>([]);
-  private readonly allSuggestions = signal<string[]>([]);
+  protected readonly allSuggestions = signal<string[]>([]);
   protected readonly subjectsError = signal<string | null>(null);
   protected readonly subjectsSaved = signal(false);
   private readonly teacherId = signal('');
@@ -199,18 +197,6 @@ export class TeacherProfileSettingsComponent implements OnInit {
       next: profile => this.profileComplete.set(profile.isProfileComplete),
       error: () => undefined
     });
-  }
-
-  /** מסנן את ההצעות לפי מה שהוקלד, ומשמיט תחומים שכבר נבחרו. */
-  filterSubjects(event: { query: string }): void {
-    const query = event.query.trim().toLowerCase();
-    const chosen = new Set(this.subjectNames().map(n => n.toLowerCase()));
-    this.subjectSuggestions.set(
-      this.allSuggestions()
-        .filter(name => !chosen.has(name.toLowerCase()))
-        .filter(name => !query || name.toLowerCase().includes(query))
-        .slice(0, 20)
-    );
   }
 
   /**

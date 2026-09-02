@@ -2,7 +2,6 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -11,6 +10,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
+import { SubjectPickerComponent } from '../../../shared/ui/subject-picker.component';
 import { cropToSquareJpeg } from '../../../shared/avatar/image-resize.util';
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { TeacherProfileService } from '../profile/profile.service';
@@ -26,13 +26,13 @@ import { ProfileSetupService } from './profile-setup.service';
   imports: [
     ReactiveFormsModule,
     FormsModule,
-    AutoCompleteModule,
     ButtonModule,
     CardModule,
     InputNumberModule,
     InputTextModule,
     TextareaModule,
-    AvatarComponent
+    AvatarComponent,
+    SubjectPickerComponent
   ],
   templateUrl: './profile-setup.component.html'
 })
@@ -55,8 +55,7 @@ export class ProfileSetupComponent implements OnInit {
   protected readonly photoError = signal<string | null>(null);
 
   protected readonly subjectNames = signal<string[]>([]);
-  protected readonly subjectSuggestions = signal<string[]>([]);
-  private readonly allSuggestions = signal<string[]>([]);
+  protected readonly allSuggestions = signal<string[]>([]);
 
   protected readonly form = this.fb.nonNullable.group({
     defaultPricePerLesson: [0, [Validators.required, Validators.min(1)]],
@@ -81,17 +80,6 @@ export class ProfileSetupComponent implements OnInit {
       },
       error: () => this.loading.set(false)
     });
-  }
-
-  filterSubjects(event: { query: string }): void {
-    const query = event.query.trim().toLowerCase();
-    const chosen = new Set(this.subjectNames().map(n => n.toLowerCase()));
-    this.subjectSuggestions.set(
-      this.allSuggestions()
-        .filter(name => !chosen.has(name.toLowerCase()))
-        .filter(name => !query || name.toLowerCase().includes(query))
-        .slice(0, 20)
-    );
   }
 
   async onPhotoSelected(event: Event): Promise<void> {

@@ -87,6 +87,15 @@
           }
         </p-card>
 
+        <p-card>
+          <h3 class="mt-0 mb-1 text-base">פנייה למורה</h3>
+          <p class="mt-0 mb-3 text-sm text-color-secondary">משאירים פרטים והמורה חוזרת אליכם.</p>
+          <app-contact-form
+            [teacherId]="teacher()!.id"
+            [teacherName]="teacher()!.fullName"
+            [subjects]="teacher()!.subjects" />
+        </p-card>
+
         <a routerLink="/" class="flex align-items-center gap-1 text-sm no-underline">
           <i class="pi pi-arrow-right text-xs"></i> חזרה לספרייה
         </a>

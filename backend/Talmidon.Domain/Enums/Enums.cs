@@ -68,5 +68,18 @@ public enum NotificationType
     /// <summary>הורה ביקש שינוי/ביטול לשיעור קיים.</summary>
     ChangeRequest = 1,
     /// <summary>התראה כללית.</summary>
-    General = 2
+    General = 2,
+    /// <summary>פנייה חדשה מהספרייה הציבורית.</summary>
+    ContactRequest = 3
+}
+
+/// <summary>מצב הטיפול בפנייה שהגיעה מהספרייה הציבורית.</summary>
+public enum ContactRequestStatus
+{
+    /// <summary>הגיעה וטרם נגעו בה.</summary>
+    New = 0,
+    /// <summary>המורה יצרה קשר והפנייה בטיפול.</summary>
+    Handled = 1,
+    /// <summary>נסגרה — הפכה לתלמיד, או שלא הבשילה.</summary>
+    Closed = 2
 }

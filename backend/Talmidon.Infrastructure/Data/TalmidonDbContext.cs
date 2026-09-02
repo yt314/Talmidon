@@ -40,6 +40,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Note> Notes => Set<Note>();
     public DbSet<StudentResource> StudentResources => Set<StudentResource>();
+    public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
@@ -68,6 +69,23 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
 
     private static void ConfigureTeacher(ModelBuilder builder)
     {
+        builder.Entity<ContactRequest>(e =>
+        {
+            e.Property(c => c.FullName).HasMaxLength(200).IsRequired();
+            e.Property(c => c.Phone).HasMaxLength(40).IsRequired();
+            e.Property(c => c.Email).HasMaxLength(256);
+            e.Property(c => c.Subject).HasMaxLength(100);
+            e.Property(c => c.Message).HasMaxLength(2000).IsRequired();
+
+            e.HasOne(c => c.Teacher)
+                .WithMany()
+                .HasForeignKey(c => c.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // המסך פותח על הפניות החדשות, מהחדשה לישנה
+            e.HasIndex(c => new { c.TenantId, c.Status, c.CreatedAt });
+        });
+
         builder.Entity<Teacher>(e =>
         {
             e.Property(t => t.FullName).HasMaxLength(200).IsRequired();

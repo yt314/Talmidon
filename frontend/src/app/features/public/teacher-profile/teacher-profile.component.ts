@@ -5,6 +5,7 @@ import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
+import { ContactFormComponent } from '../../contact-requests/contact-form.component';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
@@ -23,7 +24,8 @@ import { PublicService } from '../public.service';
     TagModule,
     EmptyStateComponent,
     ThemeToggleComponent,
-    AvatarComponent
+    AvatarComponent,
+    ContactFormComponent
   ],
   templateUrl: './teacher-profile.component.html'
 })

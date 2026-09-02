@@ -31,24 +31,10 @@
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="field">
         <label for="s-subjects">מה את מלמדת? *</label>
-        <p-autocomplete
+        <app-subject-picker
           inputId="s-subjects"
-          [ngModel]="subjectNames()"
-          (ngModelChange)="subjectNames.set($event)"
-          [ngModelOptions]="{ standalone: true }"
-          [suggestions]="subjectSuggestions()"
-          (completeMethod)="filterSubjects($event)"
-          [multiple]="true"
-          [unique]="true"
-          [completeOnFocus]="true"
-          [addOnBlur]="true"
-          [showEmptyMessage]="false"
-          placeholder="למשל: מתמטיקה"
-          styleClass="w-full"
-          inputStyleClass="w-full" />
-        <small class="block mt-1 text-color-secondary">
-          התחילי להקליד ותקבלי הצעות. תחום שלא ברשימה — הקלידי אותו והקישי Enter.
-        </small>
+          [(selected)]="subjectNames"
+          [suggestions]="allSuggestions()" />
       </div>
 
       <div class="field">

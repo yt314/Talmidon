@@ -1,8 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
+using Talmidon.Domain.Entities;
+using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Email;
+using Talmidon.Infrastructure.Identity;
 
 namespace Talmidon.Api.Controllers;
 
@@ -10,7 +15,10 @@ namespace Talmidon.Api.Controllers;
 [ApiController]
 [AllowAnonymous]
 [Route("api/public/teachers")]
-public class PublicController(TalmidonDbContext db) : ControllerBase
+public class PublicController(
+    TalmidonDbContext db,
+    IEmailSender emailSender,
+    ILogger<PublicController> logger) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PublicTeacherSummaryDto>>> List(
@@ -77,5 +85,79 @@ public class PublicController(TalmidonDbContext db) : ControllerBase
                 t.PhotoData == null ? (int?)null : t.PhotoData.Length))
             .FirstOrDefaultAsync();
         return teacher is null ? NotFound() : Ok(teacher);
+    }
+
+    /// <summary>
+    /// פנייה מהספרייה. פתוחה למבקרים, ולכן מוגבלת בקצב לפי כתובת IP — זה טופס
+    /// אנונימי שיוצר רשומות במסד ושולח מייל.
+    ///
+    /// ה-TenantId נכתב במפורש: אין דייר בהקשר של בקשה אנונימית, וה-DbContext
+    /// מתיר הוספה כזו בדיוק כשהערך מפורש (ראו EnforceTenantOnSave).
+    /// </summary>
+    [HttpPost("{id:guid}/contact")]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> Contact(Guid id, CreateContactRequestRequest request)
+    {
+        var teacher = await db.Teachers
+            .Where(t => t.Id == id && t.IsPublic)
+            .Select(t => new { t.Id, t.FullName, t.UserId })
+            .FirstOrDefaultAsync();
+        if (teacher is null) return NotFound();
+
+        var contact = new ContactRequest
+        {
+            Id = Guid.NewGuid(),
+            TenantId = teacher.Id,
+            FullName = request.FullName.Trim(),
+            Phone = request.Phone.Trim(),
+            Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
+            Subject = string.IsNullOrWhiteSpace(request.Subject) ? null : request.Subject.Trim(),
+            Message = request.Message.Trim(),
+            Status = ContactRequestStatus.New,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        db.ContactRequests.Add(contact);
+
+        db.Notifications.Add(new Notification
+        {
+            Id = Guid.NewGuid(),
+            TenantId = teacher.Id,
+            Type = NotificationType.ContactRequest,
+            Title = "פנייה חדשה מהספרייה",
+            Message = $"{contact.FullName} מעוניין/ת ליצור קשר" +
+                      (contact.Subject is null ? "." : $" בנושא {contact.Subject}."),
+            LinkPath = "/app/contact-requests",
+            IsRead = false,
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+
+        await db.SaveChangesAsync();
+
+        await NotifyTeacherByEmailAsync(teacher.UserId, contact);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// כשל בשליחת המייל אינו מפיל את הבקשה: הפנייה כבר נשמרה ומחכה במרכז
+    /// ההתראות, ואין סיבה שהפונה יראה שגיאה בגלל תקלה בספק המייל.
+    /// </summary>
+    private async Task NotifyTeacherByEmailAsync(string teacherUserId, ContactRequest contact)
+    {
+        var email = await db.Users.Where(u => u.Id == teacherUserId).Select(u => u.Email).FirstOrDefaultAsync();
+        if (email is null) return;
+
+        var body = $"""
+            <div dir="rtl" style="font-family:sans-serif">
+              <h2>פנייה חדשה מהספרייה</h2>
+              <p><strong>שם:</strong> {contact.FullName}</p>
+              <p><strong>טלפון:</strong> {contact.Phone}</p>
+              {(contact.Email is null ? "" : $"<p><strong>מייל:</strong> {contact.Email}</p>")}
+              {(contact.Subject is null ? "" : $"<p><strong>תחום:</strong> {contact.Subject}</p>")}
+              <p><strong>הודעה:</strong><br>{contact.Message}</p>
+            </div>
+            """;
+
+        try { await emailSender.SendAsync(email, "פנייה חדשה מהספרייה", body); }
+        catch (Exception ex) { logger.LogError(ex, "Failed to send contact request email."); }
     }
 }
