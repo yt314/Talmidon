@@ -67,13 +67,28 @@ export class LessonCalendarComponent {
     // המחלקות הפנימיות שלו ואין וו יציב לתא של היום
     dayLaneClass: info => (info.isToday ? 'cal-today-lane' : ''),
     dayHeaderClass: info => (info.isToday ? 'cal-today-header' : ''),
+    // אותו סיפור בכפתורי הסרגל: אין ‎.fc-button‎ ואין ‎.fc-button-group‎ לתפוס,
+    // ולכן המחלקות מוזרקות מכאן ומעוצבות ב-styles.scss
+    buttonGroupClass: 'cal-btn-group',
+    buttonClass: info =>
+      [
+        'cal-btn',
+        info.buttonGroup ? 'cal-btn-in-group' : 'cal-btn-solo',
+        info.isSelected ? 'cal-btn-selected' : '',
+        info.isIconOnly ? 'cal-btn-icon' : ''
+      ]
+        .filter(Boolean)
+        .join(' '),
     slotMinTime: '07:00:00',
     slotMaxTime: '22:00:00',
     slotDuration: '00:30:00',
     // תווית לכל שעה עגולה בלבד — חצאי שעה נשארים כקווי רשת בלי מספר, כדי שציר
-    // הזמן לא יהיה עמוס במספרים שאיש לא קורא
-    slotLabelInterval: '01:00:00',
-    slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+    // הזמן לא יהיה עמוס במספרים שאיש לא קורא.
+    // ‎slotHeader*‎ ולא ‎slotLabel*‎: אלה שמות v6, ו-v7 מתעלם מהם (עם אזהרה בקונסול).
+    slotHeaderInterval: '01:00:00',
+    slotHeaderFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+    // גובה מינימלי לחצי שעה — נותן לרשת אוויר במקום שורות דחוסות
+    slotMinHeight: 26,
     eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
     // שורת "כל היום" תמיד ריקה כאן — לשיעור יש תמיד שעה — והיא רק גזלה גובה
     allDaySlot: false,

@@ -788,55 +788,82 @@ full-calendar th {
   font-size: 1.15rem;
   font-weight: 700;
 }
-/* הכפתורים מגיעים מ-FullCalendar כתיבות נפרדות עם מרווח ביניהן. כאן הם הופכים
-   לקבוצה מחוברת אחת — מסגרת חיצונית אחת, ומפריד דק בין הפריטים — כך שהסרגל
-   נראה כמו רכיב אחד ולא כמו שורת תאים. */
-.fc .fc-button-group {
+/* --- כפתורי הסרגל ---
+   ל-FullCalendar v7 אין ‎.fc-button‎ ולא ‎.fc-button-group‎ — שמות המחלקות שלו
+   מגובבים. המחלקות כאן מוזרקות מהקומפוננטה דרך ‎buttonClass‎/‎buttonGroupClass‎,
+   ולכן הן יציבות. */
+
+/* קבוצה = בורר מקטעים על מסילה; הפריט הנבחר הוא "מגירה" מורמת מעליה */
+.cal-btn-group {
   display: inline-flex;
-  gap: 0;
-  border: 1px solid var(--p-content-border-color);
+  gap: 2px;
+  padding: 3px;
+  background: var(--p-content-hover-background);
   border-radius: var(--p-border-radius-md);
-  overflow: hidden;
-}
-.fc .fc-button-group .fc-button {
-  border: none !important;
-  border-radius: 0 !important;
-}
-.fc .fc-button-group .fc-button + .fc-button {
-  border-inline-start: 1px solid var(--p-content-border-color) !important;
 }
 
-.fc .fc-button {
-  background: var(--p-content-background);
-  border: 1px solid var(--p-content-border-color);
-  color: var(--p-text-color);
+/* ‎!important‎ נדרש גם כאן: המחלקות המגובבות של הערכה מוזרקות בזמן ריצה, אחרי
+   הגיליון הזה, וגוברות על כלל באותה ספציפיות. */
+.cal-btn {
+  font: inherit;
+  font-size: 0.875rem !important;
   font-weight: 500;
-  font-size: 0.875rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: var(--p-border-radius-md);
-  box-shadow: none;
-  text-transform: none;
+  line-height: 1.4;
+  cursor: pointer;
+  border: none !important;
+  background: transparent !important;
+  color: var(--p-text-muted-color) !important;
+  box-shadow: none !important;
   transition:
     background-color 0.15s ease,
+    color 0.15s ease,
     border-color 0.15s ease;
 }
-.fc .fc-button:hover:not(:disabled) {
-  background: var(--p-content-hover-background);
-  border-color: var(--p-surface-400);
-}
-.fc .fc-button:disabled {
+.cal-btn:disabled {
   opacity: var(--p-disabled-opacity, 0.6);
+  cursor: default;
 }
-.fc .fc-button-primary:not(:disabled).fc-button-active {
-  background: var(--p-primary-color);
-  border-color: var(--p-primary-color);
-  color: var(--p-primary-contrast-color);
-}
-.fc .fc-button:focus-visible {
-  outline: var(--p-focus-ring-width) var(--p-focus-ring-style) var(--p-focus-ring-color);
+.cal-btn:focus-visible {
+  outline: var(--p-focus-ring-width) var(--p-focus-ring-style) var(--p-focus-ring-color) !important;
   outline-offset: var(--p-focus-ring-offset);
-  box-shadow: none;
 }
+
+.cal-btn-in-group {
+  padding: 0.32rem 0.9rem !important;
+  border-radius: calc(var(--p-border-radius-md) - 3px) !important;
+}
+.cal-btn-in-group:hover:not(:disabled) {
+  color: var(--p-text-color) !important;
+  background: color-mix(in srgb, var(--p-content-background) 55%, transparent) !important;
+}
+.cal-btn-selected {
+  background: var(--p-content-background) !important;
+  color: var(--p-text-color) !important;
+  font-weight: 600 !important;
+  box-shadow: var(--p-talmidon-shadow-sm) !important;
+}
+
+/* כפתור בודד (היום) — כפתור משני רגיל, בגובה המסילה */
+.cal-btn-solo {
+  padding: 0.42rem 0.95rem !important;
+  border: 1px solid var(--p-content-border-color) !important;
+  border-radius: var(--p-border-radius-md) !important;
+  background: var(--p-content-background) !important;
+  color: var(--p-text-color) !important;
+}
+.cal-btn-solo:hover:not(:disabled) {
+  background: var(--p-content-hover-background) !important;
+  border-color: var(--p-surface-400) !important;
+}
+
+/* חצי הניווט — ריבועיים, כדי שהחץ יישב במרכז */
+.cal-btn-icon {
+  display: inline-grid !important;
+  place-items: center;
+  min-width: 2rem;
+  padding-inline: 0.45rem !important;
+}
+
 /* קו "עכשיו" — בצבע המותג במקום האדום של ברירת המחדל */
 .fc .fc-timegrid-now-indicator-line,
 .fc .fc-timegrid-now-indicator-arrow {
