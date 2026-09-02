@@ -13,11 +13,7 @@ import { TeacherProfileService } from '../profile/profile.service';
 import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
 @Component({
   selector: 'app-teacher-shell',
-<<<<<<< HEAD
-  imports: [RouterLink, RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent],
-=======
   imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent, RouterLink],
->>>>>>> Add profile setup on first login, a profile photo, and subject suggestions
   templateUrl: './teacher-shell.component.html'
 })
 export class TeacherShellComponent implements OnInit {
