@@ -7,7 +7,7 @@ import { Popover, PopoverModule } from 'primeng/popover';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { timer } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { AppNotification, NOTIFICATION_ICON, NotificationType } from '../notifications.models';
+import { AppNotification, NotificationType, notificationIcon } from '../notifications.models';
 import { NotificationsService } from '../notifications.service';
 
 @Component({
@@ -26,7 +26,7 @@ export class NotificationsBellComponent implements OnInit {
   protected readonly unreadCount = signal(0);
   protected readonly loading = signal(false);
 
-  protected readonly icon = (type: NotificationType): string => NOTIFICATION_ICON[type];
+  protected readonly icon = (type: NotificationType): string => notificationIcon(type);
 
   ngOnInit(): void {
     // רענון מונה ההתראות שלא נקראו כל 60 שניות

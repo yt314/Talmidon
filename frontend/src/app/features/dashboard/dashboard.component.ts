@@ -11,6 +11,7 @@ import { StatCardComponent } from '../../shared/ui/stat-card.component';
 import { OpenCharge } from '../payments/payments.models';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestStatus, Lesson, LessonStatus } from '../lessons/lessons.models';
 import { LessonsService } from '../lessons/lessons.service';
+import { ContactRequestsService } from '../contact-requests/contact-requests.service';
 import { PaymentsService } from '../payments/payments.service';
 
 @Component({
@@ -31,6 +32,7 @@ import { PaymentsService } from '../payments/payments.service';
 export class DashboardComponent implements OnInit {
   private readonly lessonsService = inject(LessonsService);
   private readonly paymentsService = inject(PaymentsService);
+  private readonly contactRequestsService = inject(ContactRequestsService);
 
   protected readonly statusLabel = (status: LessonStatus): string => LESSON_STATUS_LABELS[status];
   protected readonly statusSeverity = (status: LessonStatus) => LESSON_STATUS_SEVERITY[status];
@@ -40,6 +42,7 @@ export class DashboardComponent implements OnInit {
   protected readonly pendingChangeRequests = signal<number | null>(null);
   protected readonly openCharges = signal<OpenCharge[] | null>(null);
   protected readonly lessonsToMark = signal<number | null>(null);
+  protected readonly newContactRequests = signal<number | null>(null);
 
   protected readonly pendingRequestsTotal = computed(() => {
     const a = this.pendingLessonRequests();
@@ -61,6 +64,10 @@ export class DashboardComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.contactRequestsService.newCount().subscribe({
+      next: count => this.newContactRequests.set(count),
+      error: () => this.newContactRequests.set(0)
+    });
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date();

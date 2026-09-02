@@ -48,6 +48,16 @@
   </div>
 </div>
 
+@if (newContactRequests()) {
+  <a routerLink="/app/contact-requests" class="lead-banner rise" [style.--rise-delay]="'0.2s'">
+    <span class="flex align-items-center gap-2">
+      <i class="pi pi-inbox"></i>
+      {{ newContactRequests() === 1 ? 'פנייה חדשה אחת מהספרייה' : newContactRequests() + ' פניות חדשות מהספרייה' }}
+    </span>
+    <span class="flex align-items-center gap-1 font-medium">לצפייה <i class="pi pi-arrow-left text-xs"></i></span>
+  </a>
+}
+
 <p-card styleClass="mt-4 rise" [style.--rise-delay]="'0.2s'">
   <h3 class="mt-0 mb-3">שיעורי היום</h3>
 
