@@ -19,6 +19,7 @@ yarn-error.log*
 # ===== Environment / secrets =====
 .env
 *.local
+postgresqlneondb_ownernpg_APZDMk9yT.txt
 # סודות פיתוח מקומיים (העתק מ-appsettings.Development.example.json)
 **/appsettings.Development.json
 
