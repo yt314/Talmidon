@@ -8,7 +8,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
-import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
+import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { CountUpDirective } from '../../../shared/ui/count-up.directive';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { RevealDirective } from '../../../shared/ui/reveal.directive';
@@ -33,15 +34,15 @@ import { PublicService } from '../public.service';
     ThemeToggleComponent,
     RevealDirective,
     SpotlightDirective,
-    CountUpDirective
+    CountUpDirective,
+    AvatarComponent
   ],
   templateUrl: './teacher-library.component.html'
 })
 export class TeacherLibraryComponent implements OnInit {
   private readonly publicService = inject(PublicService);
 
-  protected readonly initials = getInitials;
-  protected readonly avatarColor = getAvatarColor;
+  protected readonly photoUrl = teacherPhotoUrl;
 
   /**
    * כותרת אזור התוצאות. כשיש סינון פעיל היא מדווחת כמה נמצאו — הרשת יושבת מיד

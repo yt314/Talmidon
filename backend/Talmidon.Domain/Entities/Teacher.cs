@@ -33,6 +33,16 @@ public class Teacher
     /// <summary>האם להציג בספרייה הציבורית.</summary>
     public bool IsPublic { get; set; }
 
+    /// <summary>
+    /// תמונת פרופיל. נשמרת בבסיס הנתונים ולא בדיסק, כי הפריסה רצה על אחסון בן-חלוף
+    /// (הקבצים נמחקים בכל דיפלוי) — התמונה קטנה ומוקטנת בדפדפן לפני השליחה.
+    /// <c>null</c> = אין תמונה, והממשק נופל חזרה לראשי תיבות.
+    /// </summary>
+    public byte[]? PhotoData { get; set; }
+
+    /// <summary>סוג התוכן של <see cref="PhotoData"/> (למשל "image/jpeg"), לצורך ההגשה.</summary>
+    public string? PhotoContentType { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     // ניווט

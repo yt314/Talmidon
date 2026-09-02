@@ -34,9 +34,7 @@
   } @else {
     <section class="profile-hero aurora dot-grid">
       <div class="profile-hero-inner">
-        <span class="avatar-circle avatar-circle-lg" [style.--avatar-color]="avatarColor(teacher()!.fullName)">
-          {{ initials(teacher()!.fullName) }}
-        </span>
+        <app-avatar [name]="teacher()!.fullName" [photoUrl]="photoUrl(teacher()!.id, teacher()!.photoVersion)" size="lg" />
         <div class="flex-1">
           <h2>{{ teacher()!.fullName }}</h2>
           <div class="flex gap-2 flex-wrap">

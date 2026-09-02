@@ -27,7 +27,10 @@ public class PublicController(TalmidonDbContext db) : ControllerBase
             .OrderBy(t => t.FullName)
             .Select(t => new PublicTeacherSummaryDto(
                 t.Id, t.FullName, t.Bio, t.DefaultPricePerLesson,
-                t.Subjects.Select(s => s.Name).ToList()))
+                t.Subjects.Select(s => s.Name).ToList(),
+                // רק אורך, לא ה-blob: אחרת כל טעינה של הספרייה הייתה מושכת את כל
+                // התמונות בתוך ה-JSON. הלקוח בונה מזה את הכתובת.
+                t.PhotoData == null ? (int?)null : t.PhotoData.Length))
             .ToListAsync();
         return Ok(teachers);
     }
@@ -45,6 +48,24 @@ public class PublicController(TalmidonDbContext db) : ControllerBase
         return Ok(subjects);
     }
 
+    /// <summary>
+    /// תמונת הפרופיל. מוגשת רק למורה ציבורית — התמונה היא חלק מהכרטיס הציבורי,
+    /// ומורה שאינה בספרייה אינה חושפת אותה. נשמרת במטמון הדפדפן לשנה, וחילוף
+    /// תמונה עוקף אותו דרך פרמטר ה-v שבכתובת.
+    /// </summary>
+    [HttpGet("{id:guid}/photo")]
+    public async Task<IActionResult> GetPhoto(Guid id)
+    {
+        var photo = await db.Teachers
+            .Where(t => t.Id == id && t.IsPublic && t.PhotoData != null)
+            .Select(t => new { t.PhotoData, t.PhotoContentType })
+            .FirstOrDefaultAsync();
+        if (photo is null) return NotFound();
+
+        Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+        return File(photo.PhotoData!, photo.PhotoContentType ?? "image/jpeg");
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PublicTeacherDetailDto>> GetById(Guid id)
     {
@@ -52,7 +73,8 @@ public class PublicController(TalmidonDbContext db) : ControllerBase
             .Where(t => t.Id == id && t.IsPublic)
             .Select(t => new PublicTeacherDetailDto(
                 t.Id, t.FullName, t.Bio, t.DefaultPricePerLesson, t.RulesText, t.ContactInfo,
-                t.Subjects.Select(s => s.Name).ToList()))
+                t.Subjects.Select(s => s.Name).ToList(),
+                t.PhotoData == null ? (int?)null : t.PhotoData.Length))
             .FirstOrDefaultAsync();
         return teacher is null ? NotFound() : Ok(teacher);
     }

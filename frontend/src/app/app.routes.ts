@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/auth/auth.guard';
+import { profileSetupGuard } from './core/auth/profile-setup.guard';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
@@ -33,7 +34,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/teacher/teacher-shell/teacher-shell.component').then(m => m.TeacherShellComponent),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      { path: 'dashboard', component: DashboardComponent },
+      // מסך ההקמה עצמו מחוץ ל-profileSetupGuard, אחרת הוא היה מפנה אל עצמו בלולאה
+      {
+        path: 'setup',
+        loadComponent: () =>
+          import('./features/teacher/profile-setup/profile-setup.component').then(m => m.ProfileSetupComponent)
+      },
+      { path: 'dashboard', component: DashboardComponent, canActivate: [profileSetupGuard] },
       {
         path: 'students',
         loadComponent: () => import('./features/students/students-list/students-list.component').then(m => m.StudentsListComponent)

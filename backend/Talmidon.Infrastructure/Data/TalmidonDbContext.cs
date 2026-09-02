@@ -77,6 +77,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
             e.Property(t => t.ContactInfo).HasMaxLength(1000);
             e.Property(t => t.DefaultPricePerLesson).HasPrecision(10, 2);
             e.Property(t => t.DefaultDurationMinutes).HasDefaultValue(60);
+            e.Property(t => t.PhotoContentType).HasMaxLength(100);
 
             e.HasOne<ApplicationUser>()
                 .WithMany()

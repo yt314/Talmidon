@@ -1,0 +1,103 @@
+<div class="setup-page">
+  <div class="setup-intro">
+    <span class="setup-badge">ברוכה הבאה</span>
+    <h1>נשלים את הפרופיל שלך</h1>
+    <p>
+      שלושה פרטים והכרטיס שלך בספרייה מוכן: מה את מלמדת, כמה עולה שיעור, ואיך יוצרים איתך קשר.
+      את השאר — שעות זמינות ומדיניות ביטולים — אפשר להוסיף בהמשך בהגדרות.
+    </p>
+  </div>
+
+  <p-card>
+    <div class="photo-editor mb-4">
+      <app-avatar [name]="fullName()" [photoUrl]="photoUrl()" size="lg" />
+      <div>
+        <input #photoInput type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+        <p-button
+          [label]="photoUrl() ? 'החלפת תמונה' : 'העלאת תמונה'"
+          icon="pi pi-camera"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          [loading]="photoBusy()"
+          (onClick)="photoInput.click()" />
+        <p class="photo-editor-hint">אופציונלי. בלי תמונה יוצגו ראשי התיבות שלך.</p>
+        @if (photoError(); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="field">
+        <label for="s-subjects">מה את מלמדת? *</label>
+        <p-autocomplete
+          inputId="s-subjects"
+          [ngModel]="subjectNames()"
+          (ngModelChange)="subjectNames.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+          [suggestions]="subjectSuggestions()"
+          (completeMethod)="filterSubjects($event)"
+          [multiple]="true"
+          [unique]="true"
+          [completeOnFocus]="true"
+          [addOnBlur]="true"
+          [showEmptyMessage]="false"
+          placeholder="למשל: מתמטיקה"
+          styleClass="w-full"
+          inputStyleClass="w-full" />
+        <small class="block mt-1 text-color-secondary">
+          התחילי להקליד ותקבלי הצעות. תחום שלא ברשימה — הקלידי אותו והקישי Enter.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="s-price">מחיר לשיעור (₪) *</label>
+        <p-inputnumber
+          inputId="s-price"
+          formControlName="defaultPricePerLesson"
+          mode="decimal"
+          [min]="0"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [invalid]="isInvalid(form.controls.defaultPricePerLesson)" />
+        @if (fieldError(form.controls.defaultPricePerLesson); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="s-contact">איך יוצרים איתך קשר? *</label>
+        <textarea
+          pTextarea
+          id="s-contact"
+          formControlName="contactInfo"
+          rows="3"
+          class="w-full"
+          placeholder="טלפון, וואטסאפ או מייל — מה שנוח לך שיפורסם"
+          [invalid]="isInvalid(form.controls.contactInfo)"></textarea>
+        @if (fieldError(form.controls.contactInfo); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="s-bio">קצת עלייך</label>
+        <textarea
+          pTextarea
+          id="s-bio"
+          formControlName="bio"
+          rows="4"
+          class="w-full"
+          placeholder="ניסיון, גישה, קהל היעד — מה שיעזור להורה להחליט"
+          [invalid]="isInvalid(form.controls.bio)"></textarea>
+        <small class="block mt-1 text-color-secondary">אופציונלי, אבל זה מה שהורים קוראים ראשון.</small>
+      </div>
+
+      <div class="flex align-items-center justify-content-between gap-2 mt-4 flex-wrap">
+        <p-button label="אמלא אחר כך" severity="secondary" [text]="true" type="button" (onClick)="skip()" />
+        <p-button label="סיימתי" icon="pi pi-check" type="submit" [loading]="saving()" />
+      </div>
+    </form>
+  </p-card>
+</div>

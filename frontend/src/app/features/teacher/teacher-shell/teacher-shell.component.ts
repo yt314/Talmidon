@@ -6,19 +6,27 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MenubarModule } from 'primeng/menubar';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ProfileSetupService } from '../profile-setup/profile-setup.service';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { NotificationsBellComponent } from '../../notifications/notifications-bell/notifications-bell.component';
 import { TeacherProfileService } from '../profile/profile.service';
 import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
-
 @Component({
   selector: 'app-teacher-shell',
+<<<<<<< HEAD
   imports: [RouterLink, RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent],
+=======
+  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent, RouterLink],
+>>>>>>> Add profile setup on first login, a profile photo, and subject suggestions
   templateUrl: './teacher-shell.component.html'
 })
 export class TeacherShellComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly profileSetup = inject(ProfileSetupService);
+
+  /** מוצג עד שהפרופיל הציבורי מלא, גם למי שבחרה "אמלא אחר כך". */
+  protected readonly needsSetup = this.profileSetup.needsSetup;
   private readonly profileService = inject(TeacherProfileService);
 
   protected readonly fullName = signal<string | null>(null);
@@ -47,6 +55,7 @@ export class TeacherShellComponent implements OnInit {
   }
 
   logout(): void {
+    this.profileSetup.reset();
     this.auth.logout();
     this.router.navigate(['/login']);
   }

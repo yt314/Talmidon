@@ -1599,3 +1599,75 @@ full-calendar th {
   color: var(--p-primary-color) !important;
   font-weight: 700 !important;
 }
+
+/* תמונת פרופיל — אותן מידות כמו עיגול ראשי-התיבות, כדי שהחלפה ביניהם לא תזיז כלום */
+.avatar-photo {
+  object-fit: cover;
+  background: var(--p-surface-200);
+}
+.avatar-circle.avatar-circle-sm {
+  width: 2.1rem;
+  height: 2.1rem;
+  font-size: 0.8rem;
+}
+
+/* עורך תמונת הפרופיל בהגדרות */
+.photo-editor {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.photo-editor-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ------------------------------------------------ מסך הקמת הפרופיל ---- */
+
+.setup-page {
+  max-width: 620px;
+  margin: 0 auto;
+  animation: talmidon-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.setup-intro {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+.setup-badge {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  border-radius: var(--p-border-radius-xl);
+  background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+  color: var(--p-primary-color);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.setup-intro h1 {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 800;
+}
+.setup-intro p {
+  margin: 0 auto;
+  max-width: 46ch;
+  color: var(--p-text-muted-color);
+  line-height: 1.65;
+}
+
+/* באנר תזכורת בראש מסכי המורה, כשהפרופיל עדיין חסר */
+.setup-reminder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.25rem;
+  border-radius: var(--p-border-radius-lg);
+  background: var(--p-talmidon-warn-soft);
+  border: 1px solid var(--p-talmidon-warn-border);
+  color: var(--p-talmidon-warn-text);
+}

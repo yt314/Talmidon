@@ -4,6 +4,7 @@ export interface PublicTeacherSummary {
   bio: string | null;
   defaultPricePerLesson: number;
   subjects: string[];
+  photoVersion: number | null;
 }
 
 export interface PublicTeacherDetail {
@@ -14,4 +15,5 @@ export interface PublicTeacherDetail {
   rulesText: string | null;
   contactInfo: string | null;
   subjects: string[];
+  photoVersion: number | null;
 }

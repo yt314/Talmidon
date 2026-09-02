@@ -21,6 +21,16 @@
   </header>
 
   <main class="app-shell-content">
+    @if (needsSetup()) {
+      <div class="setup-reminder">
+        <span class="flex align-items-center gap-2">
+          <i class="pi pi-exclamation-circle"></i>
+          הפרופיל הציבורי שלך עדיין לא מלא — בלעדיו הכרטיס שלך בספרייה חסר.
+        </span>
+        <p-button label="להשלמת הפרופיל" icon="pi pi-arrow-left" size="small" routerLink="/app/setup" />
+      </div>
+    }
+
     <router-outlet />
   </main>
 </div>

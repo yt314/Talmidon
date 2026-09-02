@@ -109,9 +109,7 @@
         @for (teacher of teachers(); track teacher.id; let i = $index) {
           <p-card styleClass="teacher-card h-full" [appReveal]="riseDelay(i)" appSpotlight>
             <div class="flex align-items-center gap-3 mb-3">
-              <span class="avatar-circle" [style.--avatar-color]="avatarColor(teacher.fullName)">{{
-                initials(teacher.fullName)
-              }}</span>
+              <app-avatar [name]="teacher.fullName" [photoUrl]="photoUrl(teacher.id, teacher.photoVersion)" />
               <h3 class="m-0">{{ teacher.fullName }}</h3>
             </div>
             @if (teacher.bio) {

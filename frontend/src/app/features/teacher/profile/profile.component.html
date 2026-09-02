@@ -14,9 +14,37 @@
   <p class="text-color-secondary">שגיאה בטעינת הפרופיל.</p>
 } @else {
   <p-card class="block" [style]="{ 'max-width': '640px' }">
-    <div class="flex align-items-center gap-3 mb-3">
-      <span class="avatar-circle avatar-circle-lg" [style.--avatar-color]="avatarColor(profile()!.fullName)">{{ initials(profile()!.fullName) }}</span>
-      <h3 class="m-0">{{ profile()!.fullName }}</h3>
+    <div class="photo-editor mb-4">
+      <app-avatar [name]="profile()!.fullName" [photoUrl]="photoUrl()" size="lg" />
+      <div>
+        <h3 class="mt-0 mb-2">{{ profile()!.fullName }}</h3>
+        <div class="flex gap-2 flex-wrap">
+          <!-- קלט הקובץ מוסתר וכפתור מפעיל אותו, כדי לשמור על מראה אחיד עם שאר הכפתורים -->
+          <input #photoInput type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+          <p-button
+            [label]="photoUrl() ? 'החלפת תמונה' : 'העלאת תמונה'"
+            icon="pi pi-camera"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            [loading]="photoBusy()"
+            (onClick)="photoInput.click()" />
+          @if (photoUrl()) {
+            <p-button
+              label="הסרה"
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              size="small"
+              [disabled]="photoBusy()"
+              (onClick)="removePhoto()" />
+          }
+        </div>
+        <p class="photo-editor-hint">בלי תמונה יוצגו ראשי התיבות שלך. התמונה נחתכת לריבוע אוטומטית.</p>
+        @if (photoError(); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
+      </div>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="save()">
@@ -101,30 +129,31 @@
   </p-card>
 
   <p-card class="block mt-4" [style]="{ 'max-width': '640px' }">
-    <h3 class="mt-0 mb-3">תחומי לימוד</h3>
+    <h3 class="mt-0 mb-1">תחומי לימוד</h3>
+    <p class="text-color-secondary mt-0 mb-3 text-sm">
+      התחילי להקליד וההצעות יופיעו. אם התחום שלך לא ברשימה — פשוט הקלידי אותו והקישי Enter.
+    </p>
 
-    <div class="flex flex-wrap gap-2 mb-3">
-      @for (subject of subjects(); track subject.id) {
-        <p-chip [label]="subject.name" [removable]="true" (onRemove)="removeSubject(subject)" />
-      } @empty {
-        <p class="text-color-secondary m-0 flex align-items-center gap-2"><i class="pi pi-info-circle"></i> לא נוספו תחומים עדיין.</p>
-      }
-    </div>
+    <p-autocomplete
+      [ngModel]="subjectNames()"
+      (ngModelChange)="onSubjectsChange($event)"
+      [ngModelOptions]="{ standalone: true }"
+      [suggestions]="subjectSuggestions()"
+      (completeMethod)="filterSubjects($event)"
+      [multiple]="true"
+      [unique]="true"
+      [completeOnFocus]="true"
+      [addOnBlur]="true"
+      [showEmptyMessage]="false"
+      placeholder="למשל: מתמטיקה"
+      styleClass="w-full"
+      inputStyleClass="w-full" />
 
-    <div class="flex gap-2" style="max-width: 360px">
-      <input
-        pInputText
-        [ngModel]="newSubjectName()"
-        (ngModelChange)="newSubjectName.set($event); subjectNameError.set(null)"
-        [ngModelOptions]="{ standalone: true }"
-        placeholder="תחום חדש (למשל: מתמטיקה)"
-        class="flex-1"
-        [invalid]="!!subjectNameError()"
-        (keydown.enter)="addSubject()" />
-      <p-button icon="pi pi-plus" [loading]="addingSubject()" (onClick)="addSubject()" />
-    </div>
-    @if (subjectNameError(); as msg) {
+    @if (subjectsError(); as msg) {
       <small class="text-red-500 block mt-1">{{ msg }}</small>
+    }
+    @if (subjectsSaved()) {
+      <small class="block mt-2 text-color-secondary"><i class="pi pi-check text-xs"></i> התחומים נשמרו</small>
     }
   </p-card>
 

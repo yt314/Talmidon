@@ -21,6 +21,10 @@ export interface TeacherProfile {
   contactInfo: string | null;
   isPublic: boolean;
   subjects: Subject[];
+  /** חותם גרסה לתמונה, או null כשאין. הכתובת נבנית ב-teacherPhotoUrl. */
+  photoVersion: number | null;
+  /** מחושב בשרת (TeacherProfileRules) כדי שהממשק לא יחזיק עותק שני של הכלל. */
+  isProfileComplete: boolean;
 }
 
 export interface UpdateTeacherProfileRequest {
