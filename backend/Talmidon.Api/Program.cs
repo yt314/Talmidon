@@ -83,9 +83,19 @@ var frontendOrigin = builder.Environment.IsDevelopment()
     : Environment.GetEnvironmentVariable("APP_CLIENT_URL")
         ?? throw new InvalidOperationException("APP_CLIENT_URL must be configured for production CORS.");
 
+// builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
+// {
+//     policy.WithOrigins(frontendOrigin)
+//         .AllowAnyHeader()
+//         .AllowAnyMethod();
+// }));
+
 builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
 {
-    policy.WithOrigins(frontendOrigin)
+    policy.SetIsOriginAllowed(origin =>
+            origin == frontendOrigin ||
+            (Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+             uri.Host.EndsWith("talmidon.vercel.app", StringComparison.OrdinalIgnoreCase)))
         .AllowAnyHeader()
         .AllowAnyMethod();
 }));
