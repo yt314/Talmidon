@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { MenubarModule } from 'primeng/menubar';
@@ -13,7 +13,7 @@ import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
 
 @Component({
   selector: 'app-parent-shell',
-  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ThemeToggleComponent, UserMenuComponent],
+  imports: [RouterLink, RouterOutlet, MenubarModule, ButtonModule, ToastModule, ThemeToggleComponent, UserMenuComponent],
   templateUrl: './parent-shell.component.html'
 })
 export class ParentShellComponent implements OnInit {

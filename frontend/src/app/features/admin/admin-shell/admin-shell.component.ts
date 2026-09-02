@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -11,7 +11,7 @@ import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
 
 @Component({
   selector: 'app-admin-shell',
-  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, ThemeToggleComponent, UserMenuComponent],
+  imports: [RouterLink, RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, ThemeToggleComponent, UserMenuComponent],
   templateUrl: './admin-shell.component.html'
 })
 export class AdminShellComponent {
