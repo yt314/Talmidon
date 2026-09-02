@@ -20,3 +20,12 @@ public class SendGridSettings
 {
     public string? ApiKey { get; set; }
 }
+
+/// <summary>
+/// הגדרות Brevo (נטענות מ-section "Brevo"). כשה-ApiKey מוגדר (דרך משתנה הסביבה Brevo__ApiKey)
+/// המערכת שולחת מיילים דרך Brevo Web API (HTTPS) — נחוץ בפלטפורמות כמו Render שחוסמות SMTP יוצא.
+/// </summary>
+public class BrevoSettings
+{
+    public string? ApiKey { get; set; }
+}

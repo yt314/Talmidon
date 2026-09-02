@@ -44,14 +44,19 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.Configure<EmailSettings>(configuration.GetSection("Email"));
         services.Configure<SendGridSettings>(configuration.GetSection("SendGrid"));
+        services.Configure<BrevoSettings>(configuration.GetSection("Brevo"));
 
         // שירותי אימות
         services.AddScoped<ITokenService, TokenService>();
 
-        // שליחת מייל: SendGrid כש-SendGrid:ApiKey מוגדר (פרודקשן, דרך משתנה הסביבה SendGrid__ApiKey),
-        // אחרת SMTP מול Mailpit (ברירת המחדל בפיתוח/בדיקות).
+        // שליחת מייל: Brevo/SendGrid Web API כש-ApiKey מתאים מוגדר (פרודקשן, דרך משתנה הסביבה
+        // Brevo__ApiKey או SendGrid__ApiKey), אחרת SMTP מול Mailpit (ברירת המחדל בפיתוח/בדיקות).
+        // חשוב: פלטפורמות כמו Render חוסמות SMTP יוצא — שם חובה להשתמש ב-Web API ולא ב-SMTP.
+        var brevoApiKey = configuration["Brevo:ApiKey"];
         var sendGridApiKey = configuration["SendGrid:ApiKey"];
-        if (!string.IsNullOrWhiteSpace(sendGridApiKey))
+        if (!string.IsNullOrWhiteSpace(brevoApiKey))
+            services.AddHttpClient<IEmailSender, BrevoEmailSender>();
+        else if (!string.IsNullOrWhiteSpace(sendGridApiKey))
             services.AddScoped<IEmailSender, SendGridEmailSender>();
         else
             services.AddScoped<IEmailSender, SmtpEmailSender>();

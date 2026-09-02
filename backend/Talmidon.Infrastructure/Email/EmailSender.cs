@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
@@ -79,5 +80,49 @@ public class SendGridEmailSender : IEmailSender
         }
 
         _logger.LogInformation("Email sent via SendGrid (subject: {Subject})", subject);
+    }
+}
+
+/// <summary>שולח מיילים דרך Brevo Web API (HTTPS). עדיף על SmtpEmailSender בפלטפורמות שחוסמות SMTP יוצא (למשל Render).</summary>
+public class BrevoEmailSender : IEmailSender
+{
+    private readonly HttpClient _httpClient;
+    private readonly EmailSettings _emailSettings;
+    private readonly BrevoSettings _brevoSettings;
+    private readonly ILogger<BrevoEmailSender> _logger;
+
+    public BrevoEmailSender(HttpClient httpClient, IOptions<EmailSettings> emailSettings, IOptions<BrevoSettings> brevoSettings, ILogger<BrevoEmailSender> logger)
+    {
+        _httpClient = httpClient;
+        _emailSettings = emailSettings.Value;
+        _brevoSettings = brevoSettings.Value;
+        _logger = logger;
+    }
+
+    public async Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken ct = default)
+    {
+        var payload = new
+        {
+            sender = new { name = _emailSettings.FromName, email = _emailSettings.FromAddress },
+            to = new[] { new { email = toEmail } },
+            subject,
+            htmlContent = htmlBody
+        };
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email")
+        {
+            Content = JsonContent.Create(payload)
+        };
+        request.Headers.Add("api-key", _brevoSettings.ApiKey);
+        request.Headers.Add("accept", "application/json");
+
+        using var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            throw new InvalidOperationException($"Brevo send failed with status {(int)response.StatusCode}: {body}");
+        }
+
+        _logger.LogInformation("Email sent via Brevo (subject: {Subject})", subject);
     }
 }
