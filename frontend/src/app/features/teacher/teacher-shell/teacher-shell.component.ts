@@ -29,6 +29,7 @@ export class TeacherShellComponent implements OnInit {
     { label: 'יומן', icon: 'pi pi-calendar', routerLink: '/app/lessons' },
     { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/app/payments' },
     { label: 'דוחות', icon: 'pi pi-chart-bar', routerLink: '/app/reports' },
+    { label: 'ספריית המורות', icon: 'pi pi-book', routerLink: '/' },
     // שתי מסכי ההגדרות מקובצים לתפריט משנה — שבעה פריטים ברצף שברו את הסרגל
     // לשתי שורות על מסך רגיל.
     {
