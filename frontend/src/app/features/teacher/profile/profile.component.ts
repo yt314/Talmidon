@@ -15,6 +15,7 @@ import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { SubjectPickerComponent } from '../../../shared/ui/subject-picker.component';
 import { cropToSquareJpeg } from '../../../shared/avatar/image-resize.util';
 import { HEBREW_DAY_NAMES } from '../../../core/i18n/primeng-hebrew';
+import { ShareProfileComponent } from '../../../shared/ui/share-profile.component';
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { AvailabilityWindow, TeacherProfile } from './profile.models';
 import { TeacherProfileService } from './profile.service';
@@ -34,7 +35,7 @@ import { TeacherProfileService } from './profile.service';
     PageHeaderComponent,
     AvatarComponent,
     SubjectPickerComponent
-  ],
+  , ShareProfileComponent],
   templateUrl: './profile.component.html'
 })
 export class TeacherProfileSettingsComponent implements OnInit {

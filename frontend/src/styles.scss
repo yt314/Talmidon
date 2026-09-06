@@ -1425,6 +1425,62 @@ full-calendar th {
   gap: 1rem;
 }
 
+/* --------------------------------------------------- שיתוף הכרטיס ---- */
+
+.share-block {
+  padding: 1rem 1.1rem;
+  border-radius: var(--p-border-radius-lg);
+  background: var(--p-talmidon-app-background);
+  border: 1px solid var(--p-content-border-color);
+}
+.share-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+/* הקישור נחתך ולא עוטף: שורה אחת קריאה עדיפה על גוש שמזיז את הכפתורים */
+.share-link {
+  flex: 1 1 15rem;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--p-border-radius-md);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+}
+.share-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: ltr;
+  text-align: left;
+}
+.share-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.share-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: center;
+}
+.share-qr img {
+  width: 220px;
+  height: 220px;
+  border-radius: var(--p-border-radius-md);
+  /* רקע לבן קבוע — סורקים מתקשים עם קוד כהה על רקע כהה */
+  background: #fff;
+  padding: 0.5rem;
+}
+
 .teacher-card-city {
   display: inline-flex;
   align-items: center;

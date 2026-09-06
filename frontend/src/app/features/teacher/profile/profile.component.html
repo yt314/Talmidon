@@ -47,6 +47,16 @@
       </div>
     </div>
 
+    @if (profile()!.isPublic) {
+      <div class="share-block mb-4">
+        <h4 class="mt-0 mb-1 text-base">הכרטיס שלך בספרייה</h4>
+        <p class="mt-0 mb-3 text-sm text-color-secondary">
+          זה הקישור לשלוח להורים. מי שנכנס רואה את הפרטים שלך ויכול לפנות אלייך בלי להירשם.
+        </p>
+        <app-share-profile [teacherId]="profile()!.id" [teacherName]="profile()!.fullName" />
+      </div>
+    }
+
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="flex gap-3">
         <div class="field flex-1">
