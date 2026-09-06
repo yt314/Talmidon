@@ -33,6 +33,12 @@ import { PublicService } from '../public.service';
 export class TeacherProfileComponent implements OnInit {
   private readonly auth = inject(AuthService);
   /** יעד החזרה כשמישהי מחוברת, ו-null כשלא — הכותרת נגזרת מזה. */
+  /** האם יש בכלל מה להציג תחת "יצירת קשר" — שלושת השדות אופציונליים. */
+  protected readonly hasContactDetails = computed(() => {
+    const t = this.teacher();
+    return !!(t?.phone || t?.contactEmail || t?.contactInfo);
+  });
+
   protected readonly homePath = computed(() => (this.auth.isAuthenticated() ? this.auth.homePath() : null));
 
   private readonly route = inject(ActivatedRoute);

@@ -34,7 +34,7 @@ public class PublicController(
         var teachers = await query
             .OrderBy(t => t.FullName)
             .Select(t => new PublicTeacherSummaryDto(
-                t.Id, t.FullName, t.Bio, t.DefaultPricePerLesson,
+                t.Id, t.FullName, t.Bio, t.City, t.DefaultPricePerLesson,
                 t.Subjects.Select(s => s.Name).ToList(),
                 // רק אורך, לא ה-blob: אחרת כל טעינה של הספרייה הייתה מושכת את כל
                 // התמונות בתוך ה-JSON. הלקוח בונה מזה את הכתובת.
@@ -80,7 +80,8 @@ public class PublicController(
         var teacher = await db.Teachers
             .Where(t => t.Id == id && t.IsPublic)
             .Select(t => new PublicTeacherDetailDto(
-                t.Id, t.FullName, t.Bio, t.DefaultPricePerLesson, t.RulesText, t.ContactInfo,
+                t.Id, t.FullName, t.Bio, t.City, t.Phone, t.ContactEmail,
+                t.DefaultPricePerLesson, t.RulesText, t.ContactInfo,
                 t.Subjects.Select(s => s.Name).ToList(),
                 t.PhotoData == null ? (int?)null : t.PhotoData.Length))
             .FirstOrDefaultAsync();

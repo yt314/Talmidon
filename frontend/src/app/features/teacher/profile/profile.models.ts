@@ -14,6 +14,8 @@ export interface TeacherProfile {
   id: string;
   fullName: string;
   phone: string | null;
+  contactEmail: string | null;
+  city: string | null;
   bio: string | null;
   defaultPricePerLesson: number;
   defaultDurationMinutes: number;
@@ -29,6 +31,8 @@ export interface TeacherProfile {
 
 export interface UpdateTeacherProfileRequest {
   phone?: string | null;
+  contactEmail?: string | null;
+  city?: string | null;
   bio?: string | null;
   defaultPricePerLesson: number;
   defaultDurationMinutes: number;

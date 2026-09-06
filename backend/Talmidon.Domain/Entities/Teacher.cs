@@ -13,7 +13,15 @@ public class Teacher
     public string UserId { get; set; } = default!;
 
     public string FullName { get; set; } = default!;
+
+    /// <summary>טלפון ליצירת קשר. מוצג בכרטיס הציבורי כשהמורה בספרייה.</summary>
     public string? Phone { get; set; }
+
+    /// <summary>מייל ליצירת קשר — נפרד מכתובת ההתחברות, ומוצג בכרטיס הציבורי.</summary>
+    public string? ContactEmail { get; set; }
+
+    /// <summary>יישוב. מה שהורה מסנן לפיו קודם כל כשהוא מחפש מורה.</summary>
+    public string? City { get; set; }
 
     /// <summary>תיאור לדף הציבורי.</summary>
     public string? Bio { get; set; }

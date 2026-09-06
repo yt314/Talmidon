@@ -49,6 +49,9 @@
         <app-avatar [name]="teacher()!.fullName" [photoUrl]="photoUrl(teacher()!.id, teacher()!.photoVersion)" size="lg" />
         <div class="flex-1">
           <h2>{{ teacher()!.fullName }}</h2>
+          @if (teacher()!.city; as city) {
+            <p class="profile-hero-city"><i class="pi pi-map-marker"></i> {{ city }}</p>
+          }
           <div class="flex gap-2 flex-wrap">
             @for (subject of teacher()!.subjects; track subject) {
               <p-tag [value]="subject" severity="contrast" />
@@ -87,12 +90,28 @@
           <span class="text-color-secondary text-sm">מחיר לשיעור</span>
           <div class="profile-price">₪{{ teacher()!.defaultPricePerLesson }}</div>
 
-          @if (teacher()!.contactInfo) {
+          @if (hasContactDetails()) {
             <p-divider />
             <h3 class="mt-0 mb-2 text-base flex align-items-center gap-2">
               <i class="pi pi-phone" style="color: var(--p-primary-color)"></i> יצירת קשר
             </h3>
-            <p class="m-0 line-height-3" style="white-space: pre-line">{{ teacher()!.contactInfo }}</p>
+            <ul class="profile-contact">
+              @if (teacher()!.phone; as phone) {
+                <li>
+                  <i class="pi pi-phone"></i>
+                  <a [href]="'tel:' + phone">{{ phone }}</a>
+                </li>
+              }
+              @if (teacher()!.contactEmail; as email) {
+                <li>
+                  <i class="pi pi-envelope"></i>
+                  <a [href]="'mailto:' + email">{{ email }}</a>
+                </li>
+              }
+              @if (teacher()!.contactInfo; as note) {
+                <li class="profile-contact-note" style="white-space: pre-line">{{ note }}</li>
+              }
+            </ul>
           } @else {
             <p-divider />
             <p class="m-0 text-sm text-color-secondary">המורה לא פרסמה פרטי קשר בספרייה.</p>

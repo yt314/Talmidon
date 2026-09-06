@@ -49,12 +49,33 @@
 
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="field">
-        <label for="t-phone">טלפון</label>
-        <input pInputText id="t-phone" formControlName="phone" class="w-full" [invalid]="isInvalid(form.controls.phone)" />
-        @if (fieldError(form.controls.phone); as msg) {
+        <label for="t-city">עיר</label>
+        <input pInputText id="t-city" formControlName="city" class="w-full" [invalid]="isInvalid(form.controls.city)" />
+        @if (fieldError(form.controls.city); as msg) {
           <small class="text-red-500 block mt-1">{{ msg }}</small>
         }
       </div>
+
+      <div class="flex gap-3">
+        <div class="field flex-1">
+          <label for="t-phone">טלפון</label>
+          <input pInputText id="t-phone" formControlName="phone" class="w-full" [invalid]="isInvalid(form.controls.phone)" />
+          @if (fieldError(form.controls.phone); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
+        </div>
+
+        <div class="field flex-1">
+          <label for="t-contact-email">מייל ליצירת קשר</label>
+          <input pInputText id="t-contact-email" type="email" formControlName="contactEmail" class="w-full" [invalid]="isInvalid(form.controls.contactEmail)" />
+          @if (fieldError(form.controls.contactEmail); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
+        </div>
+      </div>
+      <small class="block -mt-2 mb-3 text-color-secondary">
+        העיר, הטלפון והמייל מוצגים בכרטיס שלך בספרייה הציבורית — הם הדרך של הורים לפנות אלייך.
+      </small>
 
       <div class="field">
         <label for="t-bio">תקציר (מוצג בספרייה הציבורית)</label>
