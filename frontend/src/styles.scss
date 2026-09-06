@@ -526,6 +526,19 @@ a.stat-card:hover {
   /* ספרות ברוחב אחיד — המספר לא "רוקד" כשהערך משתנה */
   font-variant-numeric: tabular-nums;
 }
+.stat-card-value-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.45;
+  font-variant-numeric: normal;
+}
+.stat-card-hint {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
 .stat-card-badge {
   display: inline-block;
   margin-top: 0.6rem;
