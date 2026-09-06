@@ -56,6 +56,9 @@
               @if (hasWhatsapp(parent.phone)) {
                 <p-button icon="pi pi-whatsapp" severity="success" [text]="true" (onClick)="openWhatsapp(parent)" pTooltip="שלח וואטסאפ" tooltipPosition="top" />
               }
+              @if (hasEmail(parent.email)) {
+                <p-button icon="pi pi-envelope" severity="secondary" [text]="true" (onClick)="openParentEmail(parent)" pTooltip="שלח מייל" tooltipPosition="top" />
+              }
               <p-button icon="pi pi-times" severity="danger" [text]="true" (onClick)="unlinkParent(parent.id)" />
             </div>
           </li>

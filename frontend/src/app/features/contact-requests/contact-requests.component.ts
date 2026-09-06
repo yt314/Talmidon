@@ -10,6 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '../../core/http/extract-error-message';
 import { EmptyStateComponent } from '../../shared/ui/empty-state.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header.component';
+import { buildMailtoLink, hasEmail } from '../../shared/mail/mailto.util';
 import { buildWhatsappLink, hasWhatsapp } from '../../shared/whatsapp/whatsapp.util';
 import {
   CONTACT_STATUS_LABELS,
@@ -43,6 +44,7 @@ export class ContactRequestsComponent implements OnInit {
   protected readonly statusLabel = (s: ContactRequestStatus): string => CONTACT_STATUS_LABELS[s];
   protected readonly statusSeverity = (s: ContactRequestStatus) => CONTACT_STATUS_SEVERITY[s];
   protected readonly hasWhatsapp = hasWhatsapp;
+  protected readonly hasEmail = hasEmail;
   protected readonly Status = ContactRequestStatus;
 
   protected readonly loading = signal(true);
@@ -70,6 +72,21 @@ export class ContactRequestsComponent implements OnInit {
     const text = `שלום ${contact.fullName}, קיבלתי את פנייתך דרך תלמידון.`;
     const link = buildWhatsappLink(contact.phone, text);
     if (link) window.open(link, '_blank', 'noopener');
+  }
+
+  /**
+   * פותח טיוטת מייל עם הפנייה מצוטטת, כדי שהתשובה תצא בלי לחזור למסך ולהעתיק.
+   */
+  protected openEmail(contact: ContactRequest): void {
+    const subject = contact.subject
+      ? `בנוגע לפנייתך בנושא ${contact.subject}`
+      : 'בנוגע לפנייתך דרך תלמידון';
+    const body =
+      `שלום ${contact.fullName},\n\n` +
+      `קיבלתי את פנייתך דרך תלמידון.\n\n` +
+      `--- הפנייה שלך ---\n${contact.message}\n`;
+    const link = buildMailtoLink(contact.email, subject, body);
+    if (link) window.location.href = link;
   }
 
   protected setStatus(contact: ContactRequest, status: ContactRequestStatus): void {

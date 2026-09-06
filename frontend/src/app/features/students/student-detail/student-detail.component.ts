@@ -20,6 +20,7 @@ import { httpUrlValidator } from '../../../core/forms/validators';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
+import { buildMailtoLink, hasEmail } from '../../../shared/mail/mailto.util';
 import { buildWhatsappLink, hasWhatsapp } from '../../../shared/whatsapp/whatsapp.util';
 import { Note } from '../../notes/notes.models';
 import { NotesService } from '../../notes/notes.service';
@@ -181,6 +182,7 @@ export class StudentDetailComponent implements OnInit {
   }
 
   protected readonly hasWhatsapp = hasWhatsapp;
+  protected readonly hasEmail = hasEmail;
 
   /** פותח שיחת וואטסאפ עם ההורה, עם הודעת פתיחה מוכנה. */
   openWhatsapp(parent: ParentSummary): void {
@@ -188,6 +190,17 @@ export class StudentDetailComponent implements OnInit {
     const text = `שלום ${parent.fullName}, אני המורה של ${studentName}.`;
     const link = buildWhatsappLink(parent.phone, text);
     if (link) window.open(link, '_blank', 'noopener');
+  }
+
+  /** אותה פנייה, בדואר — להורים שלא זמינים בוואטסאפ. */
+  openParentEmail(parent: ParentSummary): void {
+    const studentName = this.student()?.fullName ?? '';
+    const link = buildMailtoLink(
+      parent.email,
+      studentName ? `בנוגע ל${studentName}` : 'הודעה מהמורה',
+      `שלום ${parent.fullName},\n\nאני המורה של ${studentName}.\n\n`
+    );
+    if (link) window.location.href = link;
   }
 
   confirmDelete(): void {
