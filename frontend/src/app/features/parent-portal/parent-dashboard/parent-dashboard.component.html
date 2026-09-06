@@ -2,55 +2,36 @@
 
 <div class="grid">
   <div class="col-12 md:col-4">
-    <a routerLink="/parent/lessons" class="block no-underline text-color">
-      <p-card styleClass="h-full cursor-pointer">
-        <div class="flex justify-content-between align-items-start">
-          <div>
-            <div class="text-color-secondary mb-2">הילדים שלי</div>
-            <div class="text-4xl font-bold">{{ children() === null ? '—' : children()!.length }}</div>
-            @if (childrenNames(); as names) {
-              <div class="text-color-secondary text-sm mt-2">{{ names }}</div>
-            }
-          </div>
-          <i class="pi pi-users text-2xl text-color-secondary"></i>
-        </div>
-      </p-card>
-    </a>
+    <app-stat-card
+      class="block h-full"
+      label="הילדים שלי"
+      icon="pi-users"
+      tone="primary"
+      link="/parent/lessons"
+      [value]="children() === null ? null : children()!.length"
+      [hint]="childrenNames()" />
   </div>
 
   <div class="col-12 md:col-4">
-    <a routerLink="/parent/lessons" class="block no-underline text-color">
-      <p-card styleClass="h-full cursor-pointer">
-        <div class="flex justify-content-between align-items-start">
-          <div>
-            <div class="text-color-secondary mb-2">השיעור הבא</div>
-            @if (nextLesson(); as lesson) {
-              <div class="text-xl font-bold">{{ lesson.startTime | date: 'dd/MM HH:mm' }}</div>
-              <div class="text-color-secondary text-sm mt-1">{{ lesson.studentName }}</div>
-            } @else {
-              <div class="text-xl font-bold text-color-secondary">{{ lessons() === null ? '—' : 'אין שיעורים קרובים' }}</div>
-            }
-          </div>
-          <i class="pi pi-calendar text-2xl text-color-secondary"></i>
-        </div>
-      </p-card>
-    </a>
+    <app-stat-card
+      class="block h-full"
+      label="השיעור הבא"
+      icon="pi-calendar"
+      tone="info"
+      link="/parent/lessons"
+      [value]="nextLesson() ? (nextLesson()!.startTime | date: 'dd/MM HH:mm') : (lessons() === null ? null : '—')"
+      [hint]="nextLesson() ? nextLesson()!.studentName : (lessons() === null ? null : 'אין שיעורים קרובים')" />
   </div>
 
   <div class="col-12 md:col-4">
-    <a routerLink="/parent/payments" class="block no-underline text-color">
-      <p-card styleClass="h-full cursor-pointer">
-        <div class="flex justify-content-between align-items-start">
-          <div>
-            <div class="text-color-secondary mb-2">תשלומים פתוחים</div>
-            <div class="text-4xl font-bold">{{ openChargesTotal() === null ? '—' : openChargesTotal() + ' ₪' }}</div>
-          </div>
-          @if (openChargesCount(); as count) {
-            <p-tag [value]="count + ' חיובים'" severity="warn" />
-          }
-        </div>
-      </p-card>
-    </a>
+    <app-stat-card
+      class="block h-full"
+      label="תשלומים פתוחים"
+      icon="pi-wallet"
+      tone="warn"
+      link="/parent/payments"
+      [value]="openChargesTotal() === null ? null : openChargesTotal() + ' ₪'"
+      [badge]="openChargesCount() ? openChargesCount() + ' חיובים' : null" />
   </div>
 </div>
 
