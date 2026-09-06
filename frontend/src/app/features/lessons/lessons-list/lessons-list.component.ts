@@ -22,6 +22,7 @@ import { StudentListItem } from '../../students/students.models';
 import { StudentsService } from '../../students/students.service';
 import { AvailabilityWindow } from '../../teacher/profile/profile.models';
 import { TeacherProfileService } from '../../teacher/profile/profile.service';
+import { HEBREW_DAY_NAMES } from '../../../core/i18n/primeng-hebrew';
 import { buildTeacherCalendarEvents } from '../lesson-calendar.util';
 import {
   LESSON_STATUS_LABELS,
@@ -80,11 +81,10 @@ export class LessonsListComponent implements OnInit {
 
   /** סיכום טקסטואלי של שעות הזמינות, לתצוגה מעל היומן. */
   protected readonly availabilitySummary = computed(() => {
-    const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
     return this.availability()
       .slice()
       .sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime))
-      .map(w => `${dayNames[w.dayOfWeek]} ${w.startTime}–${w.endTime}`);
+      .map(w => `${HEBREW_DAY_NAMES[w.dayOfWeek]} ${w.startTime}–${w.endTime}`);
   });
 
   protected readonly LessonStatus = LessonStatus;

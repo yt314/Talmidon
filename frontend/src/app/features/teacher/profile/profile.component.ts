@@ -14,6 +14,7 @@ import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { SubjectPickerComponent } from '../../../shared/ui/subject-picker.component';
 import { cropToSquareJpeg } from '../../../shared/avatar/image-resize.util';
+import { HEBREW_DAY_NAMES } from '../../../core/i18n/primeng-hebrew';
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { AvailabilityWindow, TeacherProfile } from './profile.models';
 import { TeacherProfileService } from './profile.service';
@@ -68,7 +69,7 @@ export class TeacherProfileSettingsComponent implements OnInit {
     isPublic: [true]
   });
 
-  protected readonly dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  protected readonly dayNames = HEBREW_DAY_NAMES;
   protected readonly days = [0, 1, 2, 3, 4, 5, 6];
   protected readonly availability = signal<AvailabilityWindow[]>([]);
   protected readonly savingAvailability = signal(false);

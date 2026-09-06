@@ -6,6 +6,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { HEBREW_TRANSLATION } from './core/i18n/primeng-hebrew';
 import { TalmidonPreset } from './core/theme/talmidon-preset';
 
 export const appConfig: ApplicationConfig = {
@@ -18,6 +19,8 @@ export const appConfig: ApplicationConfig = {
     ConfirmationService,
     providePrimeNG({
       ripple: true,
+      // בלי זה רכיבי PrimeNG מייצרים את הטקסטים שלהם באנגלית
+      translation: HEBREW_TRANSLATION,
       theme: {
         preset: TalmidonPreset,
         options: {
