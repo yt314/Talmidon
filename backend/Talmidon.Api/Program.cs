@@ -153,30 +153,27 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-if (app.Environment.IsDevelopment())
-{
-    // Completely disable Hangfire in production on Render.
-    // This ensures the background server and recurring jobs never run outside local development.
-    app.UseHangfireServer();
+// המשימות רשומות בכל סביבה: השיעורים החוזרים והתזכורות הם חלק מהמוצר, ובלעדיהן
+// המורה צריכה ליצור כל שיעור ביד. השרת עצמו כבר נרשם ב-AddHangfireServer, ולכן
+// אין כאן UseHangfireServer — הוא היה מקים שרת שני על אותו אחסון.
+// לוח הבקרה של Hangfire נשאר לפיתוח בלבד; הוא מאמת דרך Cookie ולא מכיר את ה-JWT.
+RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
+    "monthly-payment-reminders",
+    job => job.RunForAllTenantsAsync(),
+    Cron.Monthly(),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
-    RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
-        "monthly-payment-reminders",
-        job => job.RunForAllTenantsAsync(),
-        Cron.Monthly(),
-        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
+    "lesson-series-generation",
+    job => job.RunForAllTenantsAsync(),
+    Cron.Daily(),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
-    RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
-        "lesson-series-generation",
-        job => job.RunForAllTenantsAsync(),
-        Cron.Daily(),
-        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
-
-    RecurringJob.AddOrUpdate<LessonReminderJob>(
-        "lesson-reminders",
-        job => job.RunForAllTenantsAsync(),
-        Cron.Hourly(),
-        new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
-}
+RecurringJob.AddOrUpdate<LessonReminderJob>(
+    "lesson-reminders",
+    job => job.RunForAllTenantsAsync(),
+    Cron.Hourly(),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 
 app.MapControllers();
 
