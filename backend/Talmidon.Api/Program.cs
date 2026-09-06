@@ -107,6 +107,10 @@ builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
 
 var app = builder.Build();
 
+// מודפס פעם אחת בעלייה כדי שאפשר יהיה לראות ביומן איזו רשימה באמת נטענה,
+// במקום להסיק אותה משגיאת CORS בדפדפן.
+app.Logger.LogInformation("CORS allowed origins: {Origins}", string.Join(", ", allowedOrigins));
+
 await MigrateDatabaseAsync(app);
 await SeedRolesAsync(app);
 await SeedAdminUserAsync(app);
@@ -136,8 +140,11 @@ else
     app.UseForwardedHeaders(forwardedHeadersOptions);
 }
 
-app.UseHttpsRedirection();
+// CORS לפני הפניית HTTPS: בקשת preflight שמגיעה ב-HTTP הייתה מקבלת 307 לפני
+// שנוספות כותרות ה-CORS, והדפדפן אינו עוקב אחרי הפניה ב-preflight — הבקשה נכשלת
+// עם "No 'Access-Control-Allow-Origin' header" שנראה כאילו המקור אינו מורשה.
 app.UseCors(CorsPolicy);
+app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
