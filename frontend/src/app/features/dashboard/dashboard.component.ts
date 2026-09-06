@@ -13,6 +13,8 @@ import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestStatus, Less
 import { LessonsService } from '../lessons/lessons.service';
 import { ContactRequestsService } from '../contact-requests/contact-requests.service';
 import { PaymentsService } from '../payments/payments.service';
+import { StudentsService } from '../students/students.service';
+import { ProfileSetupService } from '../teacher/profile-setup/profile-setup.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -33,6 +35,8 @@ export class DashboardComponent implements OnInit {
   private readonly lessonsService = inject(LessonsService);
   private readonly paymentsService = inject(PaymentsService);
   private readonly contactRequestsService = inject(ContactRequestsService);
+  private readonly studentsService = inject(StudentsService);
+  private readonly profileSetup = inject(ProfileSetupService);
 
   protected readonly statusLabel = (status: LessonStatus): string => LESSON_STATUS_LABELS[status];
   protected readonly statusSeverity = (status: LessonStatus) => LESSON_STATUS_SEVERITY[status];
@@ -43,6 +47,30 @@ export class DashboardComponent implements OnInit {
   protected readonly openCharges = signal<OpenCharge[] | null>(null);
   protected readonly lessonsToMark = signal<number | null>(null);
   protected readonly newContactRequests = signal<number | null>(null);
+  private readonly students = signal<number | null>(null);
+  private readonly profileComplete = signal<boolean | null>(null);
+
+  /**
+   * שלושת הצעדים שהופכים חשבון ריק למערכת עובדת. מוצג רק כשעוד חסר משהו,
+   * ונעלם מעצמו — מורה ותיקה לא אמורה לראות הדרכה בכל כניסה.
+   */
+  protected readonly onboarding = computed(() => {
+    const students = this.students();
+    const profile = this.profileComplete();
+    const lessons = this.totalLessons();
+    // עד שהכול נטען אין מה להציג: הבהוב של צעדים "פתוחים" הוא רעש
+    if (students === null || profile === null || lessons === null) return null;
+
+    const steps = [
+      { label: 'להשלים את הפרופיל הציבורי', hint: 'כדי שהורים ימצאו אותך', link: '/app/profile', done: profile },
+      { label: 'להוסיף תלמיד ראשון', hint: 'משם נפתחים היומן והחיובים', link: '/app/students', done: students > 0 },
+      { label: 'לקבוע שיעור ראשון', hint: 'ביומן, בגרירה על השעה', link: '/app/lessons', done: lessons > 0 }
+    ];
+    return steps.every(s => s.done) ? null : steps;
+  });
+
+  protected readonly onboardingDone = computed(() => this.onboarding()?.filter(s => s.done).length ?? 0);
+  private readonly totalLessons = signal<number | null>(null);
 
   protected readonly pendingRequestsTotal = computed(() => {
     const a = this.pendingLessonRequests();
@@ -64,6 +92,19 @@ export class DashboardComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.studentsService.list().subscribe({
+      next: rows => this.students.set(rows.length),
+      error: () => this.students.set(0)
+    });
+    this.profileSetup.load().subscribe({
+      next: profile => this.profileComplete.set(profile.isProfileComplete),
+      // כשל בטעינה לא אמור להציג "הפרופיל לא מלא" למי שכן מילאה אותו
+      error: () => this.profileComplete.set(true)
+    });
+    this.lessonsService.list().subscribe({
+      next: rows => this.totalLessons.set(rows.length),
+      error: () => this.totalLessons.set(0)
+    });
     this.contactRequestsService.newCount().subscribe({
       next: count => this.newContactRequests.set(count),
       error: () => this.newContactRequests.set(0)

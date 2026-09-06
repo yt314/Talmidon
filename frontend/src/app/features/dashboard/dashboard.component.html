@@ -1,5 +1,31 @@
 <app-page-header title="ראשי" icon="pi-home" [subtitle]="todaySummary()" />
 
+@if (onboarding(); as steps) {
+  <section class="onboarding rise">
+    <div class="onboarding-head">
+      <div>
+        <h3 class="mt-0 mb-1">שלושה צעדים ואפשר להתחיל</h3>
+        <p class="m-0 text-sm text-color-secondary">הרשימה נעלמת לבד כשהיא מסתיימת.</p>
+      </div>
+      <span class="onboarding-count">{{ onboardingDone() }}/3</span>
+    </div>
+    <ol class="onboarding-steps">
+      @for (step of steps; track step.link) {
+        <li [class.is-done]="step.done">
+          <span class="onboarding-mark"><i class="pi" [class.pi-check]="step.done" [class.pi-circle]="!step.done"></i></span>
+          <span class="onboarding-text">
+            <strong>{{ step.label }}</strong>
+            <small>{{ step.hint }}</small>
+          </span>
+          @if (!step.done) {
+            <a [routerLink]="step.link" class="onboarding-go">להמשך <i class="pi pi-arrow-left text-xs"></i></a>
+          }
+        </li>
+      }
+    </ol>
+  </section>
+}
+
 <div class="grid">
   <div class="col-12 sm:col-6 lg:col-3">
     <app-stat-card

@@ -1425,6 +1425,94 @@ full-calendar th {
   gap: 1rem;
 }
 
+/* ------------------------------------------------- צעדי התחלה ---- */
+
+.onboarding {
+  margin-bottom: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--p-border-radius-xl);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  box-shadow: var(--p-talmidon-shadow-sm);
+}
+.onboarding-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+.onboarding-count {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--p-border-radius-xl);
+  background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+  color: var(--p-primary-color);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+.onboarding-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.onboarding-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--p-border-radius-lg);
+  background: var(--p-talmidon-app-background);
+}
+.onboarding-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  color: var(--p-text-muted-color);
+  font-size: 0.7rem;
+}
+.onboarding-steps li.is-done .onboarding-mark {
+  background: var(--p-primary-color);
+  border-color: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+.onboarding-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.onboarding-text small {
+  color: var(--p-text-muted-color);
+}
+/* צעד שהושלם נשאר קריא אך מאבד בולטות — העין נופלת על מה שנשאר לעשות */
+.onboarding-steps li.is-done .onboarding-text strong {
+  color: var(--p-text-muted-color);
+  text-decoration: line-through;
+  text-decoration-color: var(--p-content-border-color);
+}
+.onboarding-go {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--p-primary-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.onboarding-go:hover {
+  text-decoration: underline;
+}
+
 /* ----------------------------------------------------- חיפוש מהיר ---- */
 
 .quick-search-trigger {
