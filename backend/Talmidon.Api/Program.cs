@@ -78,24 +78,20 @@ builder.Services.AddRateLimiter(options =>
 
 // CORS לאפליקציית ה-Angular
 const string CorsPolicy = "TalmidonClient";
-var frontendOrigin = builder.Environment.IsDevelopment()
+// כותרת Origin מגיעה תמיד בלי לוכסן מסייג, וערך סביבה עם לוכסן בסוף לא היה תואם.
+var frontendOrigin = (builder.Environment.IsDevelopment()
     ? "http://localhost:4200"
     : Environment.GetEnvironmentVariable("APP_CLIENT_URL")
-        ?? throw new InvalidOperationException("APP_CLIENT_URL must be configured for production CORS.");
+        ?? throw new InvalidOperationException("APP_CLIENT_URL must be configured for production CORS."))
+    .TrimEnd('/');
 
-// builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
-// {
-//     policy.WithOrigins(frontendOrigin)
-//         .AllowAnyHeader()
-//         .AllowAnyMethod();
-// }));
-
+// התאמה מדויקת בלבד. בדיקת סיומת על שם המארח נראית מהודקת ואינה כזו:
+// "talmidon.vercel.app" הוא גם סופו של "eviltalmidon.vercel.app", ופרויקט בשם
+// כזה פתוח לכל אחד להקים ב-Vercel — הדפדפן היה מתיר לדף שלו לקרוא ל-API הזה
+// עם ה-token של המשתמשת. תצוגה מקדימה שצריכה גישה תתווסף כאן במפורש.
 builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
 {
-    policy.SetIsOriginAllowed(origin =>
-            origin == frontendOrigin ||
-            (Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
-             uri.Host.EndsWith("talmidon.vercel.app", StringComparison.OrdinalIgnoreCase)))
+    policy.WithOrigins(frontendOrigin)
         .AllowAnyHeader()
         .AllowAnyMethod();
 }));
