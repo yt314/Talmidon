@@ -11,6 +11,13 @@
 @if (loading()) {
   <div class="skeleton skeleton-line" style="height: 5rem"></div>
   <div class="skeleton skeleton-line" style="height: 5rem"></div>
+} @else if (hiddenByFilter()) {
+  <app-empty-state
+    icon="pi-filter"
+    title="אין פניות במצב הזה"
+    hint="יש פניות אחרות בתיבה — הן פשוט לא במצב שנבחר.">
+    <p-button label="הצגת כל הפניות" icon="pi pi-list" [outlined]="true" (onClick)="showAll()" />
+  </app-empty-state>
 } @else if (visible().length === 0) {
   <app-empty-state
     icon="pi-inbox"

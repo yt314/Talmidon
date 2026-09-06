@@ -200,7 +200,7 @@ export class StudentDetailComponent implements OnInit {
       studentName ? `בנוגע ל${studentName}` : 'הודעה מהמורה',
       `שלום ${parent.fullName},\n\nאני המורה של ${studentName}.\n\n`
     );
-    if (link) window.location.href = link;
+    if (link) window.open(link, '_blank', 'noopener');
   }
 
   confirmDelete(): void {

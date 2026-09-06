@@ -59,6 +59,9 @@ export class ContactRequestsComponent implements OnInit {
     { label: 'הכול', value: null }
   ];
 
+  /** האם הרשימה ריקה רק בגלל המסנן — יש פניות, אבל לא במצב שנבחר. */
+  protected readonly hiddenByFilter = computed(() => this.visible().length === 0 && this.all().length > 0);
+
   protected readonly visible = computed(() => {
     const status = this.filter();
     return status === null ? this.all() : this.all().filter(c => c.status === status);
@@ -86,7 +89,12 @@ export class ContactRequestsComponent implements OnInit {
       `קיבלתי את פנייתך דרך תלמידון.\n\n` +
       `--- הפנייה שלך ---\n${contact.message}\n`;
     const link = buildMailtoLink(contact.email, subject, body);
-    if (link) window.location.href = link;
+    // כרטיסייה חדשה כמו בוואטסאפ: ניווט באותה לשונית היה מוציא אותה מהמערכת
+    if (link) window.open(link, '_blank', 'noopener');
+  }
+
+  protected showAll(): void {
+    this.filter.set(null);
   }
 
   protected setStatus(contact: ContactRequest, status: ContactRequestStatus): void {
