@@ -6,11 +6,11 @@ public record UpdateTeacherProfileRequest(
     [MaxLength(40)] string? Phone,
     [EmailAddress, MaxLength(256)] string? ContactEmail,
     [MaxLength(100)] string? City,
+    [MaxLength(100)] string? Neighborhood,
     [MaxLength(2000)] string? Bio,
     [Range(0, double.MaxValue)] decimal DefaultPricePerLesson,
     [Range(1, 1440)] int DefaultDurationMinutes,
     [MaxLength(4000)] string? RulesText,
-    [MaxLength(1000)] string? ContactInfo,
     bool IsPublic);
 
 /// <summary>חלון זמינות שבועי. DayOfWeek: ראשון=0 ... שבת=6. שעות בפורמט "HH:mm".</summary>
@@ -39,11 +39,11 @@ public record TeacherProfileDto(
     string? Phone,
     string? ContactEmail,
     string? City,
+    string? Neighborhood,
     string? Bio,
     decimal DefaultPricePerLesson,
     int DefaultDurationMinutes,
     string? RulesText,
-    string? ContactInfo,
     bool IsPublic,
     List<SubjectDto> Subjects,
     /// <summary>
@@ -60,6 +60,7 @@ public record PublicTeacherSummaryDto(
     string FullName,
     string? Bio,
     string? City,
+    string? Neighborhood,
     decimal DefaultPricePerLesson,
     List<string> Subjects,
     int? PhotoVersion);
@@ -73,10 +74,10 @@ public record PublicTeacherDetailDto(
     string FullName,
     string? Bio,
     string? City,
+    string? Neighborhood,
     string? Phone,
     string? ContactEmail,
     decimal DefaultPricePerLesson,
     string? RulesText,
-    string? ContactInfo,
     List<string> Subjects,
     int? PhotoVersion);

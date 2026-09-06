@@ -22,19 +22,21 @@ public class PublicController(
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PublicTeacherSummaryDto>>> List(
-        [FromQuery] string? subject, [FromQuery] string? search)
+        [FromQuery] string? subject, [FromQuery] string? city, [FromQuery] string? search)
     {
         var query = db.Teachers.Where(t => t.IsPublic);
 
         if (!string.IsNullOrWhiteSpace(subject))
             query = query.Where(t => t.Subjects.Any(s => s.Name == subject));
+        if (!string.IsNullOrWhiteSpace(city))
+            query = query.Where(t => t.City == city);
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(t => t.FullName.Contains(search));
 
         var teachers = await query
             .OrderBy(t => t.FullName)
             .Select(t => new PublicTeacherSummaryDto(
-                t.Id, t.FullName, t.Bio, t.City, t.DefaultPricePerLesson,
+                t.Id, t.FullName, t.Bio, t.City, t.Neighborhood, t.DefaultPricePerLesson,
                 t.Subjects.Select(s => s.Name).ToList(),
                 // רק אורך, לא ה-blob: אחרת כל טעינה של הספרייה הייתה מושכת את כל
                 // התמונות בתוך ה-JSON. הלקוח בונה מזה את הכתובת.
@@ -54,6 +56,19 @@ public class PublicController(
             .OrderBy(s => s)
             .ToListAsync();
         return Ok(subjects);
+    }
+
+    /// <summary>הערים שיש בהן מורות ציבוריות — לתפריט הסינון. ריקות אינן נספרות.</summary>
+    [HttpGet("cities")]
+    public async Task<ActionResult<IEnumerable<string>>> ListCities()
+    {
+        var cities = await db.Teachers
+            .Where(t => t.IsPublic && t.City != null && t.City != "")
+            .Select(t => t.City!)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToListAsync();
+        return Ok(cities);
     }
 
     /// <summary>
@@ -80,8 +95,8 @@ public class PublicController(
         var teacher = await db.Teachers
             .Where(t => t.Id == id && t.IsPublic)
             .Select(t => new PublicTeacherDetailDto(
-                t.Id, t.FullName, t.Bio, t.City, t.Phone, t.ContactEmail,
-                t.DefaultPricePerLesson, t.RulesText, t.ContactInfo,
+                t.Id, t.FullName, t.Bio, t.City, t.Neighborhood, t.Phone, t.ContactEmail,
+                t.DefaultPricePerLesson, t.RulesText,
                 t.Subjects.Select(s => s.Name).ToList(),
                 t.PhotoData == null ? (int?)null : t.PhotoData.Length))
             .FirstOrDefaultAsync();

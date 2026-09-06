@@ -18,13 +18,10 @@ public static class TeacherProfileRules
         int subjectCount,
         decimal defaultPricePerLesson,
         string? phone,
-        string? contactEmail,
-        string? contactInfo) =>
+        string? contactEmail) =>
         subjectCount > 0
         && defaultPricePerLesson > 0
-        // די בדרך אחת ליצור קשר. הטופס מציע טלפון, מייל והערה חופשית, ומורה
-        // שמילאה אחד מהם אינה אמורה להיתקע במסך ההקמה בגלל השניים האחרים.
-        && (!string.IsNullOrWhiteSpace(phone)
-            || !string.IsNullOrWhiteSpace(contactEmail)
-            || !string.IsNullOrWhiteSpace(contactInfo));
+        // די בדרך אחת ליצור קשר, ומורה שמילאה אחת מהן אינה אמורה להיתקע
+        // במסך ההקמה בגלל השנייה.
+        && (!string.IsNullOrWhiteSpace(phone) || !string.IsNullOrWhiteSpace(contactEmail));
 }

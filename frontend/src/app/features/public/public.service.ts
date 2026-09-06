@@ -17,6 +17,10 @@ export class PublicService {
     return this.http.get<string[]>(`${this.api}/subjects`);
   }
 
+  listCities(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.api}/cities`);
+  }
+
   getTeacher(id: string): Observable<PublicTeacherDetail> {
     return this.http.get<PublicTeacherDetail>(`${this.api}/${id}`);
   }

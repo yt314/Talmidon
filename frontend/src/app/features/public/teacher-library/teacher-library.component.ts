@@ -54,7 +54,7 @@ export class TeacherLibraryComponent implements OnInit {
    * מתחת לשדה החיפוש, ובלי מספר לא ברור אם המסנן בכלל תפס.
    */
   protected readonly resultsTitle = computed(() => {
-    if (!this.search().trim() && !this.selectedSubject()) return 'המורות שלנו';
+    if (!this.search().trim() && !this.selectedSubject() && !this.selectedCity()) return 'המורות שלנו';
     const count = this.teachers().length;
     if (count === 0) return 'לא נמצאו מורות';
     return count === 1 ? 'נמצאה מורה אחת' : `נמצאו ${count} מורות`;
@@ -101,6 +101,17 @@ export class TeacherLibraryComponent implements OnInit {
   protected readonly subjects = signal<string[]>([]);
   protected readonly search = signal('');
   protected readonly selectedSubject = signal<string | null>(null);
+  protected readonly selectedCity = signal<string | null>(null);
+
+  /**
+   * הערים נגזרות מהמורות שנטענו ולא מקריאה נפרדת: הסינון עצמו מקומי, ורשימה
+   * שמגיעה ממקור אחר עלולה להציע עיר שאין לה תוצאה ברשימה שעל המסך.
+   */
+  protected readonly cities = computed(() =>
+    [...new Set(this.allTeachers().map(t => t.city).filter((c): c is string => !!c))].sort((a, b) =>
+      a.localeCompare(b, 'he')
+    )
+  );
 
   /** המחיר הזול ביותר בספרייה — מוצג כ"החל מ־" ברצועת הפתיחה. */
   protected readonly lowestPrice = computed(() => {
@@ -111,10 +122,12 @@ export class TeacherLibraryComponent implements OnInit {
   protected readonly teachers = computed(() => {
     const search = this.search().trim().toLowerCase();
     const subject = this.selectedSubject();
+    const city = this.selectedCity();
     return this.allTeachers().filter(
       teacher =>
         (!search || teacher.fullName.toLowerCase().includes(search)) &&
-        (!subject || teacher.subjects.includes(subject))
+        (!subject || teacher.subjects.includes(subject)) &&
+        (!city || teacher.city === city)
     );
   });
 
@@ -129,9 +142,15 @@ export class TeacherLibraryComponent implements OnInit {
     this.publicService.listSubjects().subscribe(subjects => this.subjects.set(subjects));
   }
 
+  /** "שכונה, עיר" על הכרטיס — מה שיש, בלי פסיק מיותם. */
+  protected teacherLocation(teacher: PublicTeacherSummary): string | null {
+    return [teacher.neighborhood, teacher.city].filter(Boolean).join(', ') || null;
+  }
+
   protected clearFilters(): void {
     this.search.set('');
     this.selectedSubject.set(null);
+    this.selectedCity.set(null);
   }
 
   /**
