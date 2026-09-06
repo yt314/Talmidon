@@ -61,6 +61,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
 
   protected readonly form = this.fb.nonNullable.group({
     phone: ['', [Validators.maxLength(40)]],
+    contactEmail: ['', [Validators.email, Validators.maxLength(256)]],
+    city: ['', [Validators.maxLength(100)]],
     bio: ['', [Validators.maxLength(2000)]],
     defaultPricePerLesson: [0, [Validators.required, Validators.min(0)]],
     defaultDurationMinutes: [60, [Validators.required, Validators.min(1), Validators.max(1440)]],
@@ -120,6 +122,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
     this.profileService
       .updateMyProfile({
         phone: raw.phone || null,
+        contactEmail: raw.contactEmail || null,
+        city: raw.city || null,
         bio: raw.bio || null,
         defaultPricePerLesson: raw.defaultPricePerLesson,
         defaultDurationMinutes: raw.defaultDurationMinutes,
@@ -238,6 +242,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
         this.profileComplete.set(profile.isProfileComplete);
         this.form.reset({
           phone: profile.phone ?? '',
+          contactEmail: profile.contactEmail ?? '',
+          city: profile.city ?? '',
           bio: profile.bio ?? '',
           defaultPricePerLesson: profile.defaultPricePerLesson,
           defaultDurationMinutes: profile.defaultDurationMinutes,

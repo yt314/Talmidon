@@ -117,7 +117,12 @@
           <p-card styleClass="teacher-card h-full" [appReveal]="riseDelay(i)" appSpotlight>
             <div class="flex align-items-center gap-3 mb-3">
               <app-avatar [name]="teacher.fullName" [photoUrl]="photoUrl(teacher.id, teacher.photoVersion)" />
-              <h3 class="m-0">{{ teacher.fullName }}</h3>
+              <div>
+                <h3 class="m-0">{{ teacher.fullName }}</h3>
+                @if (teacher.city; as city) {
+                  <span class="teacher-card-city"><i class="pi pi-map-marker"></i> {{ city }}</span>
+                }
+              </div>
             </div>
             @if (teacher.bio) {
               <p class="text-color-secondary line-clamp">{{ teacher.bio }}</p>

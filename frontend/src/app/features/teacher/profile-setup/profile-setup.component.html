@@ -53,19 +53,36 @@
       </div>
 
       <div class="field">
-        <label for="s-contact">איך יוצרים איתך קשר? *</label>
-        <textarea
-          pTextarea
-          id="s-contact"
-          formControlName="contactInfo"
-          rows="3"
-          class="w-full"
-          placeholder="טלפון או מייל — מה שנוח לך שיפורסם"
-          [invalid]="isInvalid(form.controls.contactInfo)"></textarea>
-        @if (fieldError(form.controls.contactInfo); as msg) {
+        <label for="s-city">עיר</label>
+        <input pInputText id="s-city" formControlName="city" class="w-full" placeholder="למשל: ירושלים" [invalid]="isInvalid(form.controls.city)" />
+        @if (fieldError(form.controls.city); as msg) {
           <small class="text-red-500 block mt-1">{{ msg }}</small>
         }
       </div>
+
+      <div class="flex gap-3">
+        <div class="field flex-1">
+          <label for="s-phone">טלפון</label>
+          <input pInputText id="s-phone" formControlName="phone" class="w-full" [invalid]="isInvalid(form.controls.phone)" />
+          @if (fieldError(form.controls.phone); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
+        </div>
+
+        <div class="field flex-1">
+          <label for="s-email">מייל ליצירת קשר</label>
+          <input pInputText id="s-email" type="email" formControlName="contactEmail" class="w-full" [invalid]="isInvalid(form.controls.contactEmail)" />
+          @if (fieldError(form.controls.contactEmail); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
+        </div>
+      </div>
+      @if (form.hasError('noContact') && form.touched) {
+        <small class="text-red-500 block -mt-2 mb-3">צריך למלא טלפון או מייל — אחרת אי אפשר לפנות אלייך.</small>
+      }
+      <small class="block -mt-2 mb-3 text-color-secondary">
+        הפרטים האלה מוצגים בכרטיס שלך בספרייה הציבורית.
+      </small>
 
       <div class="field">
         <label for="s-bio">קצת עלייך</label>

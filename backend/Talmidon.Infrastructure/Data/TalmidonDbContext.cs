@@ -90,6 +90,8 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
         {
             e.Property(t => t.FullName).HasMaxLength(200).IsRequired();
             e.Property(t => t.Phone).HasMaxLength(40);
+            e.Property(t => t.ContactEmail).HasMaxLength(256);
+            e.Property(t => t.City).HasMaxLength(100);
             e.Property(t => t.Bio).HasMaxLength(2000);
             e.Property(t => t.RulesText).HasMaxLength(4000);
             e.Property(t => t.ContactInfo).HasMaxLength(1000);

@@ -1425,6 +1425,55 @@ full-calendar th {
   gap: 1rem;
 }
 
+.teacher-card-city {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+}
+
+.profile-hero-city {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0.75rem;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+/* פרטי הקשר בכרטיס הציבורי — שורה לכל ערוץ, עם אייקון בעמודה קבועה */
+.profile-contact {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.profile-contact li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  line-height: 1.4;
+}
+.profile-contact i {
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+}
+.profile-contact a {
+  color: var(--p-text-color);
+  text-decoration: none;
+}
+.profile-contact a:hover {
+  color: var(--p-primary-color);
+  text-decoration: underline;
+}
+.profile-contact-note {
+  color: var(--p-text-muted-color);
+  font-size: 0.9rem;
+}
+
 .profile-price {
   font-size: 2rem;
   font-weight: 800;

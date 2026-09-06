@@ -14,8 +14,17 @@ public static class TeacherProfileRules
     /// מקבל ערכים ולא ישות, כדי שהקורא יוכל להטיל עמודות בלבד ולא לטעון את שורת
     /// המורה כולה (שכוללת את ה-blob של התמונה).
     /// </summary>
-    public static bool IsComplete(int subjectCount, decimal defaultPricePerLesson, string? contactInfo) =>
+    public static bool IsComplete(
+        int subjectCount,
+        decimal defaultPricePerLesson,
+        string? phone,
+        string? contactEmail,
+        string? contactInfo) =>
         subjectCount > 0
         && defaultPricePerLesson > 0
-        && !string.IsNullOrWhiteSpace(contactInfo);
+        // די בדרך אחת ליצור קשר. הטופס מציע טלפון, מייל והערה חופשית, ומורה
+        // שמילאה אחד מהם אינה אמורה להיתקע במסך ההקמה בגלל השניים האחרים.
+        && (!string.IsNullOrWhiteSpace(phone)
+            || !string.IsNullOrWhiteSpace(contactEmail)
+            || !string.IsNullOrWhiteSpace(contactInfo));
 }

@@ -4,6 +4,8 @@ namespace Talmidon.Api.Contracts;
 
 public record UpdateTeacherProfileRequest(
     [MaxLength(40)] string? Phone,
+    [EmailAddress, MaxLength(256)] string? ContactEmail,
+    [MaxLength(100)] string? City,
     [MaxLength(2000)] string? Bio,
     [Range(0, double.MaxValue)] decimal DefaultPricePerLesson,
     [Range(1, 1440)] int DefaultDurationMinutes,
@@ -35,6 +37,8 @@ public record TeacherProfileDto(
     Guid Id,
     string FullName,
     string? Phone,
+    string? ContactEmail,
+    string? City,
     string? Bio,
     decimal DefaultPricePerLesson,
     int DefaultDurationMinutes,
@@ -55,15 +59,22 @@ public record PublicTeacherSummaryDto(
     Guid Id,
     string FullName,
     string? Bio,
+    string? City,
     decimal DefaultPricePerLesson,
     List<string> Subjects,
     int? PhotoVersion);
 
-/// <summary>דף מורה ציבורי מלא (P2) — ללא Phone הפרטי; פרטי יצירת קשר מגיעים מ-ContactInfo.</summary>
+/// <summary>
+/// דף מורה ציבורי מלא (P2). הטלפון והמייל כאן הם פרטי יצירת הקשר שהמורה מילאה
+/// בפרופיל שלה כדי שיפורסמו — הם מוגשים רק כשהיא בספרייה, כמו שאר הכרטיס.
+/// </summary>
 public record PublicTeacherDetailDto(
     Guid Id,
     string FullName,
     string? Bio,
+    string? City,
+    string? Phone,
+    string? ContactEmail,
     decimal DefaultPricePerLesson,
     string? RulesText,
     string? ContactInfo,

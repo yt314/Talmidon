@@ -13,6 +13,7 @@ import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { SubjectPickerComponent } from '../../../shared/ui/subject-picker.component';
 import { cropToSquareJpeg } from '../../../shared/avatar/image-resize.util';
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
+import { TeacherProfile } from '../profile/profile.models';
 import { TeacherProfileService } from '../profile/profile.service';
 import { ProfileSetupService } from './profile-setup.service';
 
@@ -57,11 +58,20 @@ export class ProfileSetupComponent implements OnInit {
   protected readonly subjectNames = signal<string[]>([]);
   protected readonly allSuggestions = signal<string[]>([]);
 
-  protected readonly form = this.fb.nonNullable.group({
-    defaultPricePerLesson: [0, [Validators.required, Validators.min(1)]],
-    contactInfo: ['', [Validators.required, Validators.maxLength(1000)]],
-    bio: ['', [Validators.maxLength(2000)]]
-  });
+  protected readonly form = this.fb.nonNullable.group(
+    {
+      defaultPricePerLesson: [0, [Validators.required, Validators.min(1)]],
+      city: ['', [Validators.maxLength(100)]],
+      phone: ['', [Validators.maxLength(40)]],
+      contactEmail: ['', [Validators.email, Validators.maxLength(256)]],
+      bio: ['', [Validators.maxLength(2000)]]
+    },
+    // דרך אחת ליצור קשר מספיקה, ואין סיבה לדרוש את שתיהן
+    { validators: group => (group.get('phone')!.value || group.get('contactEmail')!.value ? null : { noContact: true }) }
+  );
+
+  /** נשמר כדי שהשמירה כאן לא תמחק שדות שהמסך הזה אינו עורך. */
+  private readonly loaded = signal<TeacherProfile | null>(null);
 
   ngOnInit(): void {
     this.profileService.subjectSuggestions().subscribe(names => this.allSuggestions.set(names));
@@ -72,9 +82,12 @@ export class ProfileSetupComponent implements OnInit {
         this.teacherId.set(profile.id);
         this.photoUrl.set(teacherPhotoUrl(profile.id, profile.photoVersion));
         this.subjectNames.set(profile.subjects.map(s => s.name));
+        this.loaded.set(profile);
         this.form.patchValue({
           defaultPricePerLesson: profile.defaultPricePerLesson,
-          contactInfo: profile.contactInfo ?? '',
+          city: profile.city ?? '',
+          phone: profile.phone ?? '',
+          contactEmail: profile.contactEmail ?? '',
           bio: profile.bio ?? ''
         });
       },
@@ -131,12 +144,15 @@ export class ProfileSetupComponent implements OnInit {
       next: () =>
         this.profileService
           .updateMyProfile({
-            phone: null,
+            phone: raw.phone || null,
+            contactEmail: raw.contactEmail || null,
+            city: raw.city || null,
             bio: raw.bio || null,
             defaultPricePerLesson: raw.defaultPricePerLesson,
-            defaultDurationMinutes: 60,
-            rulesText: null,
-            contactInfo: raw.contactInfo,
+            // המסך הזה אינו עורך משך, כללים או הערת קשר — נשמר מה שכבר קיים
+            defaultDurationMinutes: this.loaded()?.defaultDurationMinutes ?? 60,
+            rulesText: this.loaded()?.rulesText ?? null,
+            contactInfo: this.loaded()?.contactInfo ?? null,
             isPublic: true
           })
           .subscribe({

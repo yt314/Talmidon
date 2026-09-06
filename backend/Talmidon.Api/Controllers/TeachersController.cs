@@ -36,6 +36,8 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
                 t.Id,
                 t.FullName,
                 t.Phone,
+                t.ContactEmail,
+                t.City,
                 t.Bio,
                 t.DefaultPricePerLesson,
                 t.DefaultDurationMinutes,
@@ -49,11 +51,14 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         if (row is null) return NotFound();
 
         return Ok(new TeacherProfileDto(
-            row.Id, row.FullName, row.Phone, row.Bio, row.DefaultPricePerLesson,
+            row.Id, row.FullName, row.Phone, row.ContactEmail, row.City, row.Bio,
+            row.DefaultPricePerLesson,
             row.DefaultDurationMinutes, row.RulesText, row.ContactInfo, row.IsPublic,
             row.Subjects,
             row.PhotoLength,
-            TeacherProfileRules.IsComplete(row.Subjects.Count, row.DefaultPricePerLesson, row.ContactInfo)));
+            TeacherProfileRules.IsComplete(
+                row.Subjects.Count, row.DefaultPricePerLesson,
+                row.Phone, row.ContactEmail, row.ContactInfo)));
     }
 
     [HttpPut("me")]
@@ -63,6 +68,8 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         if (teacher is null) return NotFound();
 
         teacher.Phone = request.Phone;
+        teacher.ContactEmail = request.ContactEmail;
+        teacher.City = request.City;
         teacher.Bio = request.Bio;
         teacher.DefaultPricePerLesson = request.DefaultPricePerLesson;
         teacher.DefaultDurationMinutes = request.DefaultDurationMinutes;
