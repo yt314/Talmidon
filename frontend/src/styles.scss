@@ -1425,6 +1425,133 @@ full-calendar th {
   gap: 1rem;
 }
 
+/* ----------------------------------------------------- חיפוש מהיר ---- */
+
+.quick-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--p-border-radius-md);
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  color: var(--p-text-muted-color);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.quick-search-trigger:hover {
+  border-color: var(--p-primary-color);
+  color: var(--p-text-color);
+}
+.quick-search-trigger kbd {
+  padding: 0.05rem 0.35rem;
+  border-radius: var(--p-border-radius-sm);
+  background: var(--p-talmidon-app-background);
+  border: 1px solid var(--p-content-border-color);
+  font-size: 0.7rem;
+  font-family: inherit;
+  direction: ltr;
+}
+/* במסך צר נשאר האייקון בלבד — הסרגל צפוף ממילא */
+@media (max-width: 900px) {
+  .quick-search-trigger-label,
+  .quick-search-trigger kbd {
+    display: none;
+  }
+}
+
+/* יושב גבוה ולא במרכז: העין כבר שם, והרשימה גדלה כלפי מטה בלי לקפוץ */
+.quick-search-dialog {
+  align-self: flex-start;
+  margin-top: 12vh;
+}
+.quick-search-dialog .p-dialog-content {
+  padding: 0.6rem;
+}
+.quick-search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.6rem;
+  margin-bottom: 0.4rem;
+}
+.quick-search-field i {
+  color: var(--p-text-muted-color);
+}
+.quick-search-field input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font-size: 1.05rem;
+  padding: 0.6rem 0;
+}
+.quick-search-field input:focus {
+  outline: none;
+  box-shadow: none;
+}
+.quick-search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+.quick-search-list a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: var(--p-border-radius-md);
+  color: var(--p-text-color);
+  text-decoration: none;
+}
+.quick-search-list a.is-active {
+  background: var(--p-talmidon-app-background);
+}
+.quick-search-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--p-border-radius-md);
+  background: var(--p-talmidon-app-background);
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+}
+.quick-search-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.quick-search-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quick-search-hint {
+  /* לא נדחס: הכיתה קצרה, ובלי זה הגרש שלה נחתך בקצה השורה */
+  flex: 0 0 auto;
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+}
+.quick-search-empty {
+  margin: 0;
+  padding: 1.2rem 0.6rem;
+  text-align: center;
+  color: var(--p-text-muted-color);
+}
+
 /* --------------------------------------------------- שיתוף הכרטיס ---- */
 
 .share-block {

@@ -60,12 +60,14 @@ import { toDataURL } from 'qrcode';
       </div>
     </div>
 
+    @if (qrOpen()) {
     <p-dialog
-      [visible]="qrOpen()"
+      [visible]="true"
       (visibleChange)="qrOpen.set($event)"
       header="קוד סריקה לכרטיס שלך"
       [modal]="true"
       [draggable]="false"
+      appendTo="body"
       [style]="{ width: '22rem' }">
       <div class="share-qr">
         @if (qrDataUrl(); as src) {
@@ -85,6 +87,7 @@ import { toDataURL } from 'qrcode';
           (onClick)="downloadQr()" />
       </div>
     </p-dialog>
+    }
   `
 })
 export class ShareProfileComponent {
