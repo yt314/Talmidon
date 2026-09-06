@@ -45,8 +45,18 @@
         (ngModelChange)="selectedSubject.set($event)"
         placeholder="כל התחומים"
         [showClear]="true"
-        style="min-width: 200px"
+        style="min-width: 170px"
       />
+      @if (cities().length > 0) {
+        <p-select
+          [options]="cities()"
+          [ngModel]="selectedCity()"
+          (ngModelChange)="selectedCity.set($event)"
+          placeholder="כל הערים"
+          [showClear]="true"
+          style="min-width: 170px"
+        />
+      }
     </div>
 
     @if (!loading() && allTeachers().length > 0) {
@@ -119,8 +129,8 @@
               <app-avatar [name]="teacher.fullName" [photoUrl]="photoUrl(teacher.id, teacher.photoVersion)" />
               <div>
                 <h3 class="m-0">{{ teacher.fullName }}</h3>
-                @if (teacher.city; as city) {
-                  <span class="teacher-card-city"><i class="pi pi-map-marker"></i> {{ city }}</span>
+                @if (teacherLocation(teacher); as place) {
+                  <span class="teacher-card-city"><i class="pi pi-map-marker"></i> {{ place }}</span>
                 }
               </div>
             </div>

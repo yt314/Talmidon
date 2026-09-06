@@ -3,6 +3,7 @@ export interface PublicTeacherSummary {
   fullName: string;
   bio: string | null;
   city: string | null;
+  neighborhood: string | null;
   defaultPricePerLesson: number;
   subjects: string[];
   photoVersion: number | null;
@@ -13,11 +14,11 @@ export interface PublicTeacherDetail {
   fullName: string;
   bio: string | null;
   city: string | null;
+  neighborhood: string | null;
   phone: string | null;
   contactEmail: string | null;
   defaultPricePerLesson: number;
   rulesText: string | null;
-  contactInfo: string | null;
   subjects: string[];
   photoVersion: number | null;
 }

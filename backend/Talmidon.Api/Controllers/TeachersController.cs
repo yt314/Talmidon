@@ -38,11 +38,11 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
                 t.Phone,
                 t.ContactEmail,
                 t.City,
+                t.Neighborhood,
                 t.Bio,
                 t.DefaultPricePerLesson,
                 t.DefaultDurationMinutes,
                 t.RulesText,
-                t.ContactInfo,
                 t.IsPublic,
                 Subjects = t.Subjects.Select(s => new SubjectDto(s.Id, s.Name)).ToList(),
                 PhotoLength = t.PhotoData == null ? (int?)null : t.PhotoData.Length
@@ -51,14 +51,15 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         if (row is null) return NotFound();
 
         return Ok(new TeacherProfileDto(
-            row.Id, row.FullName, row.Phone, row.ContactEmail, row.City, row.Bio,
+            row.Id, row.FullName, row.Phone, row.ContactEmail, row.City, row.Neighborhood,
+            row.Bio,
             row.DefaultPricePerLesson,
-            row.DefaultDurationMinutes, row.RulesText, row.ContactInfo, row.IsPublic,
+            row.DefaultDurationMinutes, row.RulesText, row.IsPublic,
             row.Subjects,
             row.PhotoLength,
             TeacherProfileRules.IsComplete(
                 row.Subjects.Count, row.DefaultPricePerLesson,
-                row.Phone, row.ContactEmail, row.ContactInfo)));
+                row.Phone, row.ContactEmail)));
     }
 
     [HttpPut("me")]
@@ -70,11 +71,11 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         teacher.Phone = request.Phone;
         teacher.ContactEmail = request.ContactEmail;
         teacher.City = request.City;
+        teacher.Neighborhood = request.Neighborhood;
         teacher.Bio = request.Bio;
         teacher.DefaultPricePerLesson = request.DefaultPricePerLesson;
         teacher.DefaultDurationMinutes = request.DefaultDurationMinutes;
         teacher.RulesText = request.RulesText;
-        teacher.ContactInfo = request.ContactInfo;
         teacher.IsPublic = request.IsPublic;
         await db.SaveChangesAsync();
         return NoContent();

@@ -16,11 +16,11 @@ export interface TeacherProfile {
   phone: string | null;
   contactEmail: string | null;
   city: string | null;
+  neighborhood: string | null;
   bio: string | null;
   defaultPricePerLesson: number;
   defaultDurationMinutes: number;
   rulesText: string | null;
-  contactInfo: string | null;
   isPublic: boolean;
   subjects: Subject[];
   /** חותם גרסה לתמונה, או null כשאין. הכתובת נבנית ב-teacherPhotoUrl. */
@@ -33,10 +33,10 @@ export interface UpdateTeacherProfileRequest {
   phone?: string | null;
   contactEmail?: string | null;
   city?: string | null;
+  neighborhood?: string | null;
   bio?: string | null;
   defaultPricePerLesson: number;
   defaultDurationMinutes: number;
   rulesText?: string | null;
-  contactInfo?: string | null;
   isPublic: boolean;
 }

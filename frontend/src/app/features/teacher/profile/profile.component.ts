@@ -63,11 +63,11 @@ export class TeacherProfileSettingsComponent implements OnInit {
     phone: ['', [Validators.maxLength(40)]],
     contactEmail: ['', [Validators.email, Validators.maxLength(256)]],
     city: ['', [Validators.maxLength(100)]],
+    neighborhood: ['', [Validators.maxLength(100)]],
     bio: ['', [Validators.maxLength(2000)]],
     defaultPricePerLesson: [0, [Validators.required, Validators.min(0)]],
     defaultDurationMinutes: [60, [Validators.required, Validators.min(1), Validators.max(1440)]],
     rulesText: ['', [Validators.maxLength(4000)]],
-    contactInfo: ['', [Validators.maxLength(1000)]],
     isPublic: [true]
   });
 
@@ -124,11 +124,11 @@ export class TeacherProfileSettingsComponent implements OnInit {
         phone: raw.phone || null,
         contactEmail: raw.contactEmail || null,
         city: raw.city || null,
+        neighborhood: raw.neighborhood || null,
         bio: raw.bio || null,
         defaultPricePerLesson: raw.defaultPricePerLesson,
         defaultDurationMinutes: raw.defaultDurationMinutes,
         rulesText: raw.rulesText || null,
-        contactInfo: raw.contactInfo || null,
         isPublic: raw.isPublic
       })
       .subscribe({
@@ -244,11 +244,11 @@ export class TeacherProfileSettingsComponent implements OnInit {
           phone: profile.phone ?? '',
           contactEmail: profile.contactEmail ?? '',
           city: profile.city ?? '',
+          neighborhood: profile.neighborhood ?? '',
           bio: profile.bio ?? '',
           defaultPricePerLesson: profile.defaultPricePerLesson,
           defaultDurationMinutes: profile.defaultDurationMinutes,
           rulesText: profile.rulesText ?? '',
-          contactInfo: profile.contactInfo ?? '',
           isPublic: profile.isPublic
         });
         this.loading.set(false);

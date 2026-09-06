@@ -62,6 +62,7 @@ export class ProfileSetupComponent implements OnInit {
     {
       defaultPricePerLesson: [0, [Validators.required, Validators.min(1)]],
       city: ['', [Validators.maxLength(100)]],
+      neighborhood: ['', [Validators.maxLength(100)]],
       phone: ['', [Validators.maxLength(40)]],
       contactEmail: ['', [Validators.email, Validators.maxLength(256)]],
       bio: ['', [Validators.maxLength(2000)]]
@@ -86,6 +87,7 @@ export class ProfileSetupComponent implements OnInit {
         this.form.patchValue({
           defaultPricePerLesson: profile.defaultPricePerLesson,
           city: profile.city ?? '',
+          neighborhood: profile.neighborhood ?? '',
           phone: profile.phone ?? '',
           contactEmail: profile.contactEmail ?? '',
           bio: profile.bio ?? ''
@@ -147,12 +149,12 @@ export class ProfileSetupComponent implements OnInit {
             phone: raw.phone || null,
             contactEmail: raw.contactEmail || null,
             city: raw.city || null,
+            neighborhood: raw.neighborhood || null,
             bio: raw.bio || null,
             defaultPricePerLesson: raw.defaultPricePerLesson,
-            // המסך הזה אינו עורך משך, כללים או הערת קשר — נשמר מה שכבר קיים
+            // המסך הזה אינו עורך משך או כללים — נשמר מה שכבר קיים
             defaultDurationMinutes: this.loaded()?.defaultDurationMinutes ?? 60,
             rulesText: this.loaded()?.rulesText ?? null,
-            contactInfo: this.loaded()?.contactInfo ?? null,
             isPublic: true
           })
           .subscribe({

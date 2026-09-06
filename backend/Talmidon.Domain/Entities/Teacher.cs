@@ -23,6 +23,9 @@ public class Teacher
     /// <summary>יישוב. מה שהורה מסנן לפיו קודם כל כשהוא מחפש מורה.</summary>
     public string? City { get; set; }
 
+    /// <summary>שכונה בתוך היישוב. מוצגת לצד העיר; אין סינון לפיה.</summary>
+    public string? Neighborhood { get; set; }
+
     /// <summary>תיאור לדף הציבורי.</summary>
     public string? Bio { get; set; }
 
@@ -35,7 +38,10 @@ public class Teacher
     /// <summary>דף הכללים — כללי ביטול/תשלום.</summary>
     public string? RulesText { get; set; }
 
-    /// <summary>פרטי יצירת קשר לדף הכללים / הספרייה הציבורית.</summary>
+    /// <summary>
+    /// שדה חופשי ישן ליצירת קשר. הוחלף בטלפון, מייל ועיר, ואינו נערך או מוצג
+    /// עוד. העמודה נשארת כדי לא למחוק טקסט שמורות כבר כתבו בה.
+    /// </summary>
     public string? ContactInfo { get; set; }
 
     /// <summary>האם להציג בספרייה הציבורית.</summary>

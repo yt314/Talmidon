@@ -49,8 +49,8 @@
         <app-avatar [name]="teacher()!.fullName" [photoUrl]="photoUrl(teacher()!.id, teacher()!.photoVersion)" size="lg" />
         <div class="flex-1">
           <h2>{{ teacher()!.fullName }}</h2>
-          @if (teacher()!.city; as city) {
-            <p class="profile-hero-city"><i class="pi pi-map-marker"></i> {{ city }}</p>
+          @if (location(); as place) {
+            <p class="profile-hero-city"><i class="pi pi-map-marker"></i> {{ place }}</p>
           }
           <div class="flex gap-2 flex-wrap">
             @for (subject of teacher()!.subjects; track subject) {
@@ -107,9 +107,6 @@
                   <i class="pi pi-envelope"></i>
                   <a [href]="'mailto:' + email">{{ email }}</a>
                 </li>
-              }
-              @if (teacher()!.contactInfo; as note) {
-                <li class="profile-contact-note" style="white-space: pre-line">{{ note }}</li>
               }
             </ul>
           } @else {

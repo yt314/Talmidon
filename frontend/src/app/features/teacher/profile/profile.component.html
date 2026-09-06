@@ -48,12 +48,22 @@
     </div>
 
     <form [formGroup]="form" (ngSubmit)="save()">
-      <div class="field">
-        <label for="t-city">עיר</label>
-        <input pInputText id="t-city" formControlName="city" class="w-full" [invalid]="isInvalid(form.controls.city)" />
-        @if (fieldError(form.controls.city); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
-        }
+      <div class="flex gap-3">
+        <div class="field flex-1">
+          <label for="t-city">עיר</label>
+          <input pInputText id="t-city" formControlName="city" class="w-full" [invalid]="isInvalid(form.controls.city)" />
+          @if (fieldError(form.controls.city); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
+        </div>
+
+        <div class="field flex-1">
+          <label for="t-neighborhood">שכונה</label>
+          <input pInputText id="t-neighborhood" formControlName="neighborhood" class="w-full" [invalid]="isInvalid(form.controls.neighborhood)" />
+          @if (fieldError(form.controls.neighborhood); as msg) {
+            <small class="text-red-500 block mt-1">{{ msg }}</small>
+          }
+        </div>
       </div>
 
       <div class="flex gap-3">
@@ -122,20 +132,6 @@
         <label for="t-rules">כללי ביטול ותשלום</label>
         <textarea pTextarea id="t-rules" formControlName="rulesText" rows="3" class="w-full" [invalid]="isInvalid(form.controls.rulesText)"></textarea>
         @if (fieldError(form.controls.rulesText); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
-        }
-      </div>
-
-      <div class="field">
-        <label for="t-contact">פרטי יצירת קשר (מוצג בספרייה הציבורית)</label>
-        <textarea
-          pTextarea
-          id="t-contact"
-          formControlName="contactInfo"
-          rows="2"
-          class="w-full"
-          [invalid]="isInvalid(form.controls.contactInfo)"></textarea>
-        @if (fieldError(form.controls.contactInfo); as msg) {
           <small class="text-red-500 block mt-1">{{ msg }}</small>
         }
       </div>
