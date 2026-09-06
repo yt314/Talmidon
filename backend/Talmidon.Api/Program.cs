@@ -78,20 +78,29 @@ builder.Services.AddRateLimiter(options =>
 
 // CORS לאפליקציית ה-Angular
 const string CorsPolicy = "TalmidonClient";
-// כותרת Origin מגיעה תמיד בלי לוכסן מסייג, וערך סביבה עם לוכסן בסוף לא היה תואם.
-var frontendOrigin = (builder.Environment.IsDevelopment()
-    ? "http://localhost:4200"
-    : Environment.GetEnvironmentVariable("APP_CLIENT_URL")
-        ?? throw new InvalidOperationException("APP_CLIENT_URL must be configured for production CORS."))
-    .TrimEnd('/');
+// כתובת הלקוח בייצור. ברירת המחדל אינה מסתמכת על משתנה הסביבה: כשהוא חסר או
+// שגוי, שגיאת CORS מפילה כל בקשה מהדפדפן ונראית כמו שרת מת, ולכן הכתובת
+// הידועה נשארת מותרת בכל מקרה.
+const string ProductionOrigin = "https://talmidon.vercel.app";
 
 // התאמה מדויקת בלבד. בדיקת סיומת על שם המארח נראית מהודקת ואינה כזו:
 // "talmidon.vercel.app" הוא גם סופו של "eviltalmidon.vercel.app", ופרויקט בשם
 // כזה פתוח לכל אחד להקים ב-Vercel — הדפדפן היה מתיר לדף שלו לקרוא ל-API הזה
-// עם ה-token של המשתמשת. תצוגה מקדימה שצריכה גישה תתווסף כאן במפורש.
+// עם ה-token של המשתמשת. תצוגה מקדימה שצריכה גישה תתווסף לרשימה במפורש.
+var configuredOrigins = builder.Environment.IsDevelopment()
+    ? new string?[] { "http://localhost:4200" }
+    : new string?[] { Environment.GetEnvironmentVariable("APP_CLIENT_URL"), ProductionOrigin };
+
+var allowedOrigins = configuredOrigins
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    // כותרת Origin מגיעה תמיד בלי לוכסן מסייג, וערך עם לוכסן בסוף לא היה תואם
+    .Select(origin => origin!.Trim().TrimEnd('/'))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+
 builder.Services.AddCors(options => options.AddPolicy(CorsPolicy, policy =>
 {
-    policy.WithOrigins(frontendOrigin)
+    policy.WithOrigins(allowedOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod();
 }));
