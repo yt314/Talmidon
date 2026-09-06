@@ -31,6 +31,7 @@ export const routes: Routes = [
   {
     path: 'app',
     canActivate: [roleGuard(['Teacher'])],
+    canActivateChild: [profileSetupGuard],
     loadComponent: () => import('./features/teacher/teacher-shell/teacher-shell.component').then(m => m.TeacherShellComponent),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -40,7 +41,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/teacher/profile-setup/profile-setup.component').then(m => m.ProfileSetupComponent)
       },
-      { path: 'dashboard', component: DashboardComponent, canActivate: [profileSetupGuard] },
+      { path: 'dashboard', component: DashboardComponent },
       {
         path: 'students',
         loadComponent: () => import('./features/students/students-list/students-list.component').then(m => m.StudentsListComponent)

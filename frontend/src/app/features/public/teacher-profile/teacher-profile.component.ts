@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
@@ -30,6 +31,10 @@ import { PublicService } from '../public.service';
   templateUrl: './teacher-profile.component.html'
 })
 export class TeacherProfileComponent implements OnInit {
+  private readonly auth = inject(AuthService);
+  /** יעד החזרה כשמישהי מחוברת, ו-null כשלא — הכותרת נגזרת מזה. */
+  protected readonly homePath = computed(() => (this.auth.isAuthenticated() ? this.auth.homePath() : null));
+
   private readonly route = inject(ActivatedRoute);
   private readonly publicService = inject(PublicService);
 

@@ -60,7 +60,7 @@
           formControlName="contactInfo"
           rows="3"
           class="w-full"
-          placeholder="טלפון, וואטסאפ או מייל — מה שנוח לך שיפורסם"
+          placeholder="טלפון או מייל — מה שנוח לך שיפורסם"
           [invalid]="isInvalid(form.controls.contactInfo)"></textarea>
         @if (fieldError(form.controls.contactInfo); as msg) {
           <small class="text-red-500 block mt-1">{{ msg }}</small>

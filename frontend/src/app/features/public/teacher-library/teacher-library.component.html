@@ -6,22 +6,27 @@
     </span>
     <div class="flex align-items-center gap-2">
       <app-theme-toggle />
-      <p-button
-        label="הרשמה כמורה"
-        icon="pi pi-user-plus"
-        severity="secondary"
-        [outlined]="true"
-        routerLink="/register"
-        styleClass="btn-icon-only-sm"
-        ariaLabel="הרשמה כמורה"
-      />
-      <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
+      @if (homePath(); as home) {
+        <!-- מחוברת: הספרייה היא עוד מסך במערכת, לא יציאה ממנה -->
+        <p-button label="חזרה לחשבון שלי" icon="pi pi-arrow-left" [routerLink]="home" />
+      } @else {
+        <p-button
+          label="הרשמה כמורה"
+          icon="pi pi-user-plus"
+          severity="secondary"
+          [outlined]="true"
+          routerLink="/register"
+          styleClass="btn-icon-only-sm"
+          ariaLabel="הרשמה כמורה"
+        />
+        <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
+      }
     </div>
   </header>
 
   <!-- ===== רצועת פתיחה ===== -->
   <section class="library-hero aurora dot-grid">
-    <h2>המורה הפרטית הנכונה, בלי לחפש בקבוצות וואטסאפ</h2>
+    <h2>המורה הפרטית הנכונה, בלי לחפש המלצות</h2>
     <p>ספריית מורות פרטיות — לפי תחום, זמינות ומחיר. בלי הרשמה, בלי עמלות, ישירות מול המורה.</p>
 
     <div class="search-bar flex flex-wrap gap-2">
@@ -159,7 +164,7 @@
         </article>
         <article class="step" appReveal="0.25s">
           <h3>יוצרים קשר ישיר</h3>
-          <p>טלפון, וואטסאפ או מייל — כפי שהמורה בחרה לפרסם. אין צורך בחשבון כדי לפנות.</p>
+          <p>טלפון או מייל — כפי שהמורה בחרה לפרסם. אין צורך בחשבון כדי לפנות.</p>
         </article>
         <article class="step" appReveal="0.35s">
           <h3>מקבלים גישה למערכת</h3>
@@ -174,7 +179,7 @@
     <span class="section-eyebrow" appReveal>למורות פרטיות</span>
     <h2 class="section-title" appReveal="0.05s">כל הניהול במקום אחד</h2>
     <p class="section-lead" appReveal="0.1s">
-      יומן, מעקב פדגוגי, חיובים ותקשורת עם ההורים — במקום מחברת, אקסל וקבוצת וואטסאפ.
+      יומן, מעקב פדגוגי, חיובים ותקשורת עם ההורים — במקום מחברת, אקסל ופתקים מפוזרים.
     </p>
 
     <div class="bento">
@@ -208,7 +213,7 @@
       <article class="bento-item" appReveal="0.35s" style="--bento-tone: var(--p-purple-500)">
         <span class="bento-icon"><i class="pi pi-folder-open"></i></span>
         <h3>חומרי לימוד</h3>
-        <p>דף תרגול, סרטון או תיקייה בדרייב — נשלחים לתלמיד ולהורה ונשארים זמינים תמיד.</p>
+        <p>דף תרגול, קובץ או קישור — נשלחים לתלמיד ולהורה ונשארים זמינים תמיד.</p>
       </article>
     </div>
   </section>

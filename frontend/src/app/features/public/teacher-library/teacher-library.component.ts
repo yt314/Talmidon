@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -40,6 +41,10 @@ import { PublicService } from '../public.service';
   templateUrl: './teacher-library.component.html'
 })
 export class TeacherLibraryComponent implements OnInit {
+  private readonly auth = inject(AuthService);
+  /** יעד החזרה כשמישהי מחוברת, ו-null כשלא — הכותרת נגזרת מזה. */
+  protected readonly homePath = computed(() => (this.auth.isAuthenticated() ? this.auth.homePath() : null));
+
   private readonly publicService = inject(PublicService);
 
   protected readonly photoUrl = teacherPhotoUrl;
@@ -67,7 +72,7 @@ export class TeacherLibraryComponent implements OnInit {
     {
       question: 'איך יוצרים קשר עם מורה?',
       answer:
-        'בפרופיל של כל מורה מופיעים פרטי הקשר שהיא בחרה לפרסם — טלפון, וואטסאפ או מייל. הפנייה היא ישירה אליה.'
+        'בפרופיל של כל מורה מופיעים פרטי הקשר שהיא בחרה לפרסם — טלפון או מייל. הפנייה היא ישירה אליה.'
     },
     {
       question: 'אני מורה. איך מתחילים?',

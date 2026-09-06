@@ -6,15 +6,20 @@
     </a>
     <div class="flex align-items-center gap-2">
       <app-theme-toggle />
-      <p-button
-        label="הרשמה כמורה"
-        icon="pi pi-user-plus"
-        severity="secondary"
-        [outlined]="true"
-        routerLink="/register"
-        styleClass="btn-icon-only-sm"
-        ariaLabel="הרשמה כמורה" />
-      <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
+      @if (homePath(); as home) {
+        <!-- מחוברת: הפרופיל הציבורי הוא עוד מסך במערכת, לא יציאה ממנה -->
+        <p-button label="חזרה לחשבון שלי" icon="pi pi-arrow-left" [routerLink]="home" />
+      } @else {
+        <p-button
+          label="הרשמה כמורה"
+          icon="pi pi-user-plus"
+          severity="secondary"
+          [outlined]="true"
+          routerLink="/register"
+          styleClass="btn-icon-only-sm"
+          ariaLabel="הרשמה כמורה" />
+        <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
+      }
     </div>
   </header>
 
