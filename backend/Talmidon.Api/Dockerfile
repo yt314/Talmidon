@@ -19,6 +19,9 @@ RUN dotnet publish Talmidon.Api/Talmidon.Api.csproj -c Release -o /app --no-rest
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+# התמונה הזו היא תמונת הייצור. בלי הגדרה מפורשת, סביבה שנקבעת במקום אחר קובעת
+# התנהגות רגישה — לוח הבקרה של Hangfire ומסמכי ה-API נחשפים ללא הזדהות במצב פיתוח.
+ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 COPY --from=build /app .

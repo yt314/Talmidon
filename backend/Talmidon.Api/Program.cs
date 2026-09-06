@@ -87,9 +87,13 @@ const string ProductionOrigin = "https://talmidon.vercel.app";
 // "talmidon.vercel.app" הוא גם סופו של "eviltalmidon.vercel.app", ופרויקט בשם
 // כזה פתוח לכל אחד להקים ב-Vercel — הדפדפן היה מתיר לדף שלו לקרוא ל-API הזה
 // עם ה-token של המשתמשת. תצוגה מקדימה שצריכה גישה תתווסף לרשימה במפורש.
-var configuredOrigins = builder.Environment.IsDevelopment()
-    ? new string?[] { "http://localhost:4200" }
-    : new string?[] { Environment.GetEnvironmentVariable("APP_CLIENT_URL"), ProductionOrigin };
+// הכתובת החיה מותרת תמיד, בלי תלות בסביבה. כשהיא ישבה בענף הפרודקשן בלבד,
+// מופע שעלה בטעות כ-Development חסם את האתר האמיתי וחשף זאת כשגיאת CORS.
+var configuredOrigins = new List<string?> { ProductionOrigin, Environment.GetEnvironmentVariable("APP_CLIENT_URL") };
+if (builder.Environment.IsDevelopment())
+{
+    configuredOrigins.Add("http://localhost:4200");
+}
 
 var allowedOrigins = configuredOrigins
     .Where(origin => !string.IsNullOrWhiteSpace(origin))
