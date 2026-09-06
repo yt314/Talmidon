@@ -1,5 +1,8 @@
 <app-auth-layout headline="ניהול שיעורים פרטיים, במקום אחד">
-  <h2 class="mt-0 mb-3 text-xl">התחברות</h2>
+  <h2 class="mt-0 mb-1 text-xl">התחברות</h2>
+  <p class="mt-0 mb-3 text-sm text-color-secondary">
+    מורות, הורים ותלמידים — כולם נכנסים כאן.
+  </p>
 
   @if (confirmed()) {
     <p-message severity="success" text="כתובת המייל אומתה! אפשר להתחבר." styleClass="w-full mb-3" />
@@ -65,7 +68,10 @@
     <a routerLink="/forgot-password">שכחת סיסמה?</a>
   </div>
   <div class="mt-2 text-center text-sm">
-    אין לך חשבון? <a routerLink="/register">הרשמה כמורה</a>
+    מלמדת ואין לך עדיין חשבון? <a routerLink="/register">הרשמה כמורה</a>
+  </div>
+  <div class="mt-2 text-center text-sm text-color-secondary">
+    הורים ותלמידים מקבלים את פרטי הכניסה מהמורה — אין צורך בהרשמה.
   </div>
 
 </app-auth-layout>

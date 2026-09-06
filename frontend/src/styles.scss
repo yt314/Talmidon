@@ -178,6 +178,8 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* גלישה לשורה שנייה עדיפה על כפתור שנחתך מחוץ למסך */
+  flex-wrap: wrap;
   gap: 1rem;
   padding: 0.85rem 2rem;
   background: var(--p-talmidon-glass-background);
@@ -186,6 +188,42 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+/*
+ * בטלפון אין מקום לשתי תוויות מלאות לצד הלוגו ומתג הערכה, וכשנגמר המקום
+ * הכפתור האחרון נדחק אל מחוץ למסך. ההרשמה מצטמצמת לאייקון כדי שההתחברות —
+ * הדרך של הורים ותלמידים פנימה — תישאר שלמה ונגישה בלי גלילה.
+ */
+@media (max-width: 640px) {
+  .library-header {
+    padding: 0.7rem 1rem;
+    gap: 0.5rem;
+  }
+  .btn-icon-only-sm .p-button-label {
+    display: none;
+  }
+  .btn-icon-only-sm .p-button-icon {
+    margin: 0;
+  }
+}
+
+/* במסכים הצרים ביותר הלוגו מתכווץ כדי שהשורה תישאר אחת ולא תיגזל גובה */
+@media (max-width: 420px) {
+  .library-header {
+    padding: 0.7rem 0.75rem;
+  }
+  .library-header .brand {
+    font-size: 1rem;
+  }
+  .library-header .brand-mark {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  /* חוסך את ששת הפיקסלים שהפרידו בין שורה אחת לשתיים ברוחב 360 */
+  .library-header .p-button {
+    padding-inline: 0.75rem;
+  }
 }
 
 .library-content {

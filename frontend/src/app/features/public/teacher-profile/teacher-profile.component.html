@@ -6,7 +6,14 @@
     </a>
     <div class="flex align-items-center gap-2">
       <app-theme-toggle />
-      <p-button label="הרשמה כמורה" icon="pi pi-user-plus" severity="secondary" [outlined]="true" routerLink="/register" />
+      <p-button
+        label="הרשמה כמורה"
+        icon="pi pi-user-plus"
+        severity="secondary"
+        [outlined]="true"
+        routerLink="/register"
+        styleClass="btn-icon-only-sm"
+        ariaLabel="הרשמה כמורה" />
       <p-button label="התחברות" icon="pi pi-sign-in" routerLink="/login" />
     </div>
   </header>
