@@ -700,6 +700,11 @@ full-calendar {
 .lesson-cal-noshow {
   --lesson-tone: var(--p-purple-500);
 }
+/* אירוע אישי — גוון נפרד וקו מרוסק, כדי שלא ייקרא כשיעור בסריקה מהירה של השבוע */
+.lesson-cal-personal {
+  --lesson-tone: var(--p-cyan-600);
+  border-style: dashed !important;
+}
 
 full-calendar [class*="lesson-cal-"] {
   background: color-mix(in srgb, var(--lesson-tone) 16%, var(--p-content-background)) !important;

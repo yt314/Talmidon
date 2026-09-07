@@ -1,4 +1,4 @@
-export type CalendarEventKind = 'lesson' | 'request' | 'change-reschedule' | 'change-cancel';
+export type CalendarEventKind = 'lesson' | 'request' | 'change-reschedule' | 'change-cancel' | 'personal';
 
 export interface CalendarEventExtendedProps {
   kind: CalendarEventKind;
