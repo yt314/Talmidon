@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AdminTeacher } from './admin.models';
+import { AdminSubjectSuggestion, AdminTeacher } from './admin.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -19,5 +19,17 @@ export class AdminService {
 
   unlockTeacher(id: string): Observable<void> {
     return this.http.post<void>(`${this.api}/teachers/${id}/unlock`, {});
+  }
+
+  listSubjectSuggestions(): Observable<AdminSubjectSuggestion[]> {
+    return this.http.get<AdminSubjectSuggestion[]>(`${this.api}/subject-suggestions`);
+  }
+
+  addSubjectSuggestion(name: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/subject-suggestions`, { name });
+  }
+
+  hideSubjectSuggestion(name: string): Observable<void> {
+    return this.http.delete<void>(`${this.api}/subject-suggestions`, { params: { name } });
   }
 }

@@ -20,7 +20,8 @@ export class AdminShellComponent {
   protected readonly email = this.auth.currentEmail;
   private readonly router = inject(Router);
 
-  protected readonly menuItems: MenuItem[] = [{ label: 'מורות', icon: 'pi pi-users', routerLink: '/admin/teachers' }];
+  protected readonly menuItems: MenuItem[] = [{ label: 'מורות', icon: 'pi pi-users', routerLink: '/admin/teachers' },
+    { label: 'תחומי לימוד', icon: 'pi pi-tags', routerLink: '/admin/subjects' }];
 
   logout(): void {
     this.auth.logout();

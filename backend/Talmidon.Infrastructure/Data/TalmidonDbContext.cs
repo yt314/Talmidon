@@ -41,6 +41,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Note> Notes => Set<Note>();
     public DbSet<StudentResource> StudentResources => Set<StudentResource>();
     public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
+    public DbSet<SubjectSuggestion> SubjectSuggestions => Set<SubjectSuggestion>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
@@ -84,6 +85,13 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
 
             // המסך פותח על הפניות החדשות, מהחדשה לישנה
             e.HasIndex(c => new { c.TenantId, c.Status, c.CreatedAt });
+        });
+
+        builder.Entity<SubjectSuggestion>(e =>
+        {
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            // שם אחד בלבד ברשימה, בלי תלות באותיות גדולות/קטנות בצד היישום
+            e.HasIndex(x => x.Name).IsUnique();
         });
 
         builder.Entity<Teacher>(e =>

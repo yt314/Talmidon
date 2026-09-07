@@ -1,0 +1,84 @@
+<app-page-header
+  title="תחומי לימוד"
+  icon="pi-tags"
+  subtitle="הרשימה שמוצעת למורות בהשלמה האוטומטית. אפשר להוסיף תחום, ולהסתיר שם שנכנס בטעות." />
+
+<p-card class="block" [style]="{ 'max-width': '760px' }">
+  <div class="flex gap-2 flex-wrap mb-3">
+    <input
+      pInputText
+      type="text"
+      class="flex-1"
+      style="min-width: 220px"
+      placeholder="תחום חדש להצעה"
+      [ngModel]="newName()"
+      (ngModelChange)="newName.set($event)"
+      (keydown.enter)="add()" />
+    <p-button label="הוספה" icon="pi pi-plus" [disabled]="!newName().trim()" (onClick)="add()" />
+  </div>
+
+  <div class="flex gap-2 flex-wrap align-items-center mb-3">
+    <input
+      pInputText
+      type="text"
+      class="flex-1"
+      style="min-width: 200px"
+      placeholder="סינון הרשימה"
+      [ngModel]="search()"
+      (ngModelChange)="search.set($event)" />
+    <p-selectbutton
+      [options]="filterOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="filter()"
+      (ngModelChange)="filter.set($event)" />
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-line" style="height: 3rem"></div>
+    <div class="skeleton skeleton-line" style="height: 3rem"></div>
+  } @else if (visible().length === 0) {
+    <app-empty-state icon="pi-tags" title="אין תחומים להצגה" hint="אפשר לשנות את הסינון או להוסיף תחום חדש." />
+  } @else {
+    <ul class="subject-admin-list">
+      @for (row of visible(); track row.name) {
+        <li [class.is-hidden]="row.isHidden">
+          <span class="subject-admin-name">{{ row.name }}</span>
+
+          @if (row.isBuiltIn) {
+            <p-tag value="קטלוג קבוע" severity="secondary" />
+          }
+          @if (row.isInUse) {
+            <p-tag value="בשימוש" severity="info" />
+          }
+          @if (row.isHidden) {
+            <p-tag value="מוסתר" severity="warn" />
+          }
+
+          @if (row.isHidden) {
+            <p-button
+              label="החזרה"
+              icon="pi pi-undo"
+              severity="secondary"
+              [text]="true"
+              size="small"
+              [loading]="busy() === row.name"
+              (onClick)="restore(row)" />
+          } @else if (!row.isBuiltIn) {
+            <p-button
+              icon="pi pi-eye-slash"
+              severity="danger"
+              [text]="true"
+              size="small"
+              pTooltip="הסתרה מרשימת ההצעות"
+              tooltipPosition="top"
+              ariaLabel="הסתרה"
+              [loading]="busy() === row.name"
+              (onClick)="hide(row)" />
+          }
+        </li>
+      }
+    </ul>
+  }
+</p-card>

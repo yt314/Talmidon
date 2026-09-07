@@ -143,6 +143,10 @@ export const routes: Routes = [
       {
         path: 'teachers',
         loadComponent: () => import('./features/admin/admin-teachers/admin-teachers.component').then(m => m.AdminTeachersComponent)
+      },
+      {
+        path: 'subjects',
+        loadComponent: () => import('./features/admin/admin-subjects/admin-subjects.component').then(m => m.AdminSubjectsComponent)
       }
     ]
   },

@@ -1425,6 +1425,37 @@ full-calendar th {
   gap: 1rem;
 }
 
+/* ------------------------------------------- ניהול תחומי לימוד ---- */
+
+.subject-admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.subject-admin-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--p-border-radius-md);
+  background: var(--p-talmidon-app-background);
+}
+/* מוסתר נשאר קריא אך מעומעם — הוא עדיין ברשימה, רק לא מוצע */
+.subject-admin-list li.is-hidden .subject-admin-name {
+  color: var(--p-text-muted-color);
+  text-decoration: line-through;
+  text-decoration-color: var(--p-content-border-color);
+}
+.subject-admin-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ------------------------------------------------- צעדי התחלה ---- */
 
 .onboarding {
@@ -1533,21 +1564,35 @@ full-calendar th {
   border-color: var(--p-primary-color);
   color: var(--p-text-color);
 }
-.quick-search-trigger kbd {
+/* במסך צר נשאר האייקון בלבד — הסרגל צפוף ממילא */
+@media (max-width: 900px) {
+  .quick-search-trigger-label {
+    display: none;
+  }
+}
+
+/* שורת הקיצורים בתחתית החלון, במקום על הכפתור שבסרגל */
+.quick-search-hintbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  padding: 0.5rem 0.7rem 0.2rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
+}
+.quick-search-hintbar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.quick-search-hintbar kbd {
   padding: 0.05rem 0.35rem;
   border-radius: var(--p-border-radius-sm);
   background: var(--p-talmidon-app-background);
   border: 1px solid var(--p-content-border-color);
-  font-size: 0.7rem;
   font-family: inherit;
+  font-size: 0.7rem;
   direction: ltr;
-}
-/* במסך צר נשאר האייקון בלבד — הסרגל צפוף ממילא */
-@media (max-width: 900px) {
-  .quick-search-trigger-label,
-  .quick-search-trigger kbd {
-    display: none;
-  }
 }
 
 /* יושב גבוה ולא במרכז: העין כבר שם, והרשימה גדלה כלפי מטה בלי לקפוץ */

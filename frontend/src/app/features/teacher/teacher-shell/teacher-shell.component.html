@@ -3,7 +3,12 @@
   <p-confirmdialog />
 
   <header class="app-shell-topbar">
-    <p-menubar [model]="menuItems">
+    <!--
+      מתקפל להמבורגר מתחת ל-1200 ולא ל-960: שבעה פריטים לצד הלוגו, החיפוש,
+      הפעמון ותפריט המשתמשת אינם נכנסים לשורה אחת ברוחבי הביניים, והתפריט
+      נשבר לשתי שורות במקום להתקפל.
+    -->
+    <p-menubar [model]="menuItems" breakpoint="1200px">
       <ng-template pTemplate="start">
         <a routerLink="/" class="brand ml-3">
           <span class="brand-mark"><i class="pi pi-graduation-cap"></i></span>

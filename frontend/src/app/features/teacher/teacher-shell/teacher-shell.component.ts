@@ -57,9 +57,8 @@ export class TeacherShellComponent implements OnInit {
     { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/app/payments' },
     { label: 'דוחות', icon: 'pi pi-chart-bar', routerLink: '/app/reports' },
     { label: 'פניות', icon: 'pi pi-inbox', routerLink: '/app/contact-requests' },
-    { label: 'ספריית המורות', icon: 'pi pi-book', routerLink: '/' },
-    // שתי מסכי ההגדרות מקובצים לתפריט משנה — שבעה פריטים ברצף שברו את הסרגל
-    // לשתי שורות על מסך רגיל.
+    // שתי מסכי ההגדרות מקובצים לתפריט משנה — פריטים רבים ברצף שברו את הסרגל
+    // לשתי שורות. ספריית המורות ירדה מכאן: הלוגו שמשמאל כבר מוביל אליה.
     {
       label: 'הגדרות',
       icon: 'pi pi-cog',
