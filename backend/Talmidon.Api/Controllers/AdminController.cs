@@ -82,7 +82,8 @@ public class AdminController(TalmidonDbContext db, UserManager<ApplicationUser> 
     {
         var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == teacherId);
         return teacher is null ? null : await userManager.FindByIdAsync(teacher.UserId);
-    
+    }
+
     // ===== ניהול הצעות תחומי לימוד =====
 
     /// <summary>
@@ -180,5 +181,4 @@ public class AdminController(TalmidonDbContext db, UserManager<ApplicationUser> 
 
     private async Task<SubjectSuggestion?> FindSuggestionAsync(string name) =>
         await db.SubjectSuggestions.FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
-}
 }
