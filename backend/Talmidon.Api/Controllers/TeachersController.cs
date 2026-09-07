@@ -37,6 +37,7 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
                 t.FullName,
                 t.Phone,
                 t.ContactEmail,
+                t.ContactInfo,
                 t.City,
                 t.Neighborhood,
                 t.Bio,
@@ -59,7 +60,7 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
             row.PhotoLength,
             TeacherProfileRules.IsComplete(
                 row.Subjects.Count, row.DefaultPricePerLesson,
-                row.Phone, row.ContactEmail)));
+                row.Phone, row.ContactEmail, row.ContactInfo)));
     }
 
     [HttpPut("me")]
@@ -140,9 +141,18 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
             .Distinct()
             .ToListAsync();
 
+        var curated = await db.SubjectSuggestions.ToListAsync();
+        var hidden = curated
+            .Where(x => x.IsHidden)
+            .Select(x => x.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         var all = SubjectCatalog.Common
             .Concat(inUse)
+            .Concat(curated.Where(x => !x.IsHidden).Select(x => x.Name))
             .Distinct(StringComparer.OrdinalIgnoreCase)
+            // מה שהמנהל הסתיר יורד גם אם מורה כלשהי כבר הזינה אותו
+            .Where(n => !hidden.Contains(n))
             .OrderBy(n => n, StringComparer.CurrentCulture)
             .ToList();
 

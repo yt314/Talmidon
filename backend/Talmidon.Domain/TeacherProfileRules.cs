@@ -18,10 +18,16 @@ public static class TeacherProfileRules
         int subjectCount,
         decimal defaultPricePerLesson,
         string? phone,
-        string? contactEmail) =>
+        string? contactEmail,
+        string? legacyContactInfo) =>
         subjectCount > 0
         && defaultPricePerLesson > 0
         // די בדרך אחת ליצור קשר, ומורה שמילאה אחת מהן אינה אמורה להיתקע
         // במסך ההקמה בגלל השנייה.
-        && (!string.IsNullOrWhiteSpace(phone) || !string.IsNullOrWhiteSpace(contactEmail));
+        //
+        // הטקסט החופשי הישן עדיין נספר, אף שאינו נערך יותר: מורה שהשלימה את
+        // הפרופיל לפניו הייתה מוצאת אותו לא-מלא פתאום, ונשלחת להקמה בכל כניסה.
+        && (!string.IsNullOrWhiteSpace(phone)
+            || !string.IsNullOrWhiteSpace(contactEmail)
+            || !string.IsNullOrWhiteSpace(legacyContactInfo));
 }

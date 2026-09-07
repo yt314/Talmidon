@@ -125,7 +125,10 @@ export class TeacherLibraryComponent implements OnInit {
     const city = this.selectedCity();
     return this.allTeachers().filter(
       teacher =>
-        (!search || teacher.fullName.toLowerCase().includes(search)) &&
+        // שם, עיר ושכונה באותו שדה: הורה מקליד "רמות" ולא חושב אם זו עיר או שכונה
+        (!search ||
+          [teacher.fullName, teacher.city, teacher.neighborhood]
+            .some(v => v?.toLowerCase().includes(search))) &&
         (!subject || teacher.subjects.includes(subject)) &&
         (!city || teacher.city === city)
     );

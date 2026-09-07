@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
+using Talmidon.Domain;
+using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Identity;
@@ -81,4 +83,102 @@ public class AdminController(TalmidonDbContext db, UserManager<ApplicationUser> 
         var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == teacherId);
         return teacher is null ? null : await userManager.FindByIdAsync(teacher.UserId);
     }
+
+    // ===== ניהול הצעות תחומי לימוד =====
+
+    /// <summary>
+    /// רשימת ההצעות כפי שמורה רואה אותן, עם סימון מה ניתן להסתיר. הקטלוג הקבוע
+    /// מסומן בנפרד כי הוא חלק מהקוד ולא ניתן להסרה מכאן.
+    /// </summary>
+    [HttpGet("subject-suggestions")]
+    public async Task<ActionResult<IEnumerable<AdminSubjectSuggestionDto>>> ListSubjectSuggestions()
+    {
+        var inUse = await db.TeacherSubjects
+            .Select(s => s.Name)
+            .Distinct()
+            .ToListAsync();
+        var curated = await db.SubjectSuggestions.ToListAsync();
+
+        var hidden = curated
+            .Where(x => x.IsHidden)
+            .Select(x => x.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var builtIn = SubjectCatalog.Common.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var rows = SubjectCatalog.Common
+            .Concat(inUse)
+            .Concat(curated.Select(x => x.Name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(n => n, StringComparer.CurrentCulture)
+            .Select(name => new AdminSubjectSuggestionDto(
+                name,
+                hidden.Contains(name),
+                builtIn.Contains(name),
+                inUse.Contains(name, StringComparer.OrdinalIgnoreCase)))
+            .ToList();
+
+        return Ok(rows);
+    }
+
+    [HttpPost("subject-suggestions")]
+    public async Task<IActionResult> AddSubjectSuggestion(AdminSubjectSuggestionRequest request)
+    {
+        var name = request.Name.Trim();
+        if (name.Length == 0) return BadRequest(new { message = "שם ריק." });
+
+        var existing = await FindSuggestionAsync(name);
+        if (existing is null)
+        {
+            db.SubjectSuggestions.Add(new SubjectSuggestion
+            {
+                Id = Guid.NewGuid(),
+                Name = name,
+                IsHidden = false,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+        }
+        else
+        {
+            // הוספה מחדש של שם שהוסתר פשוט מבטלת את ההסתרה
+            existing.IsHidden = false;
+        }
+
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    /// <summary>
+    /// מסתיר שם מרשימת ההצעות. אינו נוגע בפרופילים: מורה שכבר בחרה בתחום שומרת
+    /// אותו, והוא פשוט לא מוצע יותר לאחרות.
+    /// </summary>
+    [HttpDelete("subject-suggestions")]
+    public async Task<IActionResult> HideSubjectSuggestion([FromQuery] string name)
+    {
+        var trimmed = (name ?? string.Empty).Trim();
+        if (trimmed.Length == 0) return BadRequest(new { message = "שם ריק." });
+        if (SubjectCatalog.Common.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
+            return BadRequest(new { message = "תחום מהקטלוג הקבוע אינו ניתן להסתרה." });
+
+        var existing = await FindSuggestionAsync(trimmed);
+        if (existing is null)
+        {
+            db.SubjectSuggestions.Add(new SubjectSuggestion
+            {
+                Id = Guid.NewGuid(),
+                Name = trimmed,
+                IsHidden = true,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+        }
+        else
+        {
+            existing.IsHidden = true;
+        }
+
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    private async Task<SubjectSuggestion?> FindSuggestionAsync(string name) =>
+        await db.SubjectSuggestions.FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
 }

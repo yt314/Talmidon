@@ -2,6 +2,7 @@ import { DOCUMENT, Component, ChangeDetectionStrategy, HostListener, computed, e
 import { Router, RouterLink } from '@angular/router';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
+import { TooltipModule } from 'primeng/tooltip';
 import { StudentsService } from '../../features/students/students.service';
 import { getInitials, getAvatarColor } from '../avatar/avatar.util';
 
@@ -34,13 +35,22 @@ const SCREENS: { label: string; icon: string; path: string; keywords: string }[]
  */
 @Component({
   selector: 'app-quick-search',
-  imports: [DialogModule, InputTextModule, RouterLink],
+  imports: [DialogModule, InputTextModule, TooltipModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button type="button" class="quick-search-trigger" (click)="open()" aria-label="חיפוש מהיר">
+    <!--
+      בלי תווית הקיצור: הסרגל ברוחב קבוע, והצ'יפ דחף את התפריט לשורה שנייה.
+      הקיצור מופיע בטולטיפ ובתוך החלון עצמו.
+    -->
+    <button
+      type="button"
+      class="quick-search-trigger"
+      (click)="open()"
+      aria-label="חיפוש מהיר"
+      pTooltip="חיפוש מהיר · Ctrl+K"
+      tooltipPosition="bottom">
       <i class="pi pi-search"></i>
       <span class="quick-search-trigger-label">חיפוש</span>
-      <kbd>Ctrl K</kbd>
     </button>
 
     <!-- נבנה רק כשהוא פתוח: רשימת התוצאות אינה מרונדרת ברקע בכל מסך במערכת -->
@@ -65,6 +75,12 @@ const SCREENS: { label: string; icon: string; path: string; keywords: string }[]
           [value]="term()"
           (input)="term.set($any($event.target).value)"
           (keydown)="onKey($event)" />
+      </div>
+
+      <div class="quick-search-hintbar">
+        <span><kbd>↑</kbd><kbd>↓</kbd> לניווט</span>
+        <span><kbd>Enter</kbd> לפתיחה</span>
+        <span><kbd>Esc</kbd> לסגירה</span>
       </div>
 
       @if (results().length === 0) {
