@@ -5,6 +5,7 @@ import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, Validat
 import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextModule } from 'primeng/inputtext';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -35,6 +36,8 @@ import {
   LessonStatus
 } from '../lessons.models';
 import { LessonsService } from '../lessons.service';
+import { CalendarEventsService } from '../calendar-events.service';
+import { CalendarEventItem } from '../calendar-events.models';
 
 @Component({
   selector: 'app-lessons-list',
@@ -44,6 +47,7 @@ import { LessonsService } from '../lessons.service';
     PrimeTemplate,
     ButtonModule,
     CheckboxModule,
+    InputTextModule,
     DatePickerModule,
     DialogModule,
     InputNumberModule,
@@ -57,6 +61,7 @@ import { LessonsService } from '../lessons.service';
 export class LessonsListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly lessonsService = inject(LessonsService);
+  private readonly calendarEventsService = inject(CalendarEventsService);
   private readonly studentsService = inject(StudentsService);
   private readonly profileService = inject(TeacherProfileService);
   private readonly route = inject(ActivatedRoute);
@@ -104,6 +109,11 @@ export class LessonsListComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly students = signal<StudentListItem[]>([]);
 
+  protected readonly personalEvents = signal<CalendarEventItem[]>([]);
+  protected readonly showEventDialog = signal(false);
+  protected readonly editingEventId = signal<string | null>(null);
+  protected readonly savingEvent = signal(false);
+
   protected readonly changeRequests = signal<ChangeRequest[]>([]);
   protected readonly changeRequestsLoading = signal(true);
 
@@ -114,7 +124,7 @@ export class LessonsListComponent implements OnInit {
     const filter = this.studentFilter();
     const lessons = filter ? this.lessons().filter(l => l.studentId === filter) : this.lessons();
     const requests = filter ? this.changeRequests().filter(r => r.studentId === filter) : this.changeRequests();
-    return buildTeacherCalendarEvents(lessons, requests);
+    return buildTeacherCalendarEvents(lessons, requests, this.personalEvents());
   });
 
   /** שיעורים שהמועד שלהם עבר ועדיין "מתוזמן" — ממתינים לסימום (התקיים/בוטל). */
@@ -165,6 +175,23 @@ export class LessonsListComponent implements OnInit {
     { validators: endAfterStartValidator('startTime', 'endTime') }
   );
 
+  protected readonly eventForm = this.fb.nonNullable.group(
+    {
+      title: ['', [Validators.required, Validators.maxLength(200)]],
+      date: this.fb.control<Date | null>(null, Validators.required),
+      endDate: this.fb.control<Date | null>(null),
+      startTime: this.fb.control<Date | null>(null),
+      endTime: this.fb.control<Date | null>(null),
+      isAllDay: [false],
+      notes: ['', [Validators.maxLength(2000)]]
+    },
+    // בדיקת סדר השעות רלוונטית רק לאירוע עם שעות; ביום שלם השדות ריקים ממילא
+    {
+      validators: group =>
+        group.get('isAllDay')!.value ? null : endAfterStartValidator('startTime', 'endTime')(group)
+    }
+  );
+
   protected readonly timeForm = this.fb.nonNullable.group(
     {
       date: this.fb.control<Date | null>(null, Validators.required),
@@ -190,6 +217,7 @@ export class LessonsListComponent implements OnInit {
   ngOnInit(): void {
     this.loadLessons();
     this.loadChangeRequests();
+    this.loadPersonalEvents();
     this.studentsService.list().subscribe(students => {
       this.students.set(students);
       this.openFromQueryParam();
@@ -248,6 +276,12 @@ export class LessonsListComponent implements OnInit {
 
   /** גרירת שיעור ללוח (רק מתוזמן ניתן לגרירה — נאכף ב-lesson-calendar.util). מבקש אישור לפני שמירה בפועל. */
   onEventDropped(drop: CalendarEventDrop): void {
+    const personal = this.personalEvents().find(e => e.id === drop.refId);
+    if (personal) {
+      this.movePersonalEvent(personal, drop);
+      return;
+    }
+
     const lesson = this.lessons().find(l => l.id === drop.refId);
     if (!lesson) {
       drop.revert();
@@ -281,6 +315,12 @@ export class LessonsListComponent implements OnInit {
 
   /** גרירת קצה השיעור לשינוי משך (רק שיעור "מתוזמן" ניתן לכך — נאכף ב-lesson-calendar.util). מבקש אישור לפני שמירה בפועל. */
   onEventResized(resize: CalendarEventDrop): void {
+    const personal = this.personalEvents().find(e => e.id === resize.refId);
+    if (personal) {
+      this.movePersonalEvent(personal, resize);
+      return;
+    }
+
     const lesson = this.lessons().find(l => l.id === resize.refId);
     if (!lesson) {
       resize.revert();
@@ -323,6 +363,11 @@ export class LessonsListComponent implements OnInit {
         }
         break;
       }
+      case 'personal': {
+        const item = this.personalEvents().find(e => e.id === props.refId);
+        if (item) this.openEventDialog(item);
+        break;
+      }
       case 'change-reschedule':
       case 'change-cancel': {
         const request = this.changeRequests().find(r => r.id === props.refId);
@@ -333,6 +378,148 @@ export class LessonsListComponent implements OnInit {
         break;
       }
     }
+  }
+
+  // ===== אירועים אישיים ביומן =====
+
+  /**
+   * פותח את חלון האירוע — ריק להוספה, או מלא לעריכה.
+   *
+   * באירוע של יום שלם השרת מחזיק "סוף בלעדי" (חצות של היום שאחרי), ולכן בתצוגה מחסירים
+   * יום אחד; אחרת אירוע של יום אחד היה נראה בטופס כנמשך יומיים.
+   */
+  openEventDialog(item?: CalendarEventItem): void {
+    if (item) {
+      const start = new Date(item.startTime);
+      const end = new Date(item.endTime);
+      const lastDay = item.isAllDay ? new Date(end.getTime() - 24 * 60 * 60 * 1000) : end;
+      this.editingEventId.set(item.id);
+      this.eventForm.reset({
+        title: item.title,
+        date: start,
+        endDate: item.isAllDay && lastDay.toDateString() !== start.toDateString() ? lastDay : null,
+        startTime: item.isAllDay ? null : start,
+        endTime: item.isAllDay ? null : end,
+        isAllDay: item.isAllDay,
+        notes: item.notes ?? ''
+      });
+    } else {
+      // היומן מציג 07:00–22:00, ולכן ברירת המחדל נשארת בתוך החלון הזה: אירוע
+      // ב-23:00 היה נשמר כשורה שהמורה אינה רואה בשום תצוגה.
+      const start = new Date();
+      start.setMinutes(0, 0, 0);
+      start.setHours(start.getHours() + 1);
+      if (start.getHours() < 7 || start.getHours() > 20) {
+        if (start.getHours() > 20) start.setDate(start.getDate() + 1);
+        start.setHours(9);
+      }
+      this.editingEventId.set(null);
+      this.eventForm.reset({
+        title: '',
+        date: start,
+        endDate: null,
+        startTime: start,
+        endTime: new Date(start.getTime() + 60 * 60 * 1000),
+        isAllDay: false,
+        notes: ''
+      });
+    }
+    this.showEventDialog.set(true);
+  }
+
+  saveEvent(): void {
+    if (this.eventForm.invalid) {
+      this.eventForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.eventForm.getRawValue();
+    const day = raw.date!;
+    let start: Date;
+    let end: Date;
+
+    if (raw.isAllDay) {
+      start = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+      const last = raw.endDate && raw.endDate > day ? raw.endDate : day;
+      // סוף בלעדי: חצות של היום שאחרי האחרון, כך שיום אחד נמשך בדיוק 24 שעות
+      end = new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1);
+    } else {
+      if (!raw.startTime || !raw.endTime) {
+        this.eventForm.markAllAsTouched();
+        return;
+      }
+      start = combineDateTime(day, raw.startTime);
+      end = combineDateTime(day, raw.endTime);
+    }
+
+    const request = {
+      title: raw.title.trim(),
+      startTime: start.toISOString(),
+      endTime: end.toISOString(),
+      isAllDay: raw.isAllDay,
+      notes: raw.notes.trim() || null
+    };
+
+    this.savingEvent.set(true);
+    const id = this.editingEventId();
+    const call = id
+      ? this.calendarEventsService.update(id, request)
+      : this.calendarEventsService.create(request);
+
+    call.subscribe({
+      next: () => {
+        this.savingEvent.set(false);
+        this.showEventDialog.set(false);
+        this.loadPersonalEvents();
+        this.messageService.add({ severity: 'success', summary: id ? 'האירוע עודכן' : 'האירוע נוסף' });
+      },
+      error: err => {
+        this.savingEvent.set(false);
+        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'שמירת האירוע נכשלה.') });
+      }
+    });
+  }
+
+  deleteEvent(): void {
+    const id = this.editingEventId();
+    if (!id) return;
+
+    this.confirmationService.confirm({
+      header: 'מחיקת אירוע',
+      message: 'למחוק את האירוע מהיומן?',
+      acceptLabel: 'מחיקה',
+      rejectLabel: 'ביטול',
+      accept: () => {
+        this.calendarEventsService.remove(id).subscribe({
+          next: () => {
+            this.showEventDialog.set(false);
+            this.loadPersonalEvents();
+            this.messageService.add({ severity: 'success', summary: 'האירוע נמחק' });
+          },
+          error: err =>
+            this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'מחיקת האירוע נכשלה.') })
+        });
+      }
+    });
+  }
+
+  /** גרירת אירוע אישי — נשמר מיד, בלי אישור: אין לו הורה שצריך לעדכן. */
+  private movePersonalEvent(item: CalendarEventItem, change: CalendarEventDrop): void {
+    this.calendarEventsService
+      .update(item.id, {
+        title: item.title,
+        startTime: change.start.toISOString(),
+        endTime: change.end.toISOString(),
+        isAllDay: item.isAllDay,
+        notes: item.notes
+      })
+      .subscribe({
+        next: () => this.loadPersonalEvents(),
+        error: err => {
+          change.revert();
+          this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'עדכון האירוע נכשל.') });
+        }
+      });
   }
 
   lessonDetailApprove(): void {
@@ -750,6 +937,13 @@ export class LessonsListComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
+    });
+  }
+
+  private loadPersonalEvents(): void {
+    this.calendarEventsService.list().subscribe({
+      next: events => this.personalEvents.set(events),
+      error: () => undefined
     });
   }
 

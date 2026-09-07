@@ -1,5 +1,6 @@
 import { EventInput } from 'fullcalendar';
 import { CalendarEventExtendedProps } from '../../shared/calendar/lesson-calendar.model';
+import { CalendarEventItem } from './calendar-events.models';
 import {
   ChangeRequest,
   ChangeRequestType,
@@ -40,7 +41,30 @@ export function lessonToCalendarEvent(lesson: Lesson): EventInput {
  * לאישור" (מקווקו). בקשת ביטול מוצגת על גבי בלוק השיעור המקורי; בקשת שינוי מועד מוצגת כבלוק-רפאים נוסף במועד
  * המוצע, לצד השיעור המקורי שנשאר במקומו עד לאישור.
  */
-export function buildTeacherCalendarEvents(lessons: Lesson[], pendingChangeRequests: ChangeRequest[]): EventInput[] {
+/**
+ * אירוע אישי (לא שיעור). מסומן חזותית אחרת כדי שלא ייראה כשיעור, וניתן לגרירה —
+ * פגישה שנדחתה בשעה היא בדיוק המקרה שבשבילו קיימת הגרירה.
+ */
+export function personalEventToCalendarEvent(item: CalendarEventItem): EventInput {
+  const extendedProps: CalendarEventExtendedProps = { kind: 'personal', refId: item.id };
+  return {
+    id: `personal-${item.id}`,
+    title: `📌 ${item.title}`,
+    start: item.startTime,
+    end: item.endTime,
+    allDay: item.isAllDay,
+    className: 'lesson-cal-personal',
+    startEditable: true,
+    durationEditable: !item.isAllDay,
+    extendedProps
+  };
+}
+
+export function buildTeacherCalendarEvents(
+  lessons: Lesson[],
+  pendingChangeRequests: ChangeRequest[],
+  personalEvents: CalendarEventItem[] = []
+): EventInput[] {
   const cancelRequestByLessonId = new Map(
     pendingChangeRequests.filter(r => r.type === ChangeRequestType.Cancel).map(r => [r.lessonId, r] as const)
   );
@@ -79,5 +103,5 @@ export function buildTeacherCalendarEvents(lessons: Lesson[], pendingChangeReque
     };
   });
 
-  return [...lessonEvents, ...rescheduleGhosts];
+  return [...lessonEvents, ...rescheduleGhosts, ...personalEvents.map(personalEventToCalendarEvent)];
 }

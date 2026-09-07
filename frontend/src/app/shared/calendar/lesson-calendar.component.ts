@@ -44,6 +44,12 @@ export class LessonCalendarComponent {
    */
   readonly editable = input(false);
   readonly initialView = input<'timeGridWeek' | 'dayGridMonth'>('timeGridWeek');
+  /**
+   * שורת "יום שלם" בראש התצוגה. כבויה כברירת מחדל כדי לא לגזול גובה במסכים שאין בהם
+   * אירועי יום שלם (פורטל ההורה והתלמיד); ביומן המורה היא נדרשת, אחרת אירוע של יום שלם
+   * פשוט לא היה מוצג בשום מקום.
+   */
+  readonly allDaySlot = input(false);
   /** שעות עבודה להדגשה (FullCalendar businessHours). ריק/undefined = ללא הדגשה. */
   readonly businessHours = input<{ daysOfWeek: number[]; startTime: string; endTime: string }[] | undefined>(undefined);
 
@@ -91,7 +97,7 @@ export class LessonCalendarComponent {
     slotMinHeight: 26,
     eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
     // שורת "כל היום" תמיד ריקה כאן — לשיעור יש תמיד שעה — והיא רק גזלה גובה
-    allDaySlot: false,
+    allDaySlot: this.allDaySlot(),
     // כותרת עמודה בשתי שורות — אות היום מעל מספר התאריך, במקום "יום ג׳ ה-1"
     // בשורה אחת. ‎dayHeaderFormat‎ לבדו לא מספיק כי הוא מייצר מחרוזת אחת ואי אפשר
     // לעצב את שני החלקים בנפרד.

@@ -37,6 +37,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Lesson> Lessons => Set<Lesson>();
     public DbSet<LessonSeries> LessonSeries => Set<LessonSeries>();
     public DbSet<LessonChangeRequest> LessonChangeRequests => Set<LessonChangeRequest>();
+    public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Note> Notes => Set<Note>();
     public DbSet<StudentResource> StudentResources => Set<StudentResource>();
@@ -71,6 +72,20 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
 
     private static void ConfigureTeacher(ModelBuilder builder)
     {
+        builder.Entity<CalendarEvent>(e =>
+        {
+            e.Property(c => c.Title).HasMaxLength(200).IsRequired();
+            e.Property(c => c.Notes).HasMaxLength(2000);
+
+            e.HasOne(c => c.Teacher)
+                .WithMany()
+                .HasForeignKey(c => c.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // היומן נטען תמיד לטווח תאריכים של דייר אחד
+            e.HasIndex(c => new { c.TenantId, c.StartTime });
+        });
+
         builder.Entity<ContactRequest>(e =>
         {
             e.Property(c => c.FullName).HasMaxLength(200).IsRequired();

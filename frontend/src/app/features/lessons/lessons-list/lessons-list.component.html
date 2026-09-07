@@ -8,6 +8,7 @@
     placeholder="כל התלמידים"
     [showClear]="true"
     styleClass="w-15rem" />
+  <p-button label="אירוע אחר" icon="pi pi-bookmark" severity="secondary" [outlined]="true" (onClick)="openEventDialog()" />
   <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
 </app-page-header>
 
@@ -28,6 +29,7 @@
   <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-cancelled"></span> בוטל</span>
   <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-declined"></span> נדחה</span>
   <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-noshow"></span> לא הגיע</span>
+  <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-personal"></span> אירוע אחר</span>
 </div>
 
 @if (availabilitySummary().length > 0) {
@@ -42,6 +44,7 @@
 
 <div class="calendar-card">
   <app-lesson-calendar
+    [allDaySlot]="true"
     [events]="calendarEvents()"
     [businessHours]="businessHours()"
     [selectable]="true"
@@ -415,4 +418,142 @@
     <p-button label="סגירה" severity="secondary" [text]="true" (onClick)="showCancelSeriesDialog.set(false)" />
     <p-button label="בטל סדרה" severity="danger" [loading]="cancellingSeries()" (onClick)="confirmCancelSeries()" />
   </div>
+</p-dialog>
+
+<p-dialog
+  [header]="editingEventId() ? 'עריכת אירוע' : 'אירוע חדש'"
+  [(visible)]="showEventDialog"
+  [modal]="true"
+  [style]="{ width: '440px' }"
+>
+  <form [formGroup]="eventForm" (ngSubmit)="saveEvent()">
+    <div class="field">
+      <label for="e-title">כותרת *</label>
+      <input
+        pInputText
+        id="e-title"
+        formControlName="title"
+        class="w-full"
+        placeholder="פגישה, חופשה, יום חסום…"
+        [invalid]="isInvalid(eventForm.controls.title)"
+      />
+      @if (fieldError(eventForm.controls.title); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="e-allday" formControlName="isAllDay" [binary]="true" />
+      <label for="e-allday" class="m-0">יום שלם</label>
+    </div>
+
+    <div class="field">
+      <label for="e-date">{{ eventForm.controls.isAllDay.value ? 'מתאריך *' : 'תאריך *' }}</label>
+      <p-datepicker
+        inputId="e-date"
+        formControlName="date"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(eventForm.controls.date)"
+      />
+      @if (fieldError(eventForm.controls.date); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    @if (eventForm.controls.isAllDay.value) {
+      <div class="field">
+        <label for="e-enddate">עד תאריך</label>
+        <p-datepicker
+          inputId="e-enddate"
+          formControlName="endDate"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [appendTo]="'body'"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+        />
+        <small class="block mt-1" style="color: var(--p-text-muted-color)">
+          אפשר להשאיר ריק לאירוע של יום אחד.
+        </small>
+      </div>
+    } @else {
+      <div class="flex gap-3">
+        <div class="field flex-1">
+          <label for="e-start">שעת התחלה *</label>
+          <p-datepicker
+            #eStart
+            inputId="e-start"
+            formControlName="startTime"
+            [timeOnly]="true"
+            hourFormat="24"
+            [appendTo]="'body'"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+          >
+            <ng-template pTemplate="footer">
+              <div class="flex justify-content-end p-2 pt-0">
+                <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="eStart.toggle()" />
+              </div>
+            </ng-template>
+          </p-datepicker>
+        </div>
+        <div class="field flex-1">
+          <label for="e-end">שעת סיום *</label>
+          <p-datepicker
+            #eEnd
+            inputId="e-end"
+            formControlName="endTime"
+            [timeOnly]="true"
+            hourFormat="24"
+            [appendTo]="'body'"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+          >
+            <ng-template pTemplate="footer">
+              <div class="flex justify-content-end p-2 pt-0">
+                <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="eEnd.toggle()" />
+              </div>
+            </ng-template>
+          </p-datepicker>
+        </div>
+      </div>
+      @if (eventForm.errors?.['endBeforeStart']) {
+        <small class="text-red-500 block mb-3">שעת הסיום חייבת להיות אחרי שעת ההתחלה.</small>
+      }
+    }
+
+    <div class="field">
+      <label for="e-notes">הערה</label>
+      <textarea pTextarea id="e-notes" formControlName="notes" rows="2" class="w-full"></textarea>
+    </div>
+
+    <div class="flex justify-content-between align-items-center gap-2 mt-3">
+      @if (editingEventId()) {
+        <p-button
+          label="מחיקה"
+          icon="pi pi-trash"
+          severity="danger"
+          [text]="true"
+          type="button"
+          (onClick)="deleteEvent()"
+        />
+      } @else {
+        <span></span>
+      }
+      <div class="flex gap-2">
+        <p-button
+          label="ביטול"
+          severity="secondary"
+          [text]="true"
+          type="button"
+          (onClick)="showEventDialog.set(false)"
+        />
+        <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingEvent()" />
+      </div>
+    </div>
+  </form>
 </p-dialog>
