@@ -19,6 +19,7 @@ import { ShareProfileComponent } from '../../../shared/ui/share-profile.componen
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { AvailabilityWindow, TeacherProfile } from './profile.models';
 import { TeacherProfileService } from './profile.service';
+import { ProfileSetupService } from '../profile-setup/profile-setup.service';
 
 @Component({
   selector: 'app-teacher-profile-settings',
@@ -41,6 +42,7 @@ import { TeacherProfileService } from './profile.service';
 export class TeacherProfileSettingsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly profileService = inject(TeacherProfileService);
+  private readonly setup = inject(ProfileSetupService);
   private readonly messageService = inject(MessageService);
 
   protected readonly loading = signal(true);
@@ -135,6 +137,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
       .subscribe({
         next: () => {
           this.saving.set(false);
+          // הטלפון והמייל נספרים בשלמות הפרופיל, אז המצב נבדק מחדש אחרי שמירה
+          this.refreshCompleteness();
           this.messageService.add({ severity: 'success', summary: 'הפרטים נשמרו' });
         },
         error: err => {
@@ -200,9 +204,18 @@ export class TeacherProfileSettingsComponent implements OnInit {
   /** שולף מחדש את מצב השלמות מהשרת, שהוא מקור האמת היחיד לכלל הזה. */
   private refreshCompleteness(): void {
     this.profileService.getMyProfile().subscribe({
-      next: profile => this.profileComplete.set(profile.isProfileComplete),
+      next: profile => this.setCompleteness(profile.isProfileComplete),
       error: () => undefined
     });
+  }
+
+  /**
+   * מעדכן גם את המטמון המשותף. השומר של ‎/app‎ קורא אותו, ובלי העדכון מורה
+   * שהשלימה את הפרופיל דווקא מכאן הייתה מוחזרת למסך ההקמה בניווט הבא.
+   */
+  private setCompleteness(value: boolean): void {
+    this.profileComplete.set(value);
+    this.setup.setComplete(value);
   }
 
   /**
@@ -240,7 +253,7 @@ export class TeacherProfileSettingsComponent implements OnInit {
         this.subjectNames.set(profile.subjects.map(s => s.name));
         this.teacherId.set(profile.id);
         this.photoUrl.set(teacherPhotoUrl(profile.id, profile.photoVersion));
-        this.profileComplete.set(profile.isProfileComplete);
+        this.setCompleteness(profile.isProfileComplete);
         this.form.reset({
           phone: profile.phone ?? '',
           contactEmail: profile.contactEmail ?? '',
