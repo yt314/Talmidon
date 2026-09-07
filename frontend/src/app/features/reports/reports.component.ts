@@ -9,7 +9,7 @@ import { PageHeaderComponent } from '../../shared/ui/page-header.component';
 import { SpotlightDirective } from '../../shared/ui/spotlight.directive';
 import { StatCardComponent } from '../../shared/ui/stat-card.component';
 import { downloadCsv } from '../../shared/export/csv.util';
-import { IncomeReport } from './reports.models';
+import { AttendanceReport, IncomeReport } from './reports.models';
 import { ReportsService } from './reports.service';
 
 @Component({
@@ -23,6 +23,7 @@ export class ReportsComponent implements OnInit {
 
   protected readonly month = signal<Date>(new Date());
   protected readonly report = signal<IncomeReport | null>(null);
+  protected readonly attendance = signal<AttendanceReport | null>(null);
   protected readonly loading = signal(true);
 
   ngOnInit(): void {
@@ -38,6 +39,10 @@ export class ReportsComponent implements OnInit {
   private load(): void {
     const date = this.month();
     this.loading.set(true);
+    this.reportsService.attendanceReport(date.getFullYear(), date.getMonth() + 1).subscribe({
+      next: report => this.attendance.set(report),
+      error: () => this.attendance.set(null)
+    });
     this.reportsService.incomeReport(date.getFullYear(), date.getMonth() + 1).subscribe({
       next: report => {
         this.report.set(report);
@@ -48,6 +53,18 @@ export class ReportsComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  exportAttendanceCsv(): void {
+    const report = this.attendance();
+    if (!report) return;
+
+    const rows: (string | number)[][] = [
+      ['תלמיד', 'התקיימו', 'בוטלו', 'לא הגיע', 'שעות', 'אחוז החמצה'],
+      ...report.byStudent.map(s => [s.studentName, s.completed, s.cancelled, s.noShow, s.hours, s.missedPercent + '%']),
+      ['סה״כ', report.completed, report.cancelled, report.noShow, report.hours, '']
+    ];
+    downloadCsv(`נוכחות-${report.year}-${String(report.month).padStart(2, '0')}.csv`, rows);
   }
 
   exportCsv(): void {
