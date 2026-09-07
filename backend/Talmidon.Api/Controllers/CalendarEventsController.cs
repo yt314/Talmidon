@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
 using Talmidon.Domain.Entities;
+using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.Data;
-using Talmidon.Infrastructure.Identity;
 using Talmidon.Infrastructure.Multitenancy;
 
 namespace Talmidon.Api.Controllers;
