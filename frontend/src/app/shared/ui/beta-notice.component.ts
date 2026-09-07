@@ -10,7 +10,13 @@ import { environment } from '../../../environments/environment';
 import { extractErrorMessage } from '../../core/http/extract-error-message';
 
 /**
- * רצועת "בהרצה" עם טופס לשליחת רעיון או תקלה.
+ * תג "בהרצה" קבוע בפינה השמאלית התחתונה, ובלחיצה — טופס לשליחת רעיון או תקלה.
+ *
+ * יושב ב-app-root ולא בכל עמוד בנפרד, כדי שיופיע בכל מסך (כולל התחברות ופורטל ההורים)
+ * ובלי שיוכל להופיע פעמיים כשמעטפת ומסך פנימי מוצגים יחד.
+ *
+ * ‎position: fixed‎ עם ‎left‎ פיזי ולא ‎inset-inline-start‎: הממשק כולו RTL, ותכונה לוגית
+ * הייתה מציבה את התג דווקא בימין.
  *
  * פתוח גם למי שאינו מחובר — מי שנתקל בתקלה במסך ההתחברות הוא בדיוק מי שהכי כדאי לשמוע
  * ממנו. פרטי קשר אינם חובה: דרישה כזו הייתה מסננת את הדיווחים המהירים.
@@ -21,11 +27,17 @@ import { extractErrorMessage } from '../../core/http/extract-error-message';
   selector: 'app-beta-notice',
   imports: [FormsModule, ButtonModule, DialogModule, InputTextModule, TextareaModule],
   template: `
-    <div class="beta-notice">
-      <span class="beta-badge">בהרצה</span>
-      <span class="beta-text">האתר עדיין בהרצה — יש רעיון או משהו שלא עובד?</span>
-      <button type="button" class="link-button" (click)="open()">שלחו לנו הודעה</button>
-    </div>
+    <button
+      type="button"
+      class="beta-fab"
+      (click)="open()"
+      title="האתר בהרצה — לשליחת רעיון או דיווח על תקלה"
+      aria-label="האתר בהרצה. לשליחת רעיון או דיווח על תקלה"
+    >
+      <span class="beta-fab-dot" aria-hidden="true"></span>
+      <span class="beta-fab-label">בהרצה</span>
+      <span class="beta-fab-more">שלחו לנו הודעה</span>
+    </button>
 
     <p-dialog
       [(visible)]="visible"
@@ -90,23 +102,61 @@ import { extractErrorMessage } from '../../core/http/extract-error-message';
   `,
   styles: [
     `
-      .beta-notice {
+      .beta-fab {
+        position: fixed;
+        bottom: 1rem;
+        /* פיזי בכוונה: הממשק RTL, ותכונה לוגית הייתה מציבה את התג בימין */
+        left: 1rem;
+        z-index: 900;
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
+        gap: 0.45rem;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid var(--p-content-border-color);
+        border-radius: 999px;
+        background: var(--p-content-background);
+        color: var(--p-text-color);
+        font: inherit;
+        font-size: 0.8125rem;
+        box-shadow: 0 4px 14px rgb(0 0 0 / 0.14);
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .beta-fab:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgb(0 0 0 / 0.2);
+      }
+      .beta-fab:focus-visible {
+        outline: 2px solid var(--p-primary-color);
+        outline-offset: 2px;
+      }
+      .beta-fab-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: var(--p-primary-color);
+        flex: none;
+      }
+      .beta-fab-label {
+        font-weight: 600;
+      }
+      .beta-fab-more {
         color: var(--p-text-muted-color);
       }
-      .beta-badge {
-        padding: 0.1rem 0.5rem;
-        border-radius: 999px;
-        font-weight: 600;
-        font-size: 0.75rem;
-        color: var(--p-primary-contrast-color);
-        background: var(--p-primary-color);
+      .beta-fab-more::before {
+        content: '·';
+        margin-inline-end: 0.45rem;
+      }
+      /* במסך צר נשאר רק "בהרצה", כדי שהתג לא יכסה תוכן */
+      @media (max-width: 640px) {
+        .beta-fab-more {
+          display: none;
+        }
+      }
+      @media print {
+        .beta-fab {
+          display: none;
+        }
       }
     `
   ]
