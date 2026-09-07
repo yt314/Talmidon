@@ -11,7 +11,12 @@ public record UpdateTeacherProfileRequest(
     [Range(0, double.MaxValue)] decimal DefaultPricePerLesson,
     [Range(1, 1440)] int DefaultDurationMinutes,
     [MaxLength(4000)] string? RulesText,
-    bool IsPublic);
+    bool IsPublic,
+    /// <summary>
+    /// אופציונלי בכוונה: לקוח שאינו שולח את השדה משאיר את הערך הקיים, במקום
+    /// לאפס אותו ל-false ולהעלים בשקט מורה מהספרייה.
+    /// </summary>
+    bool? AcceptingStudents = null);
 
 /// <summary>חלון זמינות שבועי. DayOfWeek: ראשון=0 ... שבת=6. שעות בפורמט "HH:mm".</summary>
 public record AvailabilityWindowDto(
@@ -52,7 +57,8 @@ public record TeacherProfileDto(
     /// </summary>
     int? PhotoVersion,
     /// <summary>האם הפרופיל מולא במידה שמאפשרת להציג אותו בספרייה — ראו TeacherProfileRules.</summary>
-    bool IsProfileComplete);
+    bool IsProfileComplete,
+    bool AcceptingStudents);
 
 /// <summary>כרטיס תקציר בספרייה הציבורית (P1).</summary>
 public record PublicTeacherSummaryDto(
@@ -63,7 +69,8 @@ public record PublicTeacherSummaryDto(
     string? Neighborhood,
     decimal DefaultPricePerLesson,
     List<string> Subjects,
-    int? PhotoVersion);
+    int? PhotoVersion,
+    bool AcceptingStudents);
 
 /// <summary>
 /// דף מורה ציבורי מלא (P2). הטלפון והמייל כאן הם פרטי יצירת הקשר שהמורה מילאה
@@ -80,4 +87,5 @@ public record PublicTeacherDetailDto(
     decimal DefaultPricePerLesson,
     string? RulesText,
     List<string> Subjects,
-    int? PhotoVersion);
+    int? PhotoVersion,
+    bool AcceptingStudents);

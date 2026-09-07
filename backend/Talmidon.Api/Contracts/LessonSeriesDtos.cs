@@ -13,7 +13,9 @@ public record CreateLessonSeriesRequest(
     [Required] DateTimeOffset FirstEndTime,
     [Required] LessonSeriesEndCondition EndCondition,
     [Range(1, 500)] int? OccurrenceCount,
-    DateOnly? EndDate);
+    DateOnly? EndDate,
+    /// <summary>לדלג על חגים וחול המועד. ברירת המחדל היא לדלג.</summary>
+    bool? SkipJewishHolidays = null);
 
 public record LessonSeriesDto(
     Guid Id,

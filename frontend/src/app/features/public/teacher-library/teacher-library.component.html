@@ -138,6 +138,9 @@
               <p class="text-color-secondary line-clamp">{{ teacher.bio }}</p>
             }
             <div class="flex gap-2 flex-wrap mb-3">
+              @if (!teacher.acceptingStudents) {
+                <p-tag value="לא מקבלת כרגע" severity="warn" icon="pi pi-pause" />
+              }
               @for (subject of teacher.subjects; track subject) {
                 <p-tag [value]="subject" severity="info" />
               }
@@ -330,6 +333,8 @@
         </ul>
       </div>
     </div>
+
+    <app-beta-notice />
 
     <div class="site-footer-legal">© {{ year }} תלמידון</div>
   </footer>

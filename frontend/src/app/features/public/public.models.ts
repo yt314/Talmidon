@@ -7,6 +7,8 @@ export interface PublicTeacherSummary {
   defaultPricePerLesson: number;
   subjects: string[];
   photoVersion: number | null;
+  /** האם המורה פנויה לתלמידות חדשות — מוצג כתג בכרטיס. */
+  acceptingStudents: boolean;
 }
 
 export interface PublicTeacherDetail {
@@ -21,4 +23,6 @@ export interface PublicTeacherDetail {
   rulesText: string | null;
   subjects: string[];
   photoVersion: number | null;
+  /** האם המורה פנויה לתלמידות חדשות — מוצג כתג בכרטיס. */
+  acceptingStudents: boolean;
 }

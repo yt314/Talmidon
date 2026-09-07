@@ -39,6 +39,14 @@ public class LessonSeries : ITenantScoped
     /// <summary>false לאחר ביטול ידני או מיצוי הסדרה (הגיעה למספר/לתאריך הסיום).</summary>
     public bool IsActive { get; set; }
 
+    /// <summary>
+    /// לדלג על חגים, חול המועד וערבי חג בעת ייצור המופעים (ראו <c>JewishCalendar</c>).
+    ///
+    /// דלוק כברירת מחדל, כי זה מה שנכון כמעט תמיד; ניתן לכיבוי עבור מורה שכן מלמדת
+    /// בחול המועד ולא רוצה למלא את התאריכים האלה ידנית.
+    /// </summary>
+    public bool SkipJewishHolidays { get; set; } = true;
+
     public DateTimeOffset CreatedAt { get; set; }
 
     // ניווט

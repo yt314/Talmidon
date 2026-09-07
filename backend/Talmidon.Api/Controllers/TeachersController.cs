@@ -45,6 +45,7 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
                 t.DefaultDurationMinutes,
                 t.RulesText,
                 t.IsPublic,
+                t.AcceptingStudents,
                 Subjects = t.Subjects.Select(s => new SubjectDto(s.Id, s.Name)).ToList(),
                 PhotoLength = t.PhotoData == null ? (int?)null : t.PhotoData.Length
             })
@@ -60,7 +61,8 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
             row.PhotoLength,
             TeacherProfileRules.IsComplete(
                 row.Subjects.Count, row.DefaultPricePerLesson,
-                row.Phone, row.ContactEmail, row.ContactInfo)));
+                row.Phone, row.ContactEmail, row.ContactInfo),
+            row.AcceptingStudents));
     }
 
     [HttpPut("me")]
@@ -78,6 +80,7 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         teacher.DefaultDurationMinutes = request.DefaultDurationMinutes;
         teacher.RulesText = request.RulesText;
         teacher.IsPublic = request.IsPublic;
+        if (request.AcceptingStudents is { } accepting) teacher.AcceptingStudents = accepting;
         await db.SaveChangesAsync();
         return NoContent();
     }

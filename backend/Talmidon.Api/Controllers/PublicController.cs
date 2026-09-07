@@ -40,7 +40,8 @@ public class PublicController(
                 t.Subjects.Select(s => s.Name).ToList(),
                 // רק אורך, לא ה-blob: אחרת כל טעינה של הספרייה הייתה מושכת את כל
                 // התמונות בתוך ה-JSON. הלקוח בונה מזה את הכתובת.
-                t.PhotoData == null ? (int?)null : t.PhotoData.Length))
+                t.PhotoData == null ? (int?)null : t.PhotoData.Length,
+                t.AcceptingStudents))
             .ToListAsync();
         return Ok(teachers);
     }
@@ -98,7 +99,8 @@ public class PublicController(
                 t.Id, t.FullName, t.Bio, t.City, t.Neighborhood, t.Phone, t.ContactEmail,
                 t.DefaultPricePerLesson, t.RulesText,
                 t.Subjects.Select(s => s.Name).ToList(),
-                t.PhotoData == null ? (int?)null : t.PhotoData.Length))
+                t.PhotoData == null ? (int?)null : t.PhotoData.Length,
+                t.AcceptingStudents))
             .FirstOrDefaultAsync();
         return teacher is null ? NotFound() : Ok(teacher);
     }

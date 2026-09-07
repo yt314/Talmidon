@@ -181,4 +181,33 @@ public class AdminController(TalmidonDbContext db, UserManager<ApplicationUser> 
 
     private async Task<SubjectSuggestion?> FindSuggestionAsync(string name) =>
         await db.SubjectSuggestions.FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
+
+    // ===== הודעות מהאתר (תקופת ההרצה) =====
+
+    /// <summary>פותח על מה שעוד לא טופל, מהחדש לישן — סדר הקריאה בפועל.</summary>
+    [HttpGet("feedback")]
+    public async Task<ActionResult<IEnumerable<SiteFeedbackDto>>> ListFeedback([FromQuery] bool includeHandled = false)
+    {
+        var query = db.SiteFeedback.AsQueryable();
+        if (!includeHandled) query = query.Where(f => !f.IsHandled);
+
+        var rows = await query
+            .OrderByDescending(f => f.CreatedAt)
+            .Take(200)
+            .Select(f => new SiteFeedbackDto(f.Id, f.Message, f.ContactInfo, f.PageUrl, f.IsHandled, f.CreatedAt))
+            .ToListAsync();
+
+        return Ok(rows);
+    }
+
+    [HttpPost("feedback/{id:guid}/handled")]
+    public async Task<IActionResult> MarkFeedbackHandled(Guid id, [FromQuery] bool handled = true)
+    {
+        var feedback = await db.SiteFeedback.FirstOrDefaultAsync(f => f.Id == id);
+        if (feedback is null) return NotFound();
+
+        feedback.IsHandled = handled;
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
 }

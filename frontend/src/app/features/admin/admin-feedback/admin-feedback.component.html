@@ -1,0 +1,58 @@
+<app-page-header
+  icon="pi-comments"
+  title="הודעות מהאתר"
+  subtitle="רעיונות ותקלות שנשלחו מרצועת ההרצה."
+/>
+
+<div class="flex align-items-center gap-2 mb-3">
+  <p-toggleswitch inputId="f-handled" [(ngModel)]="includeHandled" (ngModelChange)="load()" />
+  <label for="f-handled" class="m-0">הצגת הודעות שכבר טופלו</label>
+</div>
+
+@if (!loading() && rows().length === 0) {
+  <app-empty-state
+    icon="pi-inbox"
+    title="אין הודעות פתוחות"
+    hint="הודעות שנשלחות מרצועת ההרצה יופיעו כאן."
+  />
+} @else {
+  <div class="flex flex-column gap-3">
+    @for (row of rows(); track row.id) {
+      <p-card>
+        <div class="flex justify-content-between align-items-start gap-3 flex-wrap">
+          <div class="flex-1" style="min-width: 16rem">
+            <p class="mt-0 mb-2" style="white-space: pre-wrap">{{ row.message }}</p>
+            <div class="flex gap-2 flex-wrap text-sm" style="color: var(--p-text-muted-color)">
+              <span>{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              @if (row.contactInfo) {
+                <span>· {{ row.contactInfo }}</span>
+              }
+              @if (row.pageUrl) {
+                <span>· {{ row.pageUrl }}</span>
+              }
+            </div>
+          </div>
+          <div class="flex align-items-center gap-2">
+            @if (row.isHandled) {
+              <p-tag value="טופל" severity="success" />
+              <p-button
+                label="החזרה לפתוחות"
+                severity="secondary"
+                [text]="true"
+                size="small"
+                (onClick)="setHandled(row, false)"
+              />
+            } @else {
+              <p-button
+                label="סימון כטופל"
+                icon="pi pi-check"
+                size="small"
+                (onClick)="setHandled(row, true)"
+              />
+            }
+          </div>
+        </div>
+      </p-card>
+    }
+  </div>
+}

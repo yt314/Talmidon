@@ -42,6 +42,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<StudentResource> StudentResources => Set<StudentResource>();
     public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
     public DbSet<SubjectSuggestion> SubjectSuggestions => Set<SubjectSuggestion>();
+    public DbSet<SiteFeedback> SiteFeedback => Set<SiteFeedback>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
@@ -87,6 +88,15 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
             e.HasIndex(c => new { c.TenantId, c.Status, c.CreatedAt });
         });
 
+        builder.Entity<SiteFeedback>(e =>
+        {
+            e.Property(x => x.Message).HasMaxLength(4000).IsRequired();
+            e.Property(x => x.ContactInfo).HasMaxLength(256);
+            e.Property(x => x.PageUrl).HasMaxLength(500);
+            // מסך הניהול פותח על מה שעוד לא טופל, מהחדש לישן
+            e.HasIndex(x => new { x.IsHandled, x.CreatedAt });
+        });
+
         builder.Entity<SubjectSuggestion>(e =>
         {
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
@@ -101,6 +111,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
             e.Property(t => t.ContactEmail).HasMaxLength(256);
             e.Property(t => t.City).HasMaxLength(100);
             e.Property(t => t.Neighborhood).HasMaxLength(100);
+            e.Property(t => t.AcceptingStudents).HasDefaultValue(true);
             e.Property(t => t.Bio).HasMaxLength(2000);
             e.Property(t => t.RulesText).HasMaxLength(4000);
             e.Property(t => t.ContactInfo).HasMaxLength(1000);
@@ -312,6 +323,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<LessonSeries>(e =>
         {
             e.Property(s => s.DayOfWeek).HasConversion<string>().HasMaxLength(10);
+            e.Property(s => s.SkipJewishHolidays).HasDefaultValue(true);
 
             e.HasAlternateKey(s => new { s.Id, s.TenantId });
 

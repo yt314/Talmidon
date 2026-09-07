@@ -27,6 +27,7 @@ export interface TeacherProfile {
   photoVersion: number | null;
   /** מחושב בשרת (TeacherProfileRules) כדי שהממשק לא יחזיק עותק שני של הכלל. */
   isProfileComplete: boolean;
+  acceptingStudents: boolean;
 }
 
 export interface UpdateTeacherProfileRequest {
@@ -39,4 +40,5 @@ export interface UpdateTeacherProfileRequest {
   defaultDurationMinutes: number;
   rulesText?: string | null;
   isPublic: boolean;
+  acceptingStudents?: boolean;
 }

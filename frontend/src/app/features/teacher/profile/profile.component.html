@@ -151,6 +151,14 @@
         <label for="t-isPublic" class="m-0">להציג בספרייה הציבורית</label>
       </div>
 
+      <div class="field flex align-items-center gap-2">
+        <p-checkbox inputId="t-acceptingStudents" formControlName="acceptingStudents" [binary]="true" />
+        <label for="t-acceptingStudents" class="m-0">מקבלת תלמידות חדשות</label>
+      </div>
+      <small class="block -mt-2 mb-3" style="color: var(--p-text-muted-color)">
+        כשהאפשרות כבויה, הכרטיס שלך נשאר בספרייה ומסומן "לא מקבלת כרגע" — כך הורים לא פונים לחינם.
+      </small>
+
       <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
     </form>
   </p-card>
