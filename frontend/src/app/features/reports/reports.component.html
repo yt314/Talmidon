@@ -1,4 +1,4 @@
-<app-page-header title="דוח הכנסות" icon="pi-chart-bar" subtitle="סיכום ההכנסות בפועל לחודש שנבחר.">
+<app-page-header title="דוחות" icon="pi-chart-bar" subtitle="הכנסות ונוכחות לחודש שנבחר.">
   <p-datepicker
     view="month"
     dateFormat="mm/yy"
@@ -98,4 +98,79 @@
   </p-card>
 } @else {
   <p class="text-color-secondary">לא ניתן לטעון את הדוח.</p>
+}
+
+@if (attendance(); as a) {
+  <p-card class="block mt-4">
+    <div class="flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+      <div>
+        <h3 class="mt-0 mb-1">נוכחות</h3>
+        <p class="m-0 text-sm" style="color: var(--p-text-muted-color)">
+          נספרים רק שיעורים שכבר טופלו — שיעור שעדיין מתוזמן אינו נחשב החמצה.
+        </p>
+      </div>
+      <p-button
+        label="ייצוא CSV"
+        icon="pi pi-download"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        [disabled]="a.byStudent.length === 0"
+        (onClick)="exportAttendanceCsv()" />
+    </div>
+
+    <div class="grid mb-3">
+      <div class="col-6 lg:col-3">
+        <app-stat-card class="block h-full" label="שעות שלימדת" icon="pi-clock" tone="primary" [value]="a.hours" />
+      </div>
+      <div class="col-6 lg:col-3">
+        <app-stat-card class="block h-full" label="התקיימו" icon="pi-check-circle" tone="success" [value]="a.completed" />
+      </div>
+      <div class="col-6 lg:col-3">
+        <app-stat-card class="block h-full" label="בוטלו" icon="pi-times-circle" tone="warn" [value]="a.cancelled" />
+      </div>
+      <div class="col-6 lg:col-3">
+        <app-stat-card class="block h-full" label="לא הגיעו" icon="pi-user-minus" [tone]="a.noShow > 0 ? 'warn' : 'success'" [value]="a.noShow" />
+      </div>
+    </div>
+
+    @if (a.byStudent.length === 0) {
+      <p class="text-color-secondary m-0 flex align-items-center gap-2">
+        <i class="pi pi-info-circle"></i> אין שיעורים שטופלו בחודש זה.
+      </p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="report-table w-full">
+          <thead>
+            <tr>
+              <th class="text-right">תלמיד</th>
+              <th class="text-center">התקיימו</th>
+              <th class="text-center">בוטלו</th>
+              <th class="text-center">לא הגיע</th>
+              <th class="text-center">שעות</th>
+              <th class="text-center">אחוז החמצה</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of a.byStudent; track s.studentId) {
+              <tr>
+                <td>{{ s.studentName }}</td>
+                <td class="text-center">{{ s.completed }}</td>
+                <td class="text-center">{{ s.cancelled }}</td>
+                <td class="text-center">{{ s.noShow }}</td>
+                <td class="text-center">{{ s.hours }}</td>
+                <td
+                  class="text-center font-medium"
+                  [class.text-orange-500]="s.missedPercent >= 25 && s.missedPercent < 50"
+                  [class.text-red-500]="s.missedPercent >= 50"
+                >
+                  {{ s.missedPercent }}%
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </p-card>
 }

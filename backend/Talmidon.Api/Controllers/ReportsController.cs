@@ -56,4 +56,67 @@ public class ReportsController(TalmidonDbContext db) : ControllerBase
         return Ok(new IncomeReportDto(
             y, m, rows.Count, totalCharged, totalPaid, totalCharged - totalPaid, byStudent));
     }
+
+    /// <summary>
+    /// דוח נוכחות חודשי: כמה שיעורים התקיימו, בוטלו ולא הגיע, כמה שעות לימוד בפועל,
+    /// ופילוח לפי תלמיד לפי שיעור ההחמצות.
+    ///
+    /// הנתונים האלה נשמרו מאז ומעולם ולא הוצגו בשום מקום — מורה לא יכלה לדעת מי מבטל
+    /// הרבה או כמה שעות עבדה החודש.
+    /// </summary>
+    [HttpGet("attendance")]
+    public async Task<ActionResult<AttendanceReportDto>> Attendance([FromQuery] int? year, [FromQuery] int? month)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var y = year ?? now.Year;
+        var m = month ?? now.Month;
+        if (m is < 1 or > 12) return BadRequest(new { message = "חודש לא תקין." });
+
+        var start = new DateTimeOffset(new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc), TimeSpan.Zero);
+        var end = start.AddMonths(1);
+
+        var statuses = new[] { LessonStatus.Completed, LessonStatus.Cancelled, LessonStatus.NoShow };
+        var rows = await db.Lessons
+            .Where(l => statuses.Contains(l.Status) && l.StartTime >= start && l.StartTime < end)
+            .Select(l => new
+            {
+                l.StudentId,
+                StudentName = l.Student.FullName,
+                l.Status,
+                Minutes = (l.EndTime - l.StartTime).TotalMinutes
+            })
+            .ToListAsync();
+
+        static decimal HoursOf(IEnumerable<double> minutes) =>
+            Math.Round((decimal)minutes.Sum() / 60m, 1);
+
+        var byStudent = rows
+            .GroupBy(r => new { r.StudentId, r.StudentName })
+            .Select(g =>
+            {
+                var completed = g.Count(r => r.Status == LessonStatus.Completed);
+                var cancelled = g.Count(r => r.Status == LessonStatus.Cancelled);
+                var noShow = g.Count(r => r.Status == LessonStatus.NoShow);
+                var total = completed + cancelled + noShow;
+                return new StudentAttendanceDto(
+                    g.Key.StudentId,
+                    g.Key.StudentName,
+                    completed,
+                    cancelled,
+                    noShow,
+                    HoursOf(g.Where(r => r.Status == LessonStatus.Completed).Select(r => r.Minutes)),
+                    total == 0 ? 0 : (int)Math.Round((cancelled + noShow) * 100.0 / total));
+            })
+            .OrderByDescending(s => s.MissedPercent)
+            .ThenBy(s => s.StudentName)
+            .ToList();
+
+        return Ok(new AttendanceReportDto(
+            y, m,
+            rows.Count(r => r.Status == LessonStatus.Completed),
+            rows.Count(r => r.Status == LessonStatus.Cancelled),
+            rows.Count(r => r.Status == LessonStatus.NoShow),
+            HoursOf(rows.Where(r => r.Status == LessonStatus.Completed).Select(r => r.Minutes)),
+            byStudent));
+    }
 }
