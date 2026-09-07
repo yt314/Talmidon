@@ -16,11 +16,18 @@ export class ProfileSetupService {
   private readonly complete = signal<boolean | null>(null);
   /** המורה בחרה "אמלא אחר כך" — לתוקף הסשן הנוכחי בלבד. */
   private readonly skipped = signal(false);
+  /** הבאנר נסגר בלחיצה על ה-X. חוזר בכניסה הבאה, כדי שהתזכורת לא תיעלם לתמיד. */
+  private readonly bannerDismissed = signal(false);
 
   /** null = עדיין לא ידוע. הבאנר מוצג רק כשזה false ודאי. */
   readonly isComplete = this.complete.asReadonly();
   readonly needsSetup = computed(() => this.complete() === false);
   readonly wasSkipped = this.skipped.asReadonly();
+  readonly bannerHidden = this.bannerDismissed.asReadonly();
+
+  dismissBanner(): void {
+    this.bannerDismissed.set(true);
+  }
 
   load(): Observable<TeacherProfile> {
     return this.profileService.getMyProfile().pipe(tap(p => this.complete.set(p.isProfileComplete)));
@@ -41,5 +48,6 @@ export class ProfileSetupService {
   reset(): void {
     this.complete.set(null);
     this.skipped.set(false);
+    this.bannerDismissed.set(false);
   }
 }
