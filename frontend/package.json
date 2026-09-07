@@ -23,6 +23,7 @@
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primeng": "^21.1.9",
+    "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "temporal-polyfill": "^1.0.4",
     "tslib": "^2.3.0"
@@ -31,6 +32,7 @@
     "@angular/build": "^21.2.7",
     "@angular/cli": "^21.2.7",
     "@angular/compiler-cli": "^21.2.0",
+    "@types/qrcode": "^1.5.6",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",

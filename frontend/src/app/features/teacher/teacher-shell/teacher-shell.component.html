@@ -12,6 +12,7 @@
       </ng-template>
       <ng-template pTemplate="end">
         <div class="flex align-items-center gap-3">
+          <app-quick-search />
           <app-notifications-bell />
           <app-theme-toggle />
           <app-user-menu [name]="fullName()" roleLabel="מורה" (logout)="logout()" />
