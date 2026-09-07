@@ -71,7 +71,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
     defaultPricePerLesson: [0, [Validators.required, Validators.min(0)]],
     defaultDurationMinutes: [60, [Validators.required, Validators.min(1), Validators.max(1440)]],
     rulesText: ['', [Validators.maxLength(4000)]],
-    isPublic: [true]
+    isPublic: [true],
+    acceptingStudents: [true]
   });
 
   protected readonly dayNames = HEBREW_DAY_NAMES;
@@ -132,7 +133,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
         defaultPricePerLesson: raw.defaultPricePerLesson,
         defaultDurationMinutes: raw.defaultDurationMinutes,
         rulesText: raw.rulesText || null,
-        isPublic: raw.isPublic
+        isPublic: raw.isPublic,
+        acceptingStudents: raw.acceptingStudents
       })
       .subscribe({
         next: () => {
@@ -263,7 +265,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
           defaultPricePerLesson: profile.defaultPricePerLesson,
           defaultDurationMinutes: profile.defaultDurationMinutes,
           rulesText: profile.rulesText ?? '',
-          isPublic: profile.isPublic
+          isPublic: profile.isPublic,
+          acceptingStudents: profile.acceptingStudents
         });
         this.loading.set(false);
       },

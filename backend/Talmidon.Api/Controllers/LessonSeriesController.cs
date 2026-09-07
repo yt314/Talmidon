@@ -59,6 +59,7 @@ public class LessonSeriesController(
             EndDate = request.EndCondition == LessonSeriesEndCondition.EndDate ? request.EndDate : null,
             OccurrenceCount = request.EndCondition == LessonSeriesEndCondition.Count ? request.OccurrenceCount : null,
             IsActive = true,
+            SkipJewishHolidays = request.SkipJewishHolidays ?? true,
             CreatedAt = DateTimeOffset.UtcNow
         };
         db.LessonSeries.Add(series);

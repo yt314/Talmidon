@@ -26,6 +26,14 @@ public class Teacher
     /// <summary>שכונה בתוך היישוב. מוצגת לצד העיר; אין סינון לפיה.</summary>
     public string? Neighborhood { get; set; }
 
+    /// <summary>
+    /// האם המורה פנויה לקבל תלמידות חדשות. מוצג כתג בכרטיס הציבורי.
+    ///
+    /// מורה שאין לה מקום נראתה עד כה בדיוק כמו מורה פנויה, וההורה גילה את זה רק אחרי
+    /// פנייה. ברירת המחדל היא "מקבלת", כדי שמורה קיימת לא תיעלם מהספרייה בשקט.
+    /// </summary>
+    public bool AcceptingStudents { get; set; } = true;
+
     /// <summary>תיאור לדף הציבורי.</summary>
     public string? Bio { get; set; }
 

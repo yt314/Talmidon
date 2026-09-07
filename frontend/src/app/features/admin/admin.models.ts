@@ -17,3 +17,13 @@ export interface AdminSubjectSuggestion {
   /** מורה כלשהי כבר בחרה בתחום. */
   isInUse: boolean;
 }
+
+/** הודעה שנשלחה מהאתר בתקופת ההרצה. */
+export interface AdminSiteFeedback {
+  id: string;
+  message: string;
+  contactInfo: string | null;
+  pageUrl: string | null;
+  isHandled: boolean;
+  createdAt: string;
+}

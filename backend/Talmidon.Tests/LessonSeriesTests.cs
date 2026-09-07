@@ -31,7 +31,8 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
             firstEndTime = firstStart.AddHours(1),
             endCondition = 0, // Count
             occurrenceCount = 4,
-            endDate = (DateOnly?)null
+            endDate = (DateOnly?)null,
+            skipJewishHolidays = false
         });
         response.EnsureSuccessStatusCode();
         var series = await response.Content.ReadFromJsonAsync<LessonSeriesDto>();
@@ -58,7 +59,8 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
             firstEndTime = firstStart.AddMinutes(45),
             endCondition = 1, // EndDate
             occurrenceCount = (int?)null,
-            endDate
+            endDate,
+            skipJewishHolidays = false
         });
         response.EnsureSuccessStatusCode();
         var series = await response.Content.ReadFromJsonAsync<LessonSeriesDto>();
@@ -79,7 +81,8 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
             firstEndTime = firstStart.AddHours(1),
             endCondition = 0,
             occurrenceCount = 3,
-            endDate = (DateOnly?)null
+            endDate = (DateOnly?)null,
+            skipJewishHolidays = false
         });
         createResponse.EnsureSuccessStatusCode();
         var series = await createResponse.Content.ReadFromJsonAsync<LessonSeriesDto>();
@@ -121,7 +124,8 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
             firstEndTime = firstStart.AddMinutes(45),
             endCondition = 0,
             occurrenceCount = 3,
-            endDate = (DateOnly?)null
+            endDate = (DateOnly?)null,
+            skipJewishHolidays = false
         });
         createResponse.EnsureSuccessStatusCode();
         var series = await createResponse.Content.ReadFromJsonAsync<LessonSeriesDto>();
@@ -150,7 +154,8 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
             firstEndTime = firstStart.AddHours(1),
             endCondition = 2, // Indefinite
             occurrenceCount = (int?)null,
-            endDate = (DateOnly?)null
+            endDate = (DateOnly?)null,
+            skipJewishHolidays = false
         });
         createResponse.EnsureSuccessStatusCode();
         var seriesDto = await createResponse.Content.ReadFromJsonAsync<LessonSeriesDto>();
@@ -191,6 +196,8 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
             DurationMinutes = 60,
             SeriesStartDate = seriesStartDate,
             IsActive = true,
+            // הבדיקה הזו עוסקת במעבר שעון בלבד; דילוג על חגים היה מוסיף לה תלות בתאריך
+            SkipJewishHolidays = false,
             CreatedAt = DateTimeOffset.UtcNow
         };
         db.LessonSeries.Add(series);
@@ -229,6 +236,56 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
     // ----- עזר -----
 
     /// <summary>הפעם הבאה שיום-בשבוע הנתון חל, בשעה נתונה, לפחות שבוע קדימה — כדי לא להתנגש בזמן הריצה הנוכחי.</summary>
+    /// <summary>
+    /// סדרה שבועית שחוצה את פסח: השבוע שנופל בחג מדולג, והסדרה עדיין מספקת את מספר
+    /// השיעורים שהוזמן — חג לא "אוכל" שיעור מתוך המכסה.
+    /// </summary>
+    [Fact]
+    public async Task Generator_SkipsHolidayWeeks_AndStillDeliversTheRequestedCount()
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TalmidonDbContext>();
+        var generator = scope.ServiceProvider.GetRequiredService<LessonSeriesGenerator>();
+
+        var (_, studentId) = await CreateTeacherWithStudentAsync("seriesHoliday");
+        var tenantId = (await db.Students.IgnoreQueryFilters().FirstAsync(s => s.Id == studentId)).TenantId;
+
+        // 19.3.2026 הוא יום חמישי; המופעים הם 19.3, 26.3, 2.4 ו-9.4. השני באפריל הוא פסח.
+        var start = new DateOnly(2026, 3, 19);
+        var series = new LessonSeries
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            StudentId = studentId,
+            DayOfWeek = start.DayOfWeek,
+            StartTimeOfDay = new TimeOnly(17, 0),
+            DurationMinutes = 60,
+            SeriesStartDate = start,
+            OccurrenceCount = 3,
+            IsActive = true,
+            SkipJewishHolidays = true,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        db.LessonSeries.Add(series);
+        await db.SaveChangesAsync();
+
+        await generator.GenerateOccurrencesAsync(series, start.AddDays(70));
+
+        var dates = await db.Lessons.IgnoreQueryFilters()
+            .Where(l => l.SeriesId == series.Id)
+            .OrderBy(l => l.StartTime)
+            .Select(l => l.StartTime)
+            .ToListAsync();
+
+        var localDates = dates.Select(d => DateOnly.FromDateTime(AppTimeZone.ToLocal(d).DateTime)).ToList();
+
+        Assert.Equal(3, localDates.Count);
+        Assert.DoesNotContain(new DateOnly(2026, 4, 2), localDates);
+        Assert.Equal(
+            new[] { new DateOnly(2026, 3, 19), new DateOnly(2026, 3, 26), new DateOnly(2026, 4, 9) },
+            localDates);
+    }
+
     private static DateTimeOffset NextWeekday(DayOfWeek dayOfWeek, int hour)
     {
         var date = DateTime.UtcNow.Date.AddDays(8);

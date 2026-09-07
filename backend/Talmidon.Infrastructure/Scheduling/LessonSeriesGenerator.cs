@@ -27,6 +27,16 @@ public class LessonSeriesGenerator(TalmidonDbContext db)
             if (series.OccurrenceCount is { } count && series.OccurrencesGenerated >= count)
                 break;
 
+            // חג או חול המועד: מדלגים על השבוע הזה בלי לייצר שיעור. הסימנייה כן מתקדמת,
+            // אחרת הייצור היה נתקע על אותו תאריך; המונה של "כמה שיעורים נוצרו" לא מתקדם,
+            // כי סדרה של עשרה שיעורים אמורה לתת עשרה שיעורים ולא תשעה ופסח.
+            if (series.SkipJewishHolidays && JewishCalendar.IsNoLessonDay(nextDate))
+            {
+                series.LastGeneratedDate = nextDate;
+                nextDate = nextDate.AddDays(7);
+                continue;
+            }
+
             // בונים את המופע מהזמן המקומי (תאריך + שעת-היום הקבועה של הסדרה) ורק אז ממירים ל-UTC —
             // כך ה-offset הנכון (קיץ/חורף) נבחר מחדש לכל תאריך בנפרד, ושעת-היום המקומית לא זזה.
             // ToUniversalTime() מנרמל ל-offset=0 בלי לשנות את הרגע עצמו — Npgsql מסרב לכתוב

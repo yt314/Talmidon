@@ -52,6 +52,9 @@
           @if (location(); as place) {
             <p class="profile-hero-city"><i class="pi pi-map-marker"></i> {{ place }}</p>
           }
+          @if (!teacher()!.acceptingStudents) {
+            <p-tag value="לא מקבלת תלמידות חדשות כרגע" severity="warn" icon="pi pi-pause" styleClass="mt-2" />
+          }
           <div class="flex gap-2 flex-wrap">
             @for (subject of teacher()!.subjects; track subject) {
               <p-tag [value]="subject" severity="contrast" />
@@ -130,4 +133,5 @@
       </aside>
     </main>
   }
+  <app-beta-notice />
 </div>
