@@ -11,7 +11,6 @@ import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
-import { BetaNoticeComponent } from '../../../shared/ui/beta-notice.component';
 import { PublicTeacherDetail } from '../public.models';
 import { PublicService } from '../public.service';
 
@@ -26,7 +25,6 @@ import { PublicService } from '../public.service';
     TagModule,
     EmptyStateComponent,
     ThemeToggleComponent,
-    BetaNoticeComponent,
     AvatarComponent,
     ContactFormComponent
   ],

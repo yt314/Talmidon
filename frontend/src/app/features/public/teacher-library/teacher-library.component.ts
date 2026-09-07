@@ -16,7 +16,6 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { RevealDirective } from '../../../shared/ui/reveal.directive';
 import { SpotlightDirective } from '../../../shared/ui/spotlight.directive';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
-import { BetaNoticeComponent } from '../../../shared/ui/beta-notice.component';
 import { PublicTeacherSummary } from '../public.models';
 import { PublicService } from '../public.service';
 
@@ -34,7 +33,6 @@ import { PublicService } from '../public.service';
     AccordionModule,
     EmptyStateComponent,
     ThemeToggleComponent,
-    BetaNoticeComponent,
     RevealDirective,
     SpotlightDirective,
     CountUpDirective,

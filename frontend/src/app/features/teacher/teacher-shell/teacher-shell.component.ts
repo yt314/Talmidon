@@ -15,10 +15,9 @@ import { NotificationsBellComponent } from '../../notifications/notifications-be
 import { TeacherProfileService } from '../profile/profile.service';
 import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
 import { QuickSearchComponent } from '../../../shared/ui/quick-search.component';
-import { BetaNoticeComponent } from '../../../shared/ui/beta-notice.component';
 @Component({
   selector: 'app-teacher-shell',
-  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent, RouterLink, QuickSearchComponent, TooltipModule, BetaNoticeComponent],
+  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent, RouterLink, QuickSearchComponent, TooltipModule],
   templateUrl: './teacher-shell.component.html'
 })
 export class TeacherShellComponent implements OnInit {
