@@ -160,7 +160,7 @@ export class ProfileSetupComponent implements OnInit {
           .subscribe({
             next: () => {
               this.saving.set(false);
-              this.setup.refresh();
+              this.setup.markComplete();
               this.messageService.add({ severity: 'success', summary: 'הפרופיל מוכן', detail: 'אפשר להתחיל להוסיף תלמידים.' });
               this.router.navigate(['/app/dashboard']);
             },

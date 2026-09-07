@@ -33,11 +33,21 @@ export class ProfileSetupService {
     return this.profileService.getMyProfile().pipe(tap(p => this.complete.set(p.isProfileComplete)));
   }
 
-  refresh(): void {
-    this.profileService.getMyProfile().subscribe({
-      next: p => this.complete.set(p.isProfileComplete),
-      error: () => undefined
-    });
+  /**
+   * מסמן את הפרופיל כמלא מיד, בלי לחכות לסבב רשת נוסף.
+   *
+   * השומר קורא את הערך הזה באופן סינכרוני בזמן הניווט, ולכן רענון שנשלח כבקשה
+   * נפרדת מגיע מאוחר מדי: הלחיצה על "סיימתי" הייתה מנווטת ללוח הבקרה בזמן
+   * שהערך עדיין false, והשומר היה מחזיר את המורה למסך ההקמה. השמירה עצמה כבר
+   * אכפה את אותם תנאים שהשרת בודק (תחום, מחיר ודרך ליצור קשר), אז הערך ידוע.
+   */
+  markComplete(): void {
+    this.complete.set(true);
+  }
+
+  /** מסנכרן את המטמון אחרי שמסך אחר קיבל מהשרת את מצב השלמות. */
+  setComplete(value: boolean): void {
+    this.complete.set(value);
   }
 
   skip(): void {
