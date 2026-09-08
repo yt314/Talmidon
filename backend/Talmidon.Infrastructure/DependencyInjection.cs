@@ -63,7 +63,24 @@ public static class DependencyInjection
             services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         services.AddScoped<IAccountProvisioning, AccountProvisioning>();
-        services.AddScoped<ILessonPlanner, LessonPlanner>();
+        // בניית מערכי שיעור — ראו LessonPlannerSelection לסדר ההעדפה.
+        var chosen = LessonPlannerSelection.Choose(
+            configuration["Ai:Gemini:ApiKey"] ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY"),
+            configuration["Anthropic:ApiKey"] ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY"),
+            configuration["Ai:Provider"] ?? Environment.GetEnvironmentVariable("AI_PROVIDER"));
+
+        switch (chosen)
+        {
+            case LessonPlannerProvider.Gemini:
+                services.AddHttpClient<ILessonPlanner, GeminiLessonPlanner>();
+                break;
+            case LessonPlannerProvider.Anthropic:
+                services.AddScoped<ILessonPlanner, AnthropicLessonPlanner>();
+                break;
+            default:
+                services.AddScoped<ILessonPlanner, UnavailableLessonPlanner>();
+                break;
+        }
 
         // Identity (ללא קוקיז — API מבוסס טוקנים)
         services.AddIdentityCore<ApplicationUser>(options =>
