@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Email;
 
 namespace Talmidon.Tests;
 
@@ -37,6 +40,29 @@ public class TalmidonWebApplicationFactory : WebApplicationFactory<Program>, IAs
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+
+        // סביבת Development רושמת כל שאילתה ביומן. בריצה מקומית זה שימושי, אבל ב-CI הפלט
+        // מגיע לעשרות אלפי שורות והודעת הכישלון עצמה נבלעת בהן — כלומר בדיוק כשצריך את
+        // היומן, אי אפשר לקרוא אותו. אזהרות ומעלה נשארות.
+        builder.ConfigureLogging(logging =>
+        {
+            logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+            logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
+            logging.AddFilter("Microsoft.Hosting", LogLevel.Warning);
+            logging.AddFilter("Hangfire", LogLevel.Warning);
+        });
+
+        // אין שרת דואר בבדיקות, וכל הרשמה הייתה מייצרת עקבת מחסנית שלמה של
+        // "Connection refused". התוצאה זהה — לא נשלח דבר — והיומן נשאר קריא.
+        builder.ConfigureTestServices(services =>
+            services.AddSingleton<IEmailSender, NoOpEmailSender>());
+    }
+
+    /// <summary>שולח דואר שאינו שולח דבר. קיים רק כדי שהבדיקות לא ינסו להתחבר ל-SMTP.</summary>
+    private sealed class NoOpEmailSender : IEmailSender
+    {
+        public Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken ct = default) =>
+            Task.CompletedTask;
     }
 
     /// <summary>

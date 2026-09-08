@@ -14,14 +14,15 @@
   <app-empty-state
     icon="pi-file-edit"
     title="אין הערות עדיין"
-    hint="הערות שהמורה תסמן כגלויות לך יופיעו כאן." />
+    hint="הערות שהמורה תסמן כגלויות לך יופיעו כאן, ותוכלי להגיב עליהן." />
 } @else {
   <ul class="parent-list">
     @for (note of notes(); track note.id) {
       <li class="py-3 note-item">
         <p class="m-0" style="white-space: pre-wrap">{{ note.content }}</p>
-        <div class="mt-2">
+        <div class="mt-2 flex align-items-center justify-content-between gap-2 flex-wrap">
           <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+          <p-button label="השב" icon="pi pi-reply" [text]="true" size="small" (onClick)="reply(note)" />
         </div>
       </li>
     }

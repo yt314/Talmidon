@@ -11,13 +11,14 @@ import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ProfileSetupService } from '../profile-setup/profile-setup.service';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
+import { MessagesIconComponent } from '../../messages/messages-icon.component';
 import { NotificationsBellComponent } from '../../notifications/notifications-bell/notifications-bell.component';
 import { TeacherProfileService } from '../profile/profile.service';
 import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
 import { QuickSearchComponent } from '../../../shared/ui/quick-search.component';
 @Component({
   selector: 'app-teacher-shell',
-  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent, RouterLink, QuickSearchComponent, TooltipModule],
+  imports: [RouterOutlet, MenubarModule, ButtonModule, ToastModule, ConfirmDialogModule, MessagesIconComponent, NotificationsBellComponent, ThemeToggleComponent, UserMenuComponent, RouterLink, QuickSearchComponent, TooltipModule],
   templateUrl: './teacher-shell.component.html'
 })
 export class TeacherShellComponent implements OnInit {

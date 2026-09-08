@@ -1,0 +1,110 @@
+<app-page-header title="הודעות" icon="pi-comments" subtitle="השיחות שלך עם התלמידות וההורים.">
+  <p-selectbutton
+    [options]="filterOptions"
+    optionLabel="label"
+    optionValue="value"
+    [allowEmpty]="false"
+    [ngModel]="showClosed()"
+    (ngModelChange)="showClosed.set($event)" />
+  <p-button label="הודעה חדשה" icon="pi pi-pencil" (onClick)="openCompose()" />
+</app-page-header>
+
+@if (loading()) {
+  <div class="skeleton skeleton-line" style="height: 4rem"></div>
+  <div class="skeleton skeleton-line" style="height: 4rem"></div>
+} @else if (threads().length === 0) {
+  <app-empty-state
+    icon="pi-comments"
+    title="אין עדיין שיחות"
+    hint="תלמידות והורים יכולים לפנות אלייך מהאזור האישי שלהם — וגם את יכולות לפתוח שיחה.">
+    <p-button label="הודעה חדשה" icon="pi pi-pencil" (onClick)="openCompose()" />
+  </app-empty-state>
+} @else {
+  <div class="messages-shell" [class.has-selection]="selected() !== null">
+    <aside class="messages-pane messages-pane-list">
+      @if (visible().length === 0) {
+        <p class="messages-filtered">כל השיחות סומנו כטופלו.</p>
+      } @else {
+        <app-thread-list
+          [threads]="visible()"
+          [selectedId]="selected()?.id ?? null"
+          perspective="teacher"
+          (select)="open($event)" />
+      }
+    </aside>
+
+    <div class="messages-pane messages-pane-conversation">
+      @if (selected(); as thread) {
+        <app-conversation
+          [thread]="thread"
+          [me]="Author.Teacher"
+          [sending]="sending()"
+          [canClose]="true"
+          (send)="send($event)"
+          (back)="close()"
+          (toggleClosed)="setClosed($event)" />
+      } @else {
+        <div class="messages-placeholder">
+          <i class="pi pi-comments"></i>
+          <p>בחרי שיחה מהרשימה</p>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<p-dialog
+  header="הודעה חדשה"
+  [(visible)]="composeOpen"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '32rem', maxWidth: '95vw' }">
+  <div class="flex flex-column gap-3">
+    <div class="flex flex-column gap-1">
+      <label for="msg-to">אל</label>
+      <p-select
+        inputId="msg-to"
+        [options]="recipients()"
+        [ngModel]="recipient()"
+        (ngModelChange)="recipient.set($event)"
+        optionLabel="label"
+        [filter]="true"
+        filterBy="label"
+        placeholder="בחירת נמען"
+        emptyMessage="אין למי לשלוח — לתלמידות אין חשבון ואין הורים מקושרים"
+        appendTo="body"
+        styleClass="w-full" />
+    </div>
+
+    <div class="flex flex-column gap-1">
+      <label for="msg-subject">נושא</label>
+      <input
+        pInputText
+        id="msg-subject"
+        maxlength="200"
+        [ngModel]="subject()"
+        (ngModelChange)="subject.set($event)" />
+    </div>
+
+    <div class="flex flex-column gap-1">
+      <label for="msg-body">תוכן</label>
+      <textarea
+        pTextarea
+        id="msg-body"
+        rows="5"
+        maxlength="4000"
+        [ngModel]="body()"
+        (ngModelChange)="body.set($event)"></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="composeOpen.set(false)" />
+    <p-button
+      label="שליחה"
+      icon="pi pi-send"
+      [loading]="sending()"
+      [disabled]="!recipient() || subject().trim().length === 0 || body().trim().length === 0"
+      (onClick)="startThread()" />
+  </ng-template>
+</p-dialog>

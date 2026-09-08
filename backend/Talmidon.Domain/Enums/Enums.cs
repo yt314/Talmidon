@@ -71,7 +71,9 @@ public enum NotificationType
     /// <summary>התראה כללית.</summary>
     General = 2,
     /// <summary>פנייה חדשה מהספרייה הציבורית.</summary>
-    ContactRequest = 3
+    ContactRequest = 3,
+    /// <summary>הודעה חדשה בשיחה מול תלמידה או הורה.</summary>
+    Message = 4
 }
 
 /// <summary>מצב הטיפול בפנייה שהגיעה מהספרייה הציבורית.</summary>
@@ -83,4 +85,12 @@ public enum ContactRequestStatus
     Handled = 1,
     /// <summary>נסגרה — הפכה לתלמיד, או שלא הבשילה.</summary>
     Closed = 2
+}
+
+/// <summary>מי כתב הודעה בשיחה, ומי הצד השני מול המורה.</summary>
+public enum MessageAuthor
+{
+    Teacher = 0,
+    Parent = 1,
+    Student = 2
 }

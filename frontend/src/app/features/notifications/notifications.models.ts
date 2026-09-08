@@ -2,7 +2,8 @@ export enum NotificationType {
   LessonRequest = 0,
   ChangeRequest = 1,
   General = 2,
-  ContactRequest = 3
+  ContactRequest = 3,
+  Message = 4
 }
 
 export interface AppNotification {
@@ -19,7 +20,8 @@ export const NOTIFICATION_ICON: Record<NotificationType, string> = {
   [NotificationType.LessonRequest]: 'pi pi-calendar-plus',
   [NotificationType.ChangeRequest]: 'pi pi-clock',
   [NotificationType.General]: 'pi pi-info-circle',
-  [NotificationType.ContactRequest]: 'pi pi-inbox'
+  [NotificationType.ContactRequest]: 'pi pi-inbox',
+  [NotificationType.Message]: 'pi pi-comments'
 };
 
 /**
