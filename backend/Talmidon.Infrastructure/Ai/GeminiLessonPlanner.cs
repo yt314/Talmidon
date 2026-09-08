@@ -19,7 +19,13 @@ namespace Talmidon.Infrastructure.Ai;
 public class GeminiLessonPlanner : ILessonPlanner
 {
     private const string BaseUrl = "https://generativelanguage.googleapis.com/v1beta";
-    private const int MaxOutputTokens = 4000;
+
+    /// <summary>
+    /// תקציב הפלט. מערך שיעור מלא בעברית הוא ארוך, ועברית נחתכת לאסימונים בצפיפות —
+    /// תקציב צר החזיר תשובה קטועה, כלומר כלום.
+    /// </summary>
+    private const int MaxOutputTokens = 8192;
+    private const double Temperature = 0.7;
 
     private readonly HttpClient _http;
     private readonly GeminiModelResolver _resolver;
@@ -49,18 +55,8 @@ public class GeminiLessonPlanner : ILessonPlanner
         if (!IsConfigured)
             return new LessonPlanResult(false, null, "התכונה אינה מוגדרת בשרת.");
 
-        var body = new
-        {
-            system_instruction = new { parts = new[] { new { text = LessonPlanPrompt.System } } },
-            contents = new[]
-            {
-                new { role = "user", parts = new[] { new { text = LessonPlanPrompt.Details(request) } } }
-            },
-            generationConfig = new { maxOutputTokens = MaxOutputTokens, temperature = 0.7 }
-        };
-
         var model = _resolver.Resolved ?? _configuredModel;
-        var attempt = await TryAsync(model, body);
+        var attempt = await TryAsync(model, BuildBody(request, allowThinking: true));
 
         // שם שאינו קיים אצל הספק — שואלים מה כן זמין למפתח הזה ומנסים פעם אחת נוספת
         if (attempt.ModelMissing)
@@ -75,18 +71,37 @@ public class GeminiLessonPlanner : ILessonPlanner
             }
 
             _logger.LogWarning("Gemini model {Model} is unavailable; using {Discovered} instead.", model, discovered);
-            attempt = await TryAsync(discovered, body);
+            attempt = await TryAsync(discovered, BuildBody(request, allowThinking: true));
             model = discovered;
         }
 
-        if (attempt.Succeeded) _resolver.Remember(model);
+        // המודלים החדשים "חושבים" לפני שהם עונים, והחשיבה נגרעת מאותו תקציב פלט. מודל
+        // כזה יכול לכלות את כולו לפני שנכתבה מילה אחת ולהחזיר תשובה ריקה בהצלחה מדומה,
+        // ולכן ניסיון שני בלי חשיבה עדיף על הודעת שגיאה למורה.
+        if (attempt.SpentBudgetBeforeAnswering)
+        {
+            _logger.LogWarning(
+                "Gemini model {Model} used its whole output budget before writing anything; retrying without thinking.",
+                model);
+            attempt = await TryAsync(model, BuildBody(request, allowThinking: false));
+        }
+
+        if (attempt.Succeeded)
+        {
+            _resolver.Remember(model);
+            _logger.LogInformation("Lesson plan built with Gemini model {Model}.", model);
+        }
 
         return attempt.Result;
     }
 
-    private readonly record struct Attempt(bool Succeeded, bool ModelMissing, LessonPlanResult Result);
+    private static GeminiRequest.RequestBody BuildBody(LessonPlanRequest request, bool allowThinking) =>
+        GeminiRequest.Build(request, MaxOutputTokens, Temperature, allowThinking);
 
-    private async Task<Attempt> TryAsync(string model, object body)
+    private readonly record struct Attempt(
+        bool Succeeded, bool ModelMissing, bool SpentBudgetBeforeAnswering, LessonPlanResult Result);
+
+    private async Task<Attempt> TryAsync(string model, GeminiRequest.RequestBody body)
     {
         try
         {
@@ -94,51 +109,78 @@ public class GeminiLessonPlanner : ILessonPlanner
                 $"{BaseUrl}/models/{model}:generateContent?key={_apiKey}", body);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
-                return new Attempt(false, true, new LessonPlanResult(false, null, "המודל המוגדר אינו זמין."));
+                return Failed(true, false, "המודל המוגדר אינו זמין.");
 
             if (!response.IsSuccessStatusCode)
             {
                 // גוף השגיאה עשוי לכלול את המפתח בכתובת — נרשם בלוג בלבד
                 var error = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Gemini returned {Status}: {Body}", (int)response.StatusCode, Truncate(error));
-                var message = response.StatusCode == HttpStatusCode.TooManyRequests
+                return Failed(false, false, response.StatusCode == HttpStatusCode.TooManyRequests
                     ? "חרגנו ממכסת השימוש החינמית. נסי שוב מאוחר יותר."
-                    : "בניית המערך נכשלה. נסי שוב בעוד רגע.";
-                return new Attempt(false, false, new LessonPlanResult(false, null, message));
+                    : "בניית המערך נכשלה. נסי שוב בעוד רגע.");
             }
 
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-            var plan = ExtractText(document.RootElement);
+            var answer = ReadAnswer(document.RootElement);
 
-            return string.IsNullOrWhiteSpace(plan)
-                ? new Attempt(false, false, new LessonPlanResult(false, null, "לא התקבל מערך שיעור. נסי שוב."))
-                : new Attempt(true, false, new LessonPlanResult(true, plan, null));
+            if (!string.IsNullOrWhiteSpace(answer.Text))
+                return new Attempt(true, false, false, new LessonPlanResult(true, answer.Text, null));
+
+            // תשובה ריקה מגיעה כהצלחה, ולכן חייבים לקרוא את הסיבה כדי לדעת מה קרה
+            _logger.LogWarning(
+                "Gemini model {Model} returned no text (finishReason={Finish}, blockReason={Block}).",
+                model, answer.FinishReason ?? "-", answer.BlockReason ?? "-");
+
+            if (answer.BlockReason is not null || answer.FinishReason is "SAFETY" or "PROHIBITED_CONTENT")
+                return Failed(false, false, "הבקשה נחסמה על ידי מסנן התוכן של הספק. נסי לנסח את נושא השיעור אחרת.");
+
+            if (answer.FinishReason == "MAX_TOKENS")
+                return Failed(false, true, "התשובה נקטעה לפני שנכתב דבר. נסי שוב.");
+
+            return Failed(false, false, "לא התקבל מערך שיעור. נסי שוב.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lesson plan generation failed (Gemini).");
-            return new Attempt(false, false, new LessonPlanResult(false, null, "בניית המערך נכשלה. נסי שוב בעוד רגע."));
+            return Failed(false, false, "בניית המערך נכשלה. נסי שוב בעוד רגע.");
         }
     }
 
+    private static Attempt Failed(bool modelMissing, bool spentBudget, string message) =>
+        new(false, modelMissing, spentBudget, new LessonPlanResult(false, null, message));
+
+    private readonly record struct Answer(string Text, string? FinishReason, string? BlockReason);
+
     /// <summary>
-    /// ‎candidates[0].content.parts[*].text‎, בהגנה מלאה: תשובה חסומה ע"י מסנן בטיחות
-    /// מגיעה בלי ‎content‎ כלל, ולא כשגיאת HTTP.
+    /// ‎candidates[0].content.parts[*].text‎, בהגנה מלאה בכל רמה: תשובה שנחסמה או שנקטעה
+    /// מגיעה כ-200 בלי ‎content‎ כלל, ולא כשגיאת HTTP. הסיבה נמצאת ב-finishReason או
+    /// ב-promptFeedback, ובלעדיה כל כישלון כזה נראה אותו הדבר.
     /// </summary>
-    private static string ExtractText(JsonElement root)
+    private static Answer ReadAnswer(JsonElement root)
     {
+        var blockReason = root.TryGetProperty("promptFeedback", out var feedback) &&
+                          feedback.TryGetProperty("blockReason", out var block)
+            ? block.GetString()
+            : null;
+
         if (!root.TryGetProperty("candidates", out var candidates) || candidates.GetArrayLength() == 0)
-            return string.Empty;
+            return new Answer(string.Empty, null, blockReason);
 
         var first = candidates[0];
-        if (!first.TryGetProperty("content", out var content) ||
-            !content.TryGetProperty("parts", out var parts))
-            return string.Empty;
+        var finishReason = first.TryGetProperty("finishReason", out var finish) ? finish.GetString() : null;
 
-        return string.Join("\n", parts.EnumerateArray()
+        if (!first.TryGetProperty("content", out var content) ||
+            !content.TryGetProperty("parts", out var parts) ||
+            parts.ValueKind != JsonValueKind.Array)
+            return new Answer(string.Empty, finishReason, blockReason);
+
+        var text = string.Join("\n", parts.EnumerateArray()
             .Where(p => p.TryGetProperty("text", out _))
             .Select(p => p.GetProperty("text").GetString())
             .Where(t => !string.IsNullOrWhiteSpace(t))).Trim();
+
+        return new Answer(text, finishReason, blockReason);
     }
 
     /// <summary>שואל את הספק אילו מודלים זמינים למפתח הזה, ובוחר אחד מהם.</summary>
