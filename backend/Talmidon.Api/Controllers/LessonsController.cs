@@ -359,14 +359,61 @@ public class LessonsController(
             RequestedByParentId = parent.Id
         };
         db.Lessons.Add(lesson);
-        AddTeacherNotification(NotificationType.LessonRequest, "בקשת שיעור חדשה",
-            $"התקבלה בקשה לקביעת שיעור עבור {student.FullName} בתאריך {FormatDate(lesson.StartTime)}.", "/app/lessons");
+
+        var message = LessonRequestMessage(student.FullName, lesson.StartTime, request.Reason);
+        AddTeacherNotification(NotificationType.LessonRequest, "בקשת שיעור חדשה", message, "/app/lessons");
         await db.SaveChangesAsync();
 
-        await NotifyTeacherAsync("בקשה לקביעת שיעור",
-            $"התקבלה בקשה לקביעת שיעור עבור {student.FullName} בתאריך {FormatDate(lesson.StartTime)}.");
+        await NotifyTeacherAsync("בקשה לקביעת שיעור", message);
 
         return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
+    }
+
+    /// <summary>
+    /// בקשת שיעור מתלמיד — אותו מסלול כמו של ההורה, והשיעור נכנס כ-Requested עד אישור.
+    ///
+    /// אין כאן מזהה תלמיד: התלמיד מבקש עבור עצמו בלבד, ולכן אין מה לאמת ואין דרך לבקש
+    /// עבור מישהו אחר.
+    /// </summary>
+    [Authorize(Roles = Roles.Student)]
+    [HttpPost("my-requests")]
+    public async Task<ActionResult<LessonDto>> RequestOwnLesson(CreateStudentLessonRequest request)
+    {
+        if (request.EndTime <= request.StartTime)
+            return BadRequest(new { message = "שעת הסיום חייבת להיות אחרי שעת ההתחלה." });
+
+        var student = await CurrentStudentAsync();
+        if (student is null) return Forbid();
+
+        var lesson = new Lesson
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantId,
+            StudentId = student.Id,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            Status = LessonStatus.Requested,
+            Origin = LessonOrigin.Student
+        };
+        db.Lessons.Add(lesson);
+
+        var message = LessonRequestMessage(student.FullName, lesson.StartTime, request.Reason);
+        AddTeacherNotification(NotificationType.LessonRequest, "בקשת שיעור חדשה", message, "/app/lessons");
+        await db.SaveChangesAsync();
+
+        await NotifyTeacherAsync("בקשה לקביעת שיעור", message);
+
+        return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
+    }
+
+    /// <summary>
+    /// נוסח ההודעה למורה. הסיבה שנכתבה בבקשה נכללת בה — עד כה היא התקבלה בשרת ונזרקה,
+    /// כך שמי שטרח להסביר למה הוא מבקש שיעור, הסביר לאף אחד.
+    /// </summary>
+    private static string LessonRequestMessage(string studentName, DateTimeOffset startTime, string? reason)
+    {
+        var text = $"התקבלה בקשה לקביעת שיעור עבור {studentName} בתאריך {FormatDate(startTime)}.";
+        return string.IsNullOrWhiteSpace(reason) ? text : $"{text} סיבה: {reason.Trim()}";
     }
 
     /// <summary>בקשת ביטול/שינוי מועד לשיעור קיים ומתוזמן.</summary>

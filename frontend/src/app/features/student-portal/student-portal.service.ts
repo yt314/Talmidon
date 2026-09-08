@@ -21,4 +21,9 @@ export class StudentPortalService {
   myProfile(): Observable<MyStudentProfile> {
     return this.http.get<MyStudentProfile>(`${this.base}/students/me`);
   }
+
+  /** בקשת שיעור. אין כאן מזהה תלמיד — השרת יודע מי מבקש. */
+  requestLesson(request: { startTime: string; endTime: string; reason: string | null }): Observable<StudentLesson> {
+    return this.http.post<StudentLesson>(`${this.base}/lessons/my-requests`, request);
+  }
 }

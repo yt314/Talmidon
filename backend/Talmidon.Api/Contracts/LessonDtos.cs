@@ -65,3 +65,12 @@ public record ChangeRequestDto(
     string? Reason,
     ChangeRequestStatus Status,
     DateTimeOffset CreatedAt);
+
+/// <summary>
+/// בקשת שיעור מתלמיד. אין בה מזהה תלמיד בכוונה — התלמיד מבקש עבור עצמו, וקבלת מזהה
+/// מבחוץ הייתה פותחת שאלה של הרשאה במקום שאין בה צורך.
+/// </summary>
+public record CreateStudentLessonRequest(
+    [Required] DateTimeOffset StartTime,
+    [Required] DateTimeOffset EndTime,
+    [MaxLength(1000)] string? Reason);
