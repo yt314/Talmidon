@@ -68,6 +68,10 @@ export const routes: Routes = [
           import('./features/contact-requests/contact-requests.component').then(m => m.ContactRequestsComponent)
       },
       {
+        path: 'messages',
+        loadComponent: () => import('./features/messages/messages.component').then(m => m.MessagesComponent)
+      },
+      {
         path: 'lesson-plan',
         loadComponent: () => import('./features/ai/lesson-plan.component').then(m => m.LessonPlanComponent)
       },
@@ -109,6 +113,11 @@ export const routes: Routes = [
         path: 'resources',
         loadComponent: () =>
           import('./features/parent-portal/parent-resources/parent-resources.component').then(m => m.ParentResourcesComponent)
+      },
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./features/messages/portal-messages.component').then(m => m.PortalMessagesComponent)
       }
     ]
   },
@@ -140,6 +149,11 @@ export const routes: Routes = [
         path: 'games',
         loadComponent: () =>
           import('./features/student-portal/games/games.component').then(m => m.StudentGamesComponent)
+      },
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./features/messages/portal-messages.component').then(m => m.PortalMessagesComponent)
       }
     ]
   },

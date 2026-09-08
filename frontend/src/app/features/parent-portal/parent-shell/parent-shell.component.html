@@ -11,6 +11,7 @@
       </ng-template>
       <ng-template pTemplate="end">
         <div class="flex align-items-center gap-3">
+          <app-messages-icon mode="portal" link="/parent/messages" />
           <app-theme-toggle />
           <app-user-menu [name]="fullName()" [roleLabel]="roleLabel()" (logout)="logout()" />
         </div>

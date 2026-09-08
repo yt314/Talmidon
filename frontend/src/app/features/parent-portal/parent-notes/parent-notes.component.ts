@@ -1,6 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -12,11 +14,12 @@ import { ParentPortalService } from '../parent-portal.service';
 
 @Component({
   selector: 'app-parent-notes',
-  imports: [FormsModule, DatePipe, CardModule, SelectModule, SkeletonModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [FormsModule, DatePipe, ButtonModule, CardModule, SelectModule, SkeletonModule, PageHeaderComponent, EmptyStateComponent],
   templateUrl: './parent-notes.component.html'
 })
 export class ParentNotesComponent implements OnInit {
   private readonly portalService = inject(ParentPortalService);
+  private readonly router = inject(Router);
 
   protected readonly children = signal<MyChild[]>([]);
   protected readonly selectedChildId = signal<string | null>(null);
@@ -28,6 +31,13 @@ export class ParentNotesComponent implements OnInit {
   ngOnInit(): void {
     this.portalService.myChildren().subscribe(children => this.children.set(children));
     this.load();
+  }
+
+  /** תגובה על הערה — נפתחת כשיחה במסך ההודעות, עם ההערה ועם הילד שאליו היא שייכת. */
+  protected reply(note: ParentNote): void {
+    this.router.navigate(['/parent/messages'], {
+      queryParams: { noteId: note.id, studentId: note.studentId, subject: 'תגובה להערה' }
+    });
   }
 
   onChildChange(): void {

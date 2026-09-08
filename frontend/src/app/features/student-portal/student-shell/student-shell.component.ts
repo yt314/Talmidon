@@ -7,12 +7,13 @@ import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ThemeToggleComponent } from '../../../shared/ui/theme-toggle.component';
 import { Gender } from '../../../core/models/gender';
+import { MessagesIconComponent } from '../../messages/messages-icon.component';
 import { StudentPortalService } from '../student-portal.service';
 import { UserMenuComponent } from '../../../shared/ui/user-menu.component';
 
 @Component({
   selector: 'app-student-shell',
-  imports: [RouterLink, RouterOutlet, MenubarModule, ButtonModule, ToastModule, ThemeToggleComponent, UserMenuComponent],
+  imports: [RouterLink, RouterOutlet, MenubarModule, ButtonModule, ToastModule, ThemeToggleComponent, UserMenuComponent, MessagesIconComponent],
   templateUrl: './student-shell.component.html'
 })
 export class StudentShellComponent implements OnInit {
@@ -31,6 +32,7 @@ export class StudentShellComponent implements OnInit {
     { label: 'ראשי', icon: 'pi pi-home', routerLink: '/student/dashboard' },
     { label: 'יומן', icon: 'pi pi-calendar', routerLink: '/student/lessons' },
     { label: 'הערות', icon: 'pi pi-book', routerLink: '/student/notes' },
+    { label: 'הודעות', icon: 'pi pi-comments', routerLink: '/student/messages' },
     { label: 'חומרי לימוד', icon: 'pi pi-folder-open', routerLink: '/student/resources' },
     { label: 'משחקים', icon: 'pi pi-star', routerLink: '/student/games' }
   ];

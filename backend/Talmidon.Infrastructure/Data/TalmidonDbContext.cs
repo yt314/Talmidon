@@ -40,6 +40,8 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Note> Notes => Set<Note>();
+    public DbSet<MessageThread> MessageThreads => Set<MessageThread>();
+    public DbSet<Message> Messages => Set<Message>();
     public DbSet<StudentResource> StudentResources => Set<StudentResource>();
     public DbSet<ContactRequest> ContactRequests => Set<ContactRequest>();
     public DbSet<SubjectSuggestion> SubjectSuggestions => Set<SubjectSuggestion>();
@@ -62,6 +64,7 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
         ConfigureLessonChangeRequest(builder);
         ConfigurePayment(builder);
         ConfigureNote(builder);
+        ConfigureMessaging(builder);
         ConfigureStudentResource(builder);
         ConfigureNotification(builder);
         ConfigureRefreshToken(builder);
@@ -442,6 +445,62 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.SetNull);
 
             e.HasIndex(n => n.StudentId);
+        });
+    }
+
+    /// <summary>
+    /// שיחות והודעות. שיחה שייכת למורה (דייר) ותמיד עוסקת בתלמידה אחת, גם כשהצד השני
+    /// הוא ההורה — כך התיבה של המורה מסודרת לפי תלמידות ולא לפי אנשים.
+    /// </summary>
+    private static void ConfigureMessaging(ModelBuilder builder)
+    {
+        builder.Entity<MessageThread>(e =>
+        {
+            e.Property(t => t.Subject).HasMaxLength(200).IsRequired();
+            e.Property(t => t.CounterpartRole).HasConversion<string>().HasMaxLength(20);
+            e.Property(t => t.LastSenderRole).HasConversion<string>().HasMaxLength(20);
+            e.Property(t => t.LastMessagePreview).HasMaxLength(200).IsRequired();
+
+            e.HasAlternateKey(t => new { t.Id, t.TenantId });
+
+            e.HasOne(t => t.Teacher)
+                .WithMany()
+                .HasForeignKey(t => t.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // קישור לתלמידה — באותו דייר בלבד, ומחיקת תלמידה מוחקת את שיחותיה
+            e.HasOne(t => t.Student)
+                .WithMany()
+                .HasForeignKey(t => new { t.StudentId, t.TenantId })
+                .HasPrincipalKey(s => new { s.Id, s.TenantId })
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ההערה שממנה נפתחה השיחה — קישור נוח בלבד. אם ההערה נמחקת, השיחה נשארת:
+            // מה שנכתב בה כבר נאמר, ומחיקת הערה אינה סיבה למחוק דיון שלם.
+            e.HasOne(t => t.RelatedNote)
+                .WithMany()
+                .HasForeignKey(t => t.RelatedNoteId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // התיבה נטענת תמיד כדייר אחד מסודר לפי ההודעה האחרונה
+            e.HasIndex(t => new { t.TenantId, t.LastMessageAt });
+            e.HasIndex(t => t.StudentId);
+            // הצד השני טוען את השיחות שלו בלבד
+            e.HasIndex(t => new { t.TenantId, t.CounterpartRole, t.CounterpartId });
+        });
+
+        builder.Entity<Message>(e =>
+        {
+            e.Property(m => m.Body).HasMaxLength(4000).IsRequired();
+            e.Property(m => m.SenderRole).HasConversion<string>().HasMaxLength(20);
+
+            e.HasOne(m => m.Thread)
+                .WithMany(t => t.Messages)
+                .HasForeignKey(m => new { m.ThreadId, m.TenantId })
+                .HasPrincipalKey(t => new { t.Id, t.TenantId })
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(m => new { m.ThreadId, m.CreatedAt });
         });
     }
 

@@ -1,0 +1,39 @@
+<ul class="thread-list">
+  @for (thread of threads(); track thread.id) {
+    <li>
+      <button
+        type="button"
+        class="thread-row"
+        [class.is-selected]="thread.id === selectedId()"
+        [class.is-unread]="thread.hasUnread"
+        (click)="select.emit(thread)">
+        <span class="thread-row-top">
+          <span class="thread-row-name">
+            @if (thread.hasUnread) {
+              <span class="thread-dot" aria-label="חדש"></span>
+            }
+            {{ title(thread) }}
+          </span>
+          <span class="thread-row-time">{{ thread.lastMessageAt | date: 'dd/MM HH:mm' }}</span>
+        </span>
+
+        @if (context(thread); as line) {
+          <span class="thread-row-context">{{ line }}</span>
+        }
+
+        <span class="thread-row-preview">
+          @if (thread.lastSenderRole === Author.Teacher && !isTeacherView()) {
+            <i class="pi pi-reply text-xs"></i>
+          } @else if (thread.lastSenderRole !== Author.Teacher && isTeacherView()) {
+            <i class="pi pi-arrow-down-left text-xs"></i>
+          }
+          {{ thread.lastMessagePreview }}
+        </span>
+
+        @if (thread.isClosed) {
+          <span class="thread-row-closed"><i class="pi pi-check-circle text-xs"></i> טופל</span>
+        }
+      </button>
+    </li>
+  }
+</ul>

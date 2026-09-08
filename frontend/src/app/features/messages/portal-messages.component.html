@@ -1,0 +1,99 @@
+<app-page-header title="הודעות" icon="pi-comments" subtitle="כאן אפשר לכתוב למורה ולקרוא את מה שהיא עונה.">
+  <p-button label="פנייה חדשה" icon="pi pi-pencil" (onClick)="composeOpen.set(true)" />
+</app-page-header>
+
+@if (loading()) {
+  <div class="skeleton skeleton-line" style="height: 4rem"></div>
+  <div class="skeleton skeleton-line" style="height: 4rem"></div>
+} @else if (threads().length === 0) {
+  <app-empty-state
+    icon="pi-comments"
+    title="אין עדיין הודעות"
+    hint="אפשר לשאול את המורה שאלה, לבקש משהו, או להגיב על הערה שקיבלת.">
+    <p-button label="פנייה חדשה" icon="pi pi-pencil" (onClick)="composeOpen.set(true)" />
+  </app-empty-state>
+} @else {
+  <div class="messages-shell" [class.has-selection]="selected() !== null">
+    <aside class="messages-pane messages-pane-list">
+      <app-thread-list
+        [threads]="threads()"
+        [selectedId]="selected()?.id ?? null"
+        perspective="portal"
+        (select)="open($event)" />
+    </aside>
+
+    <div class="messages-pane messages-pane-conversation">
+      @if (selected(); as thread) {
+        <app-conversation
+          [thread]="thread"
+          [me]="me"
+          [sending]="sending()"
+          (send)="send($event)"
+          (back)="close()" />
+      } @else {
+        <div class="messages-placeholder">
+          <i class="pi pi-comments"></i>
+          <p>בחרי שיחה מהרשימה</p>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<p-dialog
+  header="פנייה חדשה למורה"
+  [(visible)]="composeOpen"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '32rem', maxWidth: '95vw' }">
+  <div class="flex flex-column gap-3">
+    @if (isParent) {
+      <div class="flex flex-column gap-1">
+        <label for="pm-child">בעניין</label>
+        <p-select
+          inputId="pm-child"
+          [options]="children()"
+          optionLabel="fullName"
+          optionValue="id"
+          [ngModel]="childId()"
+          (ngModelChange)="childId.set($event)"
+          placeholder="בחירת ילד"
+          appendTo="body"
+          styleClass="w-full" />
+      </div>
+    }
+
+    @if (noteId()) {
+      <p class="text-sm text-color-secondary m-0">
+        <i class="pi pi-book text-xs"></i>
+        הפנייה תישלח כתגובה על ההערה שקיבלת, כך שהמורה תראה על מה מדובר.
+      </p>
+    }
+
+    <div class="flex flex-column gap-1">
+      <label for="pm-subject">נושא</label>
+      <input
+        pInputText
+        id="pm-subject"
+        maxlength="200"
+        [ngModel]="subject()"
+        (ngModelChange)="subject.set($event)" />
+    </div>
+
+    <div class="flex flex-column gap-1">
+      <label for="pm-body">תוכן</label>
+      <textarea
+        pTextarea
+        id="pm-body"
+        rows="5"
+        maxlength="4000"
+        [ngModel]="body()"
+        (ngModelChange)="body.set($event)"></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="composeOpen.set(false)" />
+    <p-button label="שליחה" icon="pi pi-send" [loading]="sending()" [disabled]="!canSend()" (onClick)="startThread()" />
+  </ng-template>
+</p-dialog>

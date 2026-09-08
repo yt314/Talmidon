@@ -1,0 +1,70 @@
+<section class="conversation">
+  <header class="conversation-head">
+    <p-button
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      styleClass="conversation-back"
+      ariaLabel="חזרה לרשימה"
+      (onClick)="back.emit()" />
+
+    <div class="conversation-title">
+      <h2>{{ thread().subject }}</h2>
+      <span class="conversation-with">
+        {{ headline() }}
+        @if (subline(); as line) {
+          · {{ line }}
+        }
+        @if (thread().isClosed) {
+          · <span class="conversation-closed">טופל</span>
+        }
+      </span>
+    </div>
+
+    @if (canClose()) {
+      <p-button
+        [icon]="thread().isClosed ? 'pi pi-undo' : 'pi pi-check-circle'"
+        severity="secondary"
+        [text]="true"
+        [pTooltip]="thread().isClosed ? 'החזרה לטיפול' : 'סימון כטופל'"
+        tooltipPosition="bottom"
+        [ariaLabel]="thread().isClosed ? 'החזרה לטיפול' : 'סימון כטופל'"
+        (onClick)="toggleClosed.emit(!thread().isClosed)" />
+    }
+  </header>
+
+  @if (thread().relatedNoteContent; as note) {
+    <div class="conversation-note">
+      <span class="conversation-note-label"><i class="pi pi-book text-xs"></i> בעקבות ההערה</span>
+      <p>{{ note }}</p>
+    </div>
+  }
+
+  <div class="conversation-messages">
+    @for (message of thread().messages; track message.id) {
+      <article class="bubble" [class.is-mine]="message.senderRole === me()">
+        <p class="bubble-body">{{ message.body }}</p>
+        <time class="bubble-time">{{ message.createdAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+      </article>
+    }
+  </div>
+
+  <form class="conversation-composer" (ngSubmit)="submit()">
+    <textarea
+      pTextarea
+      rows="2"
+      [autoResize]="true"
+      placeholder="כתיבת הודעה…"
+      aria-label="כתיבת הודעה"
+      maxlength="4000"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+      name="draft"></textarea>
+    <p-button
+      type="submit"
+      icon="pi pi-send"
+      label="שליחה"
+      [loading]="sending()"
+      [disabled]="draft().trim().length === 0" />
+  </form>
+</section>

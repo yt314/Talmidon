@@ -1,0 +1,212 @@
+/* ----- רשימת השיחות ----- */
+
+.thread-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.thread-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 0;
+  border-inline-start: 3px solid transparent;
+  border-bottom: 1px solid var(--p-content-border-color);
+  background: transparent;
+  color: inherit;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--p-content-hover-background);
+  }
+
+  &.is-selected {
+    background: var(--p-content-hover-background);
+    border-inline-start-color: var(--p-primary-color);
+  }
+
+  &.is-unread .thread-row-name,
+  &.is-unread .thread-row-preview {
+    font-weight: 600;
+  }
+}
+
+.thread-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.thread-row-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thread-dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--p-primary-color);
+}
+
+.thread-row-time {
+  flex: none;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+.thread-row-context,
+.thread-row-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thread-row-context {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+.thread-row-preview {
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color);
+}
+
+.thread-row-closed {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--p-text-muted-color);
+}
+
+/* ----- חלון השיחה ----- */
+
+.conversation {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.conversation-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--p-content-border-color);
+}
+
+.conversation-title {
+  flex: 1;
+  min-width: 0;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.conversation-with {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.conversation-closed {
+  color: var(--p-primary-color);
+}
+
+.conversation-note {
+  margin: 0.75rem 0.9rem 0;
+  padding: 0.6rem 0.75rem;
+  border-inline-start: 3px solid var(--p-primary-color);
+  border-radius: var(--p-content-border-radius);
+  background: var(--p-content-hover-background);
+
+  p {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+  }
+}
+
+.conversation-note-label {
+  font-size: 0.72rem;
+  color: var(--p-text-muted-color);
+}
+
+.conversation-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem;
+}
+
+.bubble {
+  max-width: min(34rem, 85%);
+  align-self: flex-start;
+  padding: 0.55rem 0.75rem;
+  border-radius: 1rem;
+  border-start-start-radius: 0.25rem;
+  background: var(--p-content-hover-background);
+
+  /* ההודעות שלי בצד השני, כמו בכל יישום הודעות */
+  &.is-mine {
+    align-self: flex-end;
+    border-start-start-radius: 1rem;
+    border-start-end-radius: 0.25rem;
+    background: var(--p-primary-color);
+    color: var(--p-primary-contrast-color);
+
+    .bubble-time {
+      color: var(--p-primary-contrast-color);
+      opacity: 0.75;
+    }
+  }
+}
+
+.bubble-body {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.bubble-time {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  color: var(--p-text-muted-color);
+}
+
+.conversation-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-top: 1px solid var(--p-content-border-color);
+
+  textarea {
+    flex: 1;
+    max-height: 9rem;
+    resize: none;
+  }
+}

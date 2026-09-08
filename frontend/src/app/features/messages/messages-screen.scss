@@ -1,0 +1,84 @@
+/* פריסת שני החלונות — רשימה מימין, שיחה משמאל (וב-RTL זה מסתדר לבד). */
+.messages-shell {
+  display: grid;
+  grid-template-columns: minmax(15rem, 21rem) 1fr;
+  height: min(68vh, 42rem);
+  min-height: 24rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius);
+  background: var(--p-content-background);
+  overflow: hidden;
+}
+
+.messages-pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages-pane-list {
+  border-inline-end: 1px solid var(--p-content-border-color);
+}
+
+.messages-filtered {
+  margin: 0;
+  padding: 1.25rem 0.9rem;
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color);
+}
+
+.messages-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--p-text-muted-color);
+
+  i {
+    font-size: 2rem;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+/*
+  במסך צר אין מקום לשני חלונות. מציגים אחד בכל פעם: הרשימה, ואחרי בחירה — השיחה,
+  עם כפתור החזרה שכבר קיים בראש חלון השיחה.
+*/
+@media (max-width: 900px) {
+  .messages-shell {
+    grid-template-columns: 1fr;
+    height: min(75vh, 40rem);
+  }
+
+  .messages-pane-conversation {
+    display: none;
+  }
+
+  .messages-pane-list {
+    border-inline-end: 0;
+  }
+
+  .messages-shell.has-selection {
+    .messages-pane-list {
+      display: none;
+    }
+
+    .messages-pane-conversation {
+      display: flex;
+    }
+  }
+}
+
+/* במסך רחב אין לאן לחזור — הרשימה תמיד שם */
+@media (min-width: 901px) {
+  :host ::ng-deep .conversation-back {
+    display: none;
+  }
+}
