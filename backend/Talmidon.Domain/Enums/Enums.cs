@@ -21,7 +21,8 @@ public enum LessonStatus
 public enum LessonOrigin
 {
     Teacher = 0,
-    Parent = 1
+    Parent = 1,
+    Student = 2
 }
 
 /// <summary>סוג בקשת שינוי לשיעור קיים.</summary>

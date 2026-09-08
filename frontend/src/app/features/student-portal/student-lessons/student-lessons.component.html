@@ -1,4 +1,6 @@
-<app-page-header title="יומן שיעורים" icon="pi-calendar" />
+<app-page-header title="יומן שיעורים" icon="pi-calendar">
+  <p-button label="בקשת שיעור" icon="pi pi-plus" (onClick)="openRequestDialog()" />
+</app-page-header>
 
 <div class="calendar-card">
   <app-lesson-calendar [events]="calendarEvents()" [selectable]="false" (eventClicked)="onEventClicked($event)" />
@@ -17,4 +19,77 @@
       <p-button label="סגירה" severity="secondary" [text]="true" (onClick)="showLessonDetailDialog.set(false)" />
     </div>
   }
+</p-dialog>
+
+<p-dialog header="בקשת שיעור חדש" [(visible)]="showRequestDialog" [modal]="true" [style]="{ width: 'min(28rem, 92vw)' }">
+  <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
+    <p class="mt-0 text-sm" style="color: var(--p-text-muted-color)">
+      הבקשה נשלחת למורה, והשיעור ייקבע רק אחרי שהיא תאשר.
+    </p>
+
+    <div class="field">
+      <label for="s-start">מתי להתחיל *</label>
+      <p-datepicker
+        inputId="s-start"
+        formControlName="startTime"
+        [showTime]="true"
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(requestForm.controls.startTime)"
+      />
+      @if (fieldError(requestForm.controls.startTime); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="s-end">מתי לסיים *</label>
+      <p-datepicker
+        inputId="s-end"
+        formControlName="endTime"
+        [showTime]="true"
+        hourFormat="24"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(requestForm.controls.endTime)"
+      />
+      @if (fieldError(requestForm.controls.endTime); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    @if (requestForm.errors?.['endBeforeStart']) {
+      <small class="text-red-500 block mb-3">שעת הסיום חייבת להיות אחרי שעת ההתחלה.</small>
+    }
+
+    <div class="field">
+      <label for="s-reason">למה? (לא חובה)</label>
+      <textarea
+        pTextarea
+        id="s-reason"
+        formControlName="reason"
+        rows="2"
+        class="w-full"
+        placeholder="למשל: יש לי מבחן בשבוע הבא"
+      ></textarea>
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-3">
+      <p-button
+        label="ביטול"
+        severity="secondary"
+        [text]="true"
+        type="button"
+        (onClick)="showRequestDialog.set(false)"
+      />
+      <p-button label="שליחת הבקשה" icon="pi pi-send" type="submit" [loading]="savingRequest()" />
+    </div>
+  </form>
 </p-dialog>
