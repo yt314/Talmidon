@@ -8,6 +8,7 @@
     placeholder="כל התלמידים"
     [showClear]="true"
     styleClass="w-15rem" />
+  <p-button label="מערך שיעור" icon="pi pi-star" severity="secondary" [outlined]="true" (onClick)="openLessonPlanner()" />
   <p-button label="אירוע אחר" icon="pi pi-bookmark" severity="secondary" [outlined]="true" (onClick)="openEventDialog()" />
   <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
 </app-page-header>
