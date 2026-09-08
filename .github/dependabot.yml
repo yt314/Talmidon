@@ -1,0 +1,59 @@
+# Weekly dependency updates. Grouped on purpose: an ungrouped run on this repository opens
+# a dozen single-package pull requests a week, which is how dependency automation gets muted.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directories:
+      - /backend/Talmidon.Api
+      - /backend/Talmidon.Domain
+      - /backend/Talmidon.Infrastructure
+      - /backend/Talmidon.Tests
+    schedule:
+      interval: weekly
+      day: sunday
+    open-pull-requests-limit: 5
+    groups:
+      dotnet:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      other-nuget:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "Microsoft.*"
+          - "System.*"
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: sunday
+    open-pull-requests-limit: 5
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+          - "@angular/cli"
+      primeng:
+        patterns:
+          - "primeng"
+          - "@primeng/*"
+          - "primeicons"
+          - "primeflex"
+      other-npm:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+          - "primeng"
+          - "@primeng/*"
+          - "primeicons"
+          - "primeflex"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
