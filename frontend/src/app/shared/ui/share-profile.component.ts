@@ -4,7 +4,6 @@ import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { buildWhatsappLink } from '../whatsapp/whatsapp.util';
-import { toDataURL } from 'qrcode';
 
 /**
  * שיתוף הכרטיס הציבורי. זו הדרך של המורה להביא תלמידים, וכל עוד הקישור היה
@@ -109,11 +108,24 @@ export class ShareProfileComponent {
   constructor() {
     effect(() => {
       if (!this.qrOpen() || this.qrDataUrl()) return;
-      // רזולוציה גבוהה מהתצוגה כדי שההדפסה תישאר חדה
-      toDataURL(this.url(), { width: 600, margin: 2 })
-        .then(data => this.qrDataUrl.set(data))
-        .catch(() => this.fail('לא הצלחנו לייצר את קוד הסריקה.'));
+      // הכתובת נקראת כאן, בתוך ההקשר הריאקטיבי, ולא אחרי ה-await
+      void this.renderQr(this.url());
     });
+  }
+
+  /**
+   * הספרייה נטענת בייבוא דינמי ולא בראש הקובץ: היא נחוצה למיעוט מהמורות, ורק
+   * בלחיצה על "קוד סריקה". ייבוא סטטי היה מצרף אותה למקטע של מסך הפרופיל כולו,
+   * כלומר גם למי שלא פותחת את החלון הזה לעולם.
+   */
+  private async renderQr(url: string): Promise<void> {
+    try {
+      const { toDataURL } = await import('qrcode');
+      // רזולוציה גבוהה מהתצוגה כדי שההדפסה תישאר חדה
+      this.qrDataUrl.set(await toDataURL(url, { width: 600, margin: 2 }));
+    } catch {
+      this.fail('לא הצלחנו לייצר את קוד הסריקה.');
+    }
   }
 
   protected async copy(): Promise<void> {
