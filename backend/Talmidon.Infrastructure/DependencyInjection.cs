@@ -72,6 +72,8 @@ public static class DependencyInjection
         switch (chosen)
         {
             case LessonPlannerProvider.Gemini:
+                // הזיכרון של המודל שנבחר חייב לשרוד בין בקשות; ה-planner עצמו נוצר מחדש בכל אחת
+                services.AddSingleton<GeminiModelResolver>();
                 services.AddHttpClient<ILessonPlanner, GeminiLessonPlanner>();
                 break;
             case LessonPlannerProvider.Anthropic:
