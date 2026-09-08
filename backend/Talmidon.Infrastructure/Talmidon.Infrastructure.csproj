@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Anthropic" Version="12.46.0" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.24" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
     <PackageReference Include="MailKit" Version="4.17.0" />

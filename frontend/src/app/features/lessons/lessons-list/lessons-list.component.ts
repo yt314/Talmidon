@@ -1,6 +1,6 @@
 import { DatePipe, formatDate } from '@angular/common';
 import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -65,6 +65,7 @@ export class LessonsListComponent implements OnInit {
   private readonly studentsService = inject(StudentsService);
   private readonly profileService = inject(TeacherProfileService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly locale = inject(LOCALE_ID);
@@ -388,6 +389,15 @@ export class LessonsListComponent implements OnInit {
    * באירוע של יום שלם השרת מחזיק "סוף בלעדי" (חצות של היום שאחרי), ולכן בתצוגה מחסירים
    * יום אחד; אחרת אירוע של יום אחד היה נראה בטופס כנמשך יומיים.
    */
+  /**
+   * ניווט מפורש ולא routerLink על p-button: עם routerLink סטטי הרכיב מרונדר ריק.
+   * הכפתור מוצג תמיד — המסך עצמו מסביר אם התכונה אינה מוגדרת בשרת, וזה עדיף על
+   * ‎@if‎ סביב תוכן מוקרן, שבו כפתור PrimeNG (OnPush) לא עובר בדיקה ראשונה ויוצא ריק.
+   */
+  openLessonPlanner(): void {
+    this.router.navigate(['/app/lesson-plan']);
+  }
+
   openEventDialog(item?: CalendarEventItem): void {
     if (item) {
       const start = new Date(item.startTime);

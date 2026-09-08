@@ -12,6 +12,7 @@ using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 using Talmidon.Infrastructure.Multitenancy;
 using Talmidon.Infrastructure.Scheduling;
+using Talmidon.Infrastructure.Ai;
 
 namespace Talmidon.Infrastructure;
 
@@ -62,6 +63,7 @@ public static class DependencyInjection
             services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         services.AddScoped<IAccountProvisioning, AccountProvisioning>();
+        services.AddScoped<ILessonPlanner, LessonPlanner>();
 
         // Identity (ללא קוקיז — API מבוסס טוקנים)
         services.AddIdentityCore<ApplicationUser>(options =>
