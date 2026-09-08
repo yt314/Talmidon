@@ -1,0 +1,101 @@
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.game-card {
+  cursor: pointer;
+  height: 100%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+.game-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+  color: var(--p-primary-color);
+  font-size: 1.4rem;
+}
+
+.game-prompt {
+  font-size: clamp(1.75rem, 6vw, 3rem);
+  font-weight: 700;
+  text-align: center;
+  padding: 1.5rem 0;
+  /* תרגיל חשבון נקרא משמאל לימין גם בממשק עברי */
+  direction: ltr;
+}
+
+.game-prompt-word {
+  direction: rtl;
+}
+
+.game-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.game-option {
+  padding: 1rem 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border: 2px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md, 0.5rem);
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, transform 0.12s ease;
+}
+.game-option:hover:not(:disabled) {
+  border-color: var(--p-primary-color);
+  transform: translateY(-1px);
+}
+.game-option:disabled {
+  cursor: default;
+}
+.game-option-correct {
+  border-color: var(--p-green-500);
+  background: color-mix(in srgb, var(--p-green-500) 16%, var(--p-content-background));
+}
+.game-option-wrong {
+  border-color: var(--p-red-500);
+  background: color-mix(in srgb, var(--p-red-500) 16%, var(--p-content-background));
+}
+
+.game-stats {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+.game-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.game-stat-label {
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+}
+
+.game-timer-low {
+  color: var(--p-red-500);
+}
+
+.passage-text {
+  white-space: pre-line;
+  line-height: 1.9;
+  font-size: 1.05rem;
+}

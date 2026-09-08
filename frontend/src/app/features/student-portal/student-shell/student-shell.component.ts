@@ -31,7 +31,8 @@ export class StudentShellComponent implements OnInit {
     { label: 'ראשי', icon: 'pi pi-home', routerLink: '/student/dashboard' },
     { label: 'יומן', icon: 'pi pi-calendar', routerLink: '/student/lessons' },
     { label: 'הערות', icon: 'pi pi-book', routerLink: '/student/notes' },
-    { label: 'חומרי לימוד', icon: 'pi pi-folder-open', routerLink: '/student/resources' }
+    { label: 'חומרי לימוד', icon: 'pi pi-folder-open', routerLink: '/student/resources' },
+    { label: 'משחקים', icon: 'pi pi-star', routerLink: '/student/games' }
   ];
 
   ngOnInit(): void {

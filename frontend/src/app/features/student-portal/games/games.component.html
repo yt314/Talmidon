@@ -1,0 +1,147 @@
+@if (activeGame() === null) {
+  <app-page-header
+    title="משחקים"
+    icon="pi-star"
+    subtitle="תרגול קצר בחשבון, אנגלית והבנת הנקרא."
+  />
+
+  <div class="game-grid">
+    @for (game of games; track game.id) {
+      <p-card styleClass="game-card" (click)="open(game.id)">
+        <div class="flex align-items-center gap-3 mb-2">
+          <span class="game-icon"><i class="pi {{ game.icon }}"></i></span>
+          <h3 class="m-0">{{ game.title }}</h3>
+        </div>
+        <p class="m-0 text-color-secondary">{{ game.description }}</p>
+      </p-card>
+    }
+  </div>
+} @else {
+  <app-page-header [title]="gameTitle()" icon="pi-star">
+    <p-button label="חזרה למשחקים" icon="pi pi-arrow-right" severity="secondary" [text]="true" (onClick)="back()" />
+  </app-page-header>
+
+  <p-card>
+    @if (!running() && !finished()) {
+      <div class="text-center">
+        <p class="mt-0">בחרו רמה והתחילו.</p>
+        <p-selectbutton
+          [options]="difficultyOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="difficulty"
+          (ngModelChange)="onDifficultyChange()"
+          [allowEmpty]="false"
+        />
+        @if (poolSize() > 0) {
+          <p class="text-sm mt-2 mb-0" style="color: var(--p-text-muted-color)">
+            {{ poolSize() }} {{ activeGame() === 'english' ? 'מילים' : 'קטעים' }} ברמה הזו.
+          </p>
+        }
+        @if (best() > 0) {
+          <p class="mt-3 mb-0"><p-tag [value]="'השיא שלך: ' + best()" severity="warn" icon="pi pi-star-fill" /></p>
+        }
+        <div class="mt-4">
+          <p-button label="התחלה" icon="pi pi-play" size="large" (onClick)="start()" />
+        </div>
+      </div>
+    }
+
+    @if (running()) {
+      <div class="game-stats mb-3">
+        <div class="text-center">
+          <div class="game-stat-value">{{ score() }}</div>
+          <div class="game-stat-label">נקודות</div>
+        </div>
+        @if (activeGame() !== 'reading') {
+          <div class="text-center">
+            <div class="game-stat-value" [class.game-timer-low]="secondsLeft() <= 10">{{ secondsLeft() }}</div>
+            <div class="game-stat-label">שניות</div>
+          </div>
+          <div class="text-center">
+            <div class="game-stat-value">{{ streak() }}</div>
+            <div class="game-stat-label">ברצף</div>
+          </div>
+        }
+      </div>
+
+      @if (activeGame() === 'math' && mathQuestion(); as q) {
+        <div class="game-prompt">{{ q.text }} = ?</div>
+        <div class="game-options">
+          @for (option of q.options; track $index) {
+            <button
+              type="button"
+              class="game-option {{ optionClass($index) }}"
+              [disabled]="picked() !== null"
+              (click)="answerMath($index)"
+            >
+              {{ option }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (activeGame() === 'english' && englishQuestion(); as q) {
+        <p class="text-center m-0 text-color-secondary">
+          {{ q.englishToHebrew ? 'מה התרגום לעברית?' : 'מה המילה באנגלית?' }}
+        </p>
+        <div class="game-prompt" [class.game-prompt-word]="!q.englishToHebrew">{{ q.prompt }}</div>
+        <div class="game-options">
+          @for (option of q.options; track $index) {
+            <button
+              type="button"
+              class="game-option {{ optionClass($index) }}"
+              [disabled]="picked() !== null"
+              (click)="answerEnglish($index)"
+            >
+              {{ option }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (activeGame() === 'reading' && passage(); as p) {
+        <h3 class="mt-0">{{ p.title }}</h3>
+        <p class="passage-text">{{ p.text }}</p>
+
+        @if (readingQuestion(); as q) {
+          <div class="mt-4">
+            <p class="font-medium">
+              שאלה {{ questionIndex() + 1 }} מתוך {{ p.questions.length }}: {{ q.question }}
+            </p>
+            <div class="flex flex-column gap-2">
+              @for (option of q.options; track $index) {
+                <button
+                  type="button"
+                  class="game-option text-right {{ optionClass($index) }}"
+                  [disabled]="picked() !== null"
+                  (click)="answerReading($index)"
+                >
+                  {{ option }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      }
+    }
+
+    @if (finished()) {
+      <div class="text-center py-4">
+        <i class="pi pi-check-circle" style="font-size: 3rem; color: var(--p-primary-color)"></i>
+        <h3 class="mt-3 mb-1">סיימת!</h3>
+        <p class="game-stat-value" style="font-size: 2.5rem">{{ score() }}</p>
+        <p class="game-stat-label">נקודות</p>
+        @if (best() > 0 && score() >= best()) {
+          <p-tag value="שיא חדש!" severity="success" icon="pi pi-star-fill" />
+        } @else if (best() > 0) {
+          <p class="text-sm" style="color: var(--p-text-muted-color)">השיא שלך: {{ best() }}</p>
+        }
+        <div class="mt-4 flex gap-2 justify-content-center flex-wrap">
+          <p-button label="עוד סבב" icon="pi pi-replay" (onClick)="start()" />
+          <p-button label="חזרה למשחקים" severity="secondary" [outlined]="true" (onClick)="back()" />
+        </div>
+      </div>
+    }
+  </p-card>
+}
