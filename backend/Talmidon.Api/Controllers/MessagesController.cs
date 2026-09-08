@@ -431,8 +431,9 @@ public class MessagesController(
             Body = body,
             CreatedAt = DateTimeOffset.UtcNow
         };
+        // רק Add אחד: הצבת Thread גורמת ל-EF לשרשר את ההודעה גם אל thread.Messages,
+        // ותוספת ידנית שם הייתה מכניסה אותה פעמיים לתשובה שחוזרת ללקוח.
         db.Messages.Add(message);
-        thread.Messages.Add(message);
 
         thread.LastMessageAt = message.CreatedAt;
         thread.LastSenderRole = sender;
