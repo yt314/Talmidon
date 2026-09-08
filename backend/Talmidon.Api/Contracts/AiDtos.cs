@@ -15,5 +15,8 @@ public record BuildLessonPlanRequest(
 
 public record LessonPlanResponse(string Plan);
 
-/// <summary>האם תכונות ה-AI זמינות בשרת — הממשק מסתיר אותן כשלא.</summary>
-public record AiAvailabilityDto(bool LessonPlanner);
+/// <summary>
+/// האם תכונות ה-AI זמינות בשרת, ומי הספק הפעיל. הממשק מסתיר את מה שאינו מוגדר,
+/// ומציג את שם הספק — כך רואים במסך עצמו אם רץ המודל החינמי או זה שבתשלום.
+/// </summary>
+public record AiAvailabilityDto(bool LessonPlanner, string Provider);

@@ -43,6 +43,7 @@ export class LessonPlanComponent implements OnInit {
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
   protected readonly available = this.ai.lessonPlannerAvailable;
+  protected readonly provider = this.ai.provider;
 
   protected readonly building = signal(false);
   protected readonly plan = signal<string>('');

@@ -20,7 +20,7 @@ public class AiController(ILessonPlanner planner) : ControllerBase
     /// <summary>מה זמין. הממשק שואל פעם אחת ומסתיר את מה שלא מוגדר.</summary>
     [HttpGet("availability")]
     public ActionResult<AiAvailabilityDto> Availability() =>
-        Ok(new AiAvailabilityDto(planner.IsConfigured));
+        Ok(new AiAvailabilityDto(planner.IsConfigured, planner.ProviderName));
 
     [HttpPost("lesson-plan")]
     public async Task<ActionResult<LessonPlanResponse>> BuildLessonPlan(BuildLessonPlanRequest request)

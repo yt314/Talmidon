@@ -1,5 +1,7 @@
 export interface AiAvailability {
   lessonPlanner: boolean;
+  /** שם הספק הפעיל ("Gemini", "Claude", "none"). */
+  provider: string;
 }
 
 export interface BuildLessonPlanRequest {

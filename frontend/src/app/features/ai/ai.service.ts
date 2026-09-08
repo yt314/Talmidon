@@ -12,6 +12,7 @@ export class AiService {
   /** null = עדיין לא נבדק. נשמר כדי לא לשאול את השרת בכל פתיחת מסך. */
   private readonly availability = signal<AiAvailability | null>(null);
   readonly lessonPlannerAvailable = signal(false);
+  readonly provider = signal('');
 
   loadAvailability(): void {
     if (this.availability() !== null) return;
@@ -19,6 +20,7 @@ export class AiService {
       next: value => {
         this.availability.set(value);
         this.lessonPlannerAvailable.set(value.lessonPlanner);
+        this.provider.set(value.provider);
       },
       // תקלה ברשת אינה סיבה להסתיר את הכפתור לתמיד — פשוט לא נדע, וננסה שוב בכניסה הבאה
       error: () => undefined
