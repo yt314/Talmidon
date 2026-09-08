@@ -510,7 +510,8 @@ persists in the `talmidon_pgdata` named volume regardless.
 ## Documentation
 
 See [docs/](docs/) for the original requirements specification, database schema design,
-and screen/wireframe planning (in Hebrew).
+and screen/wireframe planning (in Hebrew), plus [docs/images/](docs/images/) — the
+screenshots used in the *Screens* section above.
 
 ---
 
