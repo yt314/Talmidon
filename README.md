@@ -9,7 +9,7 @@ login-free directory sitting on top so prospective students can discover tutors 
 ![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
 ![PrimeNG](https://img.shields.io/badge/PrimeNG-custom%20preset-06B6D4)
-![License](https://img.shields.io/badge/license-private-lightgrey)
+![License](https://img.shields.io/badge/license-proprietary-lightgrey)
 
 
 [![Talmidon — the public tutor library](docs/images/library.png)](docs/images/library.png)
@@ -513,6 +513,13 @@ persists in the `talmidon_pgdata` named volume regardless.
 See [docs/](docs/) for the original requirements specification, database schema design,
 and screen/wireframe planning (in Hebrew), plus [docs/images/](docs/images/) — the
 screenshots used in the *Screens* section above.
+
+## License
+
+Proprietary — copyright © 2026 Yehudit Pollock, all rights reserved. See [LICENSE](LICENSE).
+
+The code is public so that it can be read and reviewed; it is not offered for reuse. If you
+want to use any part of it, ask first.
 
 ---
 
