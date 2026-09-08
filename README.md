@@ -4,6 +4,7 @@
 manages her own students, lesson schedule, pedagogical notes, and payments, with a public,
 login-free directory sitting on top so prospective students can discover tutors and reach out.
 
+[![CI](https://github.com/yt314/Talmidon/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yt314/Talmidon/actions/workflows/ci.yml)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
 ![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
