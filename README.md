@@ -10,6 +10,9 @@ login-free directory sitting on top so prospective students can discover tutors 
 ![PrimeNG](https://img.shields.io/badge/PrimeNG-custom%20preset-06B6D4)
 ![License](https://img.shields.io/badge/license-private-lightgrey)
 
+
+[![Talmidon — the public tutor library](docs/images/library.png)](docs/images/library.png)
+
 ---
 
 ## Overview
@@ -102,6 +105,54 @@ exactly what concerns them — nothing more.
   model-generated: instant, free, offline-capable, and reviewed in advance
 - **Light and dark mode** — follows the operating system by default, with a toggle in every
   shell; the choice is remembered and applied before first paint, so there is no white flash
+
+## Screens
+
+Every screenshot below is the running app against seeded data — no mockups. The UI is Hebrew and
+right-to-left throughout.
+
+### The tutor's app
+
+|  |  |
+|---|---|
+| [![Dashboard](docs/images/dashboard.png)](docs/images/dashboard.png) | [![Student card](docs/images/student-detail.png)](docs/images/student-detail.png) |
+| **Home** — today's lessons, pending requests, open charges, and lessons still waiting to be closed. | **Student card** — details, linked parents with one-tap WhatsApp and email, and pedagogical notes carrying their visibility ("hidden from student" / "visible to parent"). |
+| [![Payments](docs/images/payments.png)](docs/images/payments.png) | [![Reports](docs/images/reports.png)](docs/images/reports.png) |
+| **Payments** — open charges grouped by parent, and the history of what has been settled. | **Reports** — monthly income and attendance, per student, exportable to CSV. |
+
+[![Lesson calendar](docs/images/calendar.png)](docs/images/calendar.png)
+
+**Calendar** — completed lessons, scheduled ones, a recurring weekly series, an all-day personal
+event, and the tutor's own availability windows above the grid. The banner counts lessons that
+have already happened and are still waiting to be closed.
+
+[![Messages](docs/images/messages.png)](docs/images/messages.png)
+
+**Messages** — one inbox for every conversation with students and parents, unread state tracked
+on both sides.
+
+### The portals
+
+|  |  |
+|---|---|
+| [![Parent portal](docs/images/parent-portal.png)](docs/images/parent-portal.png) | [![Student portal](docs/images/student-portal.png)](docs/images/student-portal.png) |
+| **Parent** — their children's upcoming lessons, what is open to pay, notes and materials shared with them. | **Student** — their own schedule, the notes marked visible to them, materials, and practice games. No payment information at all. |
+
+### Public, and without a login
+
+|  |  |
+|---|---|
+| [![Tutor profile](docs/images/teacher-profile.png)](docs/images/teacher-profile.png) | [![The library on a phone](docs/images/library-mobile.png)](docs/images/library-mobile.png) |
+| **Tutor profile** — subjects, price, cancellation policy and a contact form, for tutors who opted into the library. | **On a phone** — the same library, responsive down to a narrow screen. |
+
+### Light and dark
+
+The theme follows the operating system, with a toggle in every shell; the stored choice is applied
+before Angular boots, so the page never flashes light before turning dark.
+
+|  |  |
+|---|---|
+| [![Dashboard, dark](docs/images/dashboard-dark.png)](docs/images/dashboard-dark.png) | [![Calendar, dark](docs/images/calendar-dark.png)](docs/images/calendar-dark.png) |
 
 ## Tech Stack
 
