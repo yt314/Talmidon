@@ -166,6 +166,35 @@ public class GeminiModelChoiceTests
         Assert.False(GeminiFailure.IsThinkingRejected(status, body));
     }
 
+    /// <summary>
+    /// התיאור הטכני מגיע למסך, ולכן הוא חייב להיות מה שהספק אמר — ובלי המפתח.
+    /// </summary>
+    [Fact]
+    public void TheDescriptionQuotesTheProviderAndNamesTheModel()
+    {
+        var described = GeminiFailure.Describe(503, "gemini-2.5-flash",
+            """{"error":{"code":503,"message":"The model is overloaded. Please try again later.","status":"UNAVAILABLE"}}""");
+
+        Assert.Equal("gemini-2.5-flash: HTTP 503 The model is overloaded. Please try again later.", described);
+    }
+
+    [Fact]
+    public void AnApiKeyInTheProviderMessageIsRedacted()
+    {
+        var described = GeminiFailure.Describe(403, "m",
+            """{"error":{"message":"Requests to this API ?key=AIzaSyRealLookingKey are blocked."}}""");
+
+        Assert.DoesNotContain("AIzaSyRealLookingKey", described);
+        Assert.Contains("key=***", described);
+    }
+
+    /// <summary>גוף שאינו JSON עדיין שווה משהו — עדיף עליו מאשר על שום דבר.</summary>
+    [Fact]
+    public void ABodyThatIsNotJsonIsPassedThroughAsIs()
+    {
+        Assert.Equal("m: HTTP 500 upstream connect error", GeminiFailure.Describe(500, "m", "upstream connect error"));
+    }
+
     [Fact]
     public void NothingAvailableMeansNoChoice()
     {

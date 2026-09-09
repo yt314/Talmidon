@@ -2234,3 +2234,26 @@ full-calendar th {
   background: color-mix(in srgb, var(--p-primary-color) 16%, transparent);
   text-decoration: none;
 }
+
+/*
+  פרטי השגיאה של בניית מערך: טכניים, באנגלית, ומיועדים להעתקה ולדיווח — ולכן סגורים
+  כברירת מחדל וקטנים כשנפתחים.
+*/
+.plan-error-detail {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  text-align: start;
+
+  summary {
+    cursor: pointer;
+  }
+
+  p {
+    margin: 0.4rem 0 0;
+    direction: ltr;
+    text-align: left;
+    word-break: break-word;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+}

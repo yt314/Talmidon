@@ -126,6 +126,12 @@
       } @else if (error(); as message) {
         <app-empty-state icon="pi-exclamation-triangle" title="בניית המערך לא הצליחה" [hint]="message">
           <p-button label="ניסיון נוסף" icon="pi pi-refresh" (onClick)="build()" />
+          @if (errorDetail(); as detail) {
+            <details class="plan-error-detail">
+              <summary>פרטים טכניים</summary>
+              <p>{{ detail }}</p>
+            </details>
+          }
         </app-empty-state>
       } @else {
         <app-empty-state

@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace Talmidon.Infrastructure.Ai;
 
 /// <summary>
@@ -31,6 +33,27 @@ public static class GeminiFailure
     /// עולה עשרות שניות, אבל לא כל מודל מכיר את השדה ואצל חלקם אפס אינו ערך חוקי —
     /// ואז התיקון הוא לוותר על הכיבוי, לא להיכשל.
     /// </summary>
+    /// <summary>
+    /// תיאור קצר של הכשל, במילים של הספק עצמו, לתצוגה מאחורי "פרטים". המפתח נמחק
+    /// לפני הכול: הוא אינו אמור להופיע בגוף התשובה, ואם יופיע — לא נעביר אותו הלאה.
+    /// </summary>
+    public static string Describe(int statusCode, string model, string? errorBody)
+    {
+        var message = ProviderMessage.Match(errorBody ?? "") is { Success: true } m
+            ? m.Groups[1].Value
+            : (errorBody ?? "").Trim();
+
+        message = ApiKey.Replace(message, "key=***");
+        if (message.Length > 300) message = message[..300] + "…";
+
+        return $"{model}: HTTP {statusCode} {message}".Trim();
+    }
+
+    private static readonly Regex ProviderMessage =
+        new(@"""message""\s*:\s*""((?:[^""\\]|\\.)*)""", RegexOptions.Compiled);
+
+    private static readonly Regex ApiKey = new(@"key=[\w\-]+", RegexOptions.Compiled);
+
     public static bool IsThinkingRejected(int statusCode, string? errorBody) =>
         statusCode == 400 && errorBody is not null &&
         errorBody.Contains("thinking", StringComparison.OrdinalIgnoreCase);
