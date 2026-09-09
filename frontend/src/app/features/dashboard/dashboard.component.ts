@@ -90,7 +90,7 @@ export class DashboardComponent implements OnInit {
       error: () => this.openCharges.set([])
     });
 
-    // שיעורים שהמועד שלהם עבר ועדיין "מתוזמן" — ממתינים לסימום
+    // שיעורים שהמועד שלהם עבר ועדיין "מתוזמן" — ממתינים לסימון
     const now = new Date();
     this.lessonsService.list(undefined, now, LessonStatus.Scheduled).subscribe({
       next: lessons => this.lessonsToMark.set(lessons.filter(l => new Date(l.endTime).getTime() < now.getTime()).length),

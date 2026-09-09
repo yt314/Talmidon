@@ -8,7 +8,7 @@ export function fieldError(control: AbstractControl | null | undefined): string 
   if (errors['required']) return 'שדה חובה';
   if (errors['email']) return 'כתובת אימייל לא תקינה';
   if (errors['minlength']) return `נדרשים לפחות ${errors['minlength'].requiredLength} תווים`;
-  if (errors['maxlength']) return `מקסימום ${errors['maxlength'].requiredLength} תווים`;
+  if (errors['maxlength']) return `מקסימון ${errors['maxlength'].requiredLength} תווים`;
   if (errors['min']) return `הערך המינימלי הוא ${errors['min'].min}`;
   if (errors['max']) return `הערך המקסימלי הוא ${errors['max'].max}`;
   if (errors['passwordMismatch']) return 'הסיסמאות אינן זהות';
