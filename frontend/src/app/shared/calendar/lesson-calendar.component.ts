@@ -1,6 +1,7 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { CalendarOptions, EventClickInfo, EventDropInfo, EventInput, EventResizeDoneInfo } from 'fullcalendar';
 import dayGridPlugin from 'fullcalendar/daygrid';
+import listPlugin from 'fullcalendar/list';
 import interactionPlugin from 'fullcalendar/interaction';
 import heLocale from 'fullcalendar/locales/he';
 import classicTheme from 'fullcalendar/themes/classic';
@@ -29,6 +30,8 @@ function buildDayHeader(date: Date, isToday: boolean): HTMLElement {
   return wrapper;
 }
 
+const NARROW = '(max-width: 640px)';
+
 /** עטיפה משותפת סביב FullCalendar — RTL/עברית, צביעה לפי סטטוס וטיפול בלחיצות. משמשת את יומני המורה/הורה/תלמיד. */
 @Component({
   selector: 'app-lesson-calendar',
@@ -36,6 +39,24 @@ function buildDayHeader(date: Date, isToday: boolean): HTMLElement {
   template: `<full-calendar [options]="calendarOptions()" />`
 })
 export class LessonCalendarComponent {
+  /**
+   * בטלפון היומן נפתח כסדר יום ולא כרשת שבוע: שבע עמודות ברוחב 45 פיקסל אינן
+   * קריאות, והרשת נפתחת על שעות ריקות בזמן שכל השיעורים אחר הצהריים. סיגנל ולא
+   * קריאה חד-פעמית ל-window, כדי שסיבוב המכשיר יעדכן את התצוגה.
+   */
+  protected readonly isNarrow = signal(
+    typeof window !== 'undefined' && window.matchMedia(NARROW).matches
+  );
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      const mq = window.matchMedia(NARROW);
+      const onChange = (e: MediaQueryListEvent) => this.isNarrow.set(e.matches);
+      mq.addEventListener('change', onChange);
+      inject(DestroyRef).onDestroy(() => mq.removeEventListener('change', onChange));
+    }
+  }
+
   readonly events = input<EventInput[]>([]);
   readonly selectable = input(false);
   /**
@@ -59,15 +80,17 @@ export class LessonCalendarComponent {
   readonly eventResized = output<CalendarEventDrop>();
 
   protected readonly calendarOptions = computed<CalendarOptions>(() => ({
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, classicTheme],
+    plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, classicTheme],
     locale: heLocale,
     direction: 'rtl',
-    initialView: this.initialView(),
-    headerToolbar: { start: 'prev,next today', center: 'title', end: 'dayGridMonth,timeGridWeek' },
+    initialView: this.isNarrow() ? 'listWeek' : this.initialView(),
+    headerToolbar: this.isNarrow()
+      ? { start: 'prev,next today', center: 'title', end: 'listWeek,dayGridMonth' }
+      : { start: 'prev,next today', center: 'title', end: 'dayGridMonth,timeGridWeek' },
     // גובה חסום עם גלילה פנימית, ולא 'auto': כך היומן לא משתלט על העמוד בשעות
     // הריקות, ו-scrollTime באמת עושה משהו. כל השעות נשארות נגישות בגלילה, ולכן
     // אין סכנה ששיעור מוקדם או מאוחר "ייעלם" (מה שהיה קורה בקיצור טווח השעות).
-    height: '68vh',
+    height: this.isNarrow() ? 'auto' : '68vh',
     firstDay: 0,
     // הדגשת היום הנוכחי — דרך המחלקות האלה ולא בסלקטור CSS, כי v7 מגבב את שמות
     // המחלקות הפנימיות שלו ואין וו יציב לתא של היום

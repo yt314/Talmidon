@@ -781,6 +781,15 @@ full-calendar [class*="lesson-cal-"] .fc-event-title {
   font-size: 0.85rem;
   color: var(--p-text-muted-color);
 }
+
+/* בטלפון היומן הוא סדר יום, והמקרא מסביר צבעים של רשת שבוע: שש שורות שגזלו שליש
+   מסך לפני שהשיעור הראשון בכלל נראה. חייב לשבת אחרי ההגדרה הבסיסית — קודם הוא ישב
+   בבלוק של השלד, מוקדם יותר בקובץ, ו-display: flex שלמטה גבר עליו. */
+@media (max-width: 640px) {
+  .calendar-legend {
+    display: none;
+  }
+}
 .legend-dot {
   display: inline-block;
   width: 10px;
