@@ -1,5 +1,9 @@
-# Weekly dependency updates. Grouped on purpose: an ungrouped run on this repository opens
-# a dozen single-package pull requests a week, which is how dependency automation gets muted.
+# One grouped pull request per ecosystem, once a month.
+#
+# The first configuration here was weekly with three npm groups, and it produced
+# ten open pull requests in a day on a repository with one maintainer. Dependency
+# automation that has to be triaged like that gets muted, which is worse than not
+# having it. Grouping everything and slowing the cadence keeps it readable.
 version: 2
 updates:
   - package-ecosystem: nuget
@@ -9,75 +13,36 @@ updates:
       - /backend/Talmidon.Infrastructure
       - /backend/Talmidon.Tests
     schedule:
-      interval: weekly
-      day: sunday
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 1
     groups:
-      dotnet:
-        patterns:
-          - "Microsoft.*"
-          - "System.*"
-      other-nuget:
+      nuget:
         patterns:
           - "*"
-        exclude-patterns:
-          - "Microsoft.*"
-          - "System.*"
 
   - package-ecosystem: npm
     directory: /frontend
     schedule:
-      interval: weekly
-      day: sunday
-    open-pull-requests-limit: 5
-    # Majors of the framework packages are a migration, not a bump: `ng update`
-    # moves Angular, its CLI and the TypeScript it pins together, and PrimeNG's
-    # majors track Angular's. A bot pull request for those can only ever be red.
+      interval: monthly
+    open-pull-requests-limit: 1
+    # No major upgrades from the bot on the front end. Angular pins the TypeScript
+    # range it accepts, PrimeNG's majors track Angular's, and the tooling majors
+    # (vitest, jsdom) need their own config changes — each one arrives red and has
+    # to be closed. Majors here are done deliberately with `ng update`.
     ignore:
-      - dependency-name: "@angular/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@angular-devkit/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "primeng"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@primeng/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "primeicons"
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
     groups:
-      angular:
-        # TypeScript belongs in this group: Angular pins a narrow peer range for
-        # it, so moving one without the other leaves npm unable to resolve.
-        patterns:
-          - "@angular/*"
-          - "@angular-devkit/*"
-          - "typescript"
-        update-types: ["minor", "patch"]
-      primeng:
-        patterns:
-          - "primeng"
-          - "@primeng/*"
-          - "primeicons"
-          - "primeflex"
-        update-types: ["minor", "patch"]
-      other-npm:
+      npm:
         patterns:
           - "*"
-        exclude-patterns:
-          - "@angular/*"
-          - "@angular-devkit/*"
-          - "typescript"
-          - "primeng"
-          - "@primeng/*"
-          - "primeicons"
-          - "primeflex"
-        # Anything major here arrives as its own pull request, where one failing
-        # package is obvious instead of sinking a group of six.
-        update-types: ["minor", "patch"]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns:
+          - "*"
