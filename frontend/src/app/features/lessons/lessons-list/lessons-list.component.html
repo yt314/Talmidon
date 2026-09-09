@@ -8,7 +8,13 @@
     placeholder="כל התלמידים"
     [showClear]="true"
     styleClass="w-15rem" />
-  <p-button label="מערך שיעור" icon="pi pi-star" severity="secondary" [outlined]="true" (onClick)="openLessonPlanner()" />
+  <!--
+    hidden ולא ‎@if‎: כפתור PrimeNG הוא OnPush, וכשהוא נוצר בתוך ‎@if‎ בתוכן מוקרן הוא
+    אינו עובר בדיקה ראשונה ויוצא ריק. hidden משאיר אותו בנוי ורק מסתיר אותו.
+  -->
+  <span [hidden]="!lessonPlannerAvailable()">
+    <p-button label="מערך שיעור" icon="pi pi-star" severity="secondary" [outlined]="true" (onClick)="openLessonPlanner()" />
+  </span>
   <p-button label="אירוע אחר" icon="pi pi-bookmark" severity="secondary" [outlined]="true" (onClick)="openEventDialog()" />
   <p-button label="הוסף שיעור" icon="pi pi-plus" (onClick)="openAddLessonDialog()" />
 </app-page-header>
