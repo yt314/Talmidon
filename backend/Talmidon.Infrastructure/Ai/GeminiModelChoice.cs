@@ -16,9 +16,14 @@ public static class GeminiModelChoice
     private static readonly string[] NotForText =
         ["embedding", "aqa", "imagen", "veo", "vision", "tts", "image", "audio", "live", "computer-use", "robotics"];
 
-    public static string? Pick(IEnumerable<GeminiModelInfo> models)
-    {
-        return models
+    public static string? Pick(IEnumerable<GeminiModelInfo> models) => Rank(models).FirstOrDefault();
+
+    /// <summary>
+    /// כל המודלים המתאימים, מהמועדף ומטה. הרשימה ולא רק הראשון: עומס אצל הספק הוא לכל
+    /// מודל בנפרד, ולכן כשאחד עמוס יש טעם לנסות את הבא בתור במקום לוותר.
+    /// </summary>
+    public static IReadOnlyList<string> Rank(IEnumerable<GeminiModelInfo> models) =>
+        models
             .Where(m => m.SupportedMethods.Contains("generateContent"))
             .Select(m => Strip(m.Name))
             .Where(name => !string.IsNullOrWhiteSpace(name))
@@ -26,8 +31,14 @@ public static class GeminiModelChoice
             .OrderByDescending(Score)
             // שובר שוויון יציב, ומעדיף גם את הגרסה המאוחרת: 2.5 לפני 2.0
             .ThenByDescending(name => name, StringComparer.Ordinal)
-            .FirstOrDefault();
-    }
+            .ToList();
+
+    /// <summary>
+    /// כשל חולף אצל הספק — עומס או תקלה זמנית — שניסיון חוזר יכול לפתור. מכסה שנגמרה
+    /// (429) אינה כאן בכוונה: ניסיון חוזר רק ישרוף עוד מכסה ולא יעזור.
+    /// </summary>
+    public static bool IsTransient(int statusCode) =>
+        statusCode is 500 or 502 or 503 or 504;
 
     /// <summary>
     /// האם הכשל הוא בשם המודל, כלומר האם כדאי לשאול את הספק מה כן זמין ולנסות שוב.
@@ -75,8 +86,15 @@ public static class GeminiModelChoice
 public class GeminiModelResolver
 {
     private string? _model;
+    private IReadOnlyList<string>? _available;
 
+    /// <summary>המודל שכבר ענה בהצלחה, אם היה כזה.</summary>
     public string? Resolved => Volatile.Read(ref _model);
 
+    /// <summary>המודלים שהמפתח רשאי להשתמש בהם, מדורגים. נשאל פעם אחת ולא בכל כשל.</summary>
+    public IReadOnlyList<string>? Available => Volatile.Read(ref _available);
+
     public void Remember(string model) => Volatile.Write(ref _model, model);
+
+    public void RememberAvailable(IReadOnlyList<string> models) => Volatile.Write(ref _available, models);
 }

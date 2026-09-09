@@ -106,6 +106,46 @@ public class GeminiModelChoiceTests
         Assert.False(GeminiModelChoice.IsModelProblem(status, body));
     }
 
+    /// <summary>
+    /// עומס אצל הספק חולף, ולכן ניסיון חוזר שווה משהו. מכסה שנגמרה אינה חולפת, וניסיון
+    /// חוזר עליה רק שורף עוד מכסה — ההבחנה הזו היא כל מה שמפריד בין השתיים.
+    /// </summary>
+    [Theory]
+    [InlineData(500)]
+    [InlineData(502)]
+    [InlineData(503)]
+    [InlineData(504)]
+    public void ServerSideFailuresAreWorthRetrying(int status)
+    {
+        Assert.True(GeminiModelChoice.IsTransient(status));
+    }
+
+    [Theory]
+    [InlineData(429)]
+    [InlineData(403)]
+    [InlineData(400)]
+    [InlineData(404)]
+    public void EverythingElseIsNot(int status)
+    {
+        Assert.False(GeminiModelChoice.IsTransient(status));
+    }
+
+    /// <summary>
+    /// הדירוג מחזיר את כל המתאימים ולא רק את הראשון, כדי שיהיה למי לפנות כשהמועדף עמוס.
+    /// </summary>
+    [Fact]
+    public void RankKeepsEveryUsableModelInPreferenceOrder()
+    {
+        var ranked = GeminiModelChoice.Rank([
+            Text("models/gemini-2.5-pro"),
+            Text("models/gemini-embedding-001"),
+            Text("models/gemini-2.5-flash"),
+            Text("models/gemini-2.5-flash-image")
+        ]);
+
+        Assert.Equal(new[] { "gemini-2.5-flash", "gemini-2.5-pro" }, ranked);
+    }
+
     [Fact]
     public void NothingAvailableMeansNoChoice()
     {

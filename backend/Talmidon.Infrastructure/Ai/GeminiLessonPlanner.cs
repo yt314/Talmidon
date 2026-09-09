@@ -27,6 +27,12 @@ public class GeminiLessonPlanner : ILessonPlanner
     private const int MaxOutputTokens = 8192;
     private const double Temperature = 0.7;
 
+    /// <summary>
+    /// המתנות בין ניסיונות חוזרים. השכבה החינמית מחזירה "עמוס" לעיתים קרובות, ושתי
+    /// המתנות קצרות פותרות את רוב המקרים — בלי להאריך את ההמתנה של המורה מעבר לסביר.
+    /// </summary>
+    private static readonly int[] RetryDelaysMs = [800, 2500];
+
     private readonly HttpClient _http;
     private readonly GeminiModelResolver _resolver;
     private readonly string? _apiKey;
@@ -56,13 +62,13 @@ public class GeminiLessonPlanner : ILessonPlanner
             return new LessonPlanResult(false, null, "התכונה אינה מוגדרת בשרת.");
 
         var model = _resolver.Resolved ?? _configuredModel;
-        var attempt = await TryAsync(model, BuildBody(request, allowThinking: true));
+        var attempt = await TryWithRetriesAsync(model, BuildBody(request, allowThinking: true));
 
         // שם שאינו קיים אצל הספק — שואלים מה כן זמין למפתח הזה ומנסים פעם אחת נוספת
         if (attempt.ModelMissing)
         {
-            var discovered = await DiscoverModelAsync();
-            if (discovered is null || discovered == model)
+            var discovered = (await DiscoverModelsAsync()).FirstOrDefault(m => m != model);
+            if (discovered is null)
             {
                 _logger.LogError(
                     "Gemini model {Model} is unavailable and no usable replacement was found for this key.", model);
@@ -71,8 +77,25 @@ public class GeminiLessonPlanner : ILessonPlanner
             }
 
             _logger.LogWarning("Gemini model {Model} is unavailable; using {Discovered} instead.", model, discovered);
-            attempt = await TryAsync(discovered, BuildBody(request, allowThinking: true));
+            attempt = await TryWithRetriesAsync(discovered, BuildBody(request, allowThinking: true));
             model = discovered;
+        }
+
+        // עומס אצל הספק הוא לכל מודל בנפרד. אחרי שהניסיונות החוזרים על המודל הזה מוצו,
+        // מודל אחר הוא עדיין סיכוי אמיתי — ועדיף על לשלוח את המורה ללחוץ שוב בעצמה.
+        if (attempt.ProviderBusy)
+        {
+            var alternative = (await DiscoverModelsAsync()).FirstOrDefault(m => m != model);
+            if (alternative is not null)
+            {
+                _logger.LogWarning("Gemini model {Model} is overloaded; trying {Alternative}.", model, alternative);
+                var viaAlternative = await TryWithRetriesAsync(alternative, BuildBody(request, allowThinking: true));
+                if (!viaAlternative.ProviderBusy)
+                {
+                    attempt = viaAlternative;
+                    model = alternative;
+                }
+            }
         }
 
         // המודלים החדשים "חושבים" לפני שהם עונים, והחשיבה נגרעת מאותו תקציב פלט. מודל
@@ -83,7 +106,7 @@ public class GeminiLessonPlanner : ILessonPlanner
             _logger.LogWarning(
                 "Gemini model {Model} used its whole output budget before writing anything; retrying without thinking.",
                 model);
-            attempt = await TryAsync(model, BuildBody(request, allowThinking: false));
+            attempt = await TryWithRetriesAsync(model, BuildBody(request, allowThinking: false));
         }
 
         if (attempt.Succeeded)
@@ -99,7 +122,27 @@ public class GeminiLessonPlanner : ILessonPlanner
         GeminiRequest.Build(request, MaxOutputTokens, Temperature, allowThinking);
 
     private readonly record struct Attempt(
-        bool Succeeded, bool ModelMissing, bool SpentBudgetBeforeAnswering, LessonPlanResult Result);
+        bool Succeeded, bool ModelMissing, bool SpentBudgetBeforeAnswering, bool ProviderBusy, LessonPlanResult Result);
+
+    /// <summary>
+    /// מנסה שוב כשהספק עמוס. עומס הוא המצב השכיח ביותר בשכבה החינמית, והוא חולף תוך
+    /// שניות — הודעת שגיאה עליו שולחת את המורה ללחוץ שוב על מה שהשרת יכול לעשות לבדו.
+    /// </summary>
+    private async Task<Attempt> TryWithRetriesAsync(string model, GeminiRequest.RequestBody body)
+    {
+        var attempt = await TryAsync(model, body);
+
+        foreach (var delay in RetryDelaysMs)
+        {
+            if (!attempt.ProviderBusy) return attempt;
+
+            await Task.Delay(delay);
+            _logger.LogWarning("Retrying Gemini model {Model} after a transient failure.", model);
+            attempt = await TryAsync(model, body);
+        }
+
+        return attempt;
+    }
 
     private async Task<Attempt> TryAsync(string model, GeminiRequest.RequestBody body)
     {
@@ -122,6 +165,11 @@ public class GeminiLessonPlanner : ILessonPlanner
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                     return Failed(false, false, "חרגנו ממכסת השימוש החינמית. נסי שוב מאוחר יותר.");
 
+                if (GeminiModelChoice.IsTransient(status))
+                    return Failed(false, false,
+                        "השירות של Gemini עמוס כרגע. ניסינו כמה פעמים — כדאי לנסות שוב בעוד דקה.",
+                        providerBusy: true);
+
                 // מספר השגיאה מוצג בכוונה: בלעדיו כל כשל מהספק נראה זהה, ואי אפשר לדעת
                 // מהמסך אם מדובר במפתח, במכסה או בתקלה זמנית אצלו.
                 return Failed(false, false, $"בניית המערך נכשלה (שגיאה {status} מהספק). נסי שוב בעוד רגע.");
@@ -131,7 +179,7 @@ public class GeminiLessonPlanner : ILessonPlanner
             var answer = ReadAnswer(document.RootElement);
 
             if (!string.IsNullOrWhiteSpace(answer.Text))
-                return new Attempt(true, false, false, new LessonPlanResult(true, answer.Text, null));
+                return new Attempt(true, false, false, false, new LessonPlanResult(true, answer.Text, null));
 
             // תשובה ריקה מגיעה כהצלחה, ולכן חייבים לקרוא את הסיבה כדי לדעת מה קרה
             _logger.LogWarning(
@@ -149,12 +197,14 @@ public class GeminiLessonPlanner : ILessonPlanner
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lesson plan generation failed (Gemini).");
-            return Failed(false, false, "לא הצלחנו להגיע לשירות בניית המערכים. נסי שוב בעוד רגע.");
+            // חיבור שנקטע הוא חולף בדיוק כמו עומס, ולכן גם הוא ראוי לניסיון נוסף
+            return Failed(false, false, "לא הצלחנו להגיע לשירות בניית המערכים. נסי שוב בעוד רגע.",
+                providerBusy: true);
         }
     }
 
-    private static Attempt Failed(bool modelMissing, bool spentBudget, string message) =>
-        new(false, modelMissing, spentBudget, new LessonPlanResult(false, null, message));
+    private static Attempt Failed(bool modelMissing, bool spentBudget, string message, bool providerBusy = false) =>
+        new(false, modelMissing, spentBudget, providerBusy, new LessonPlanResult(false, null, message));
 
     private readonly record struct Answer(string Text, string? FinishReason, string? BlockReason);
 
@@ -189,31 +239,38 @@ public class GeminiLessonPlanner : ILessonPlanner
         return new Answer(text, finishReason, blockReason);
     }
 
-    /// <summary>שואל את הספק אילו מודלים זמינים למפתח הזה, ובוחר אחד מהם.</summary>
-    private async Task<string?> DiscoverModelAsync()
+    /// <summary>
+    /// שואל את הספק אילו מודלים זמינים למפתח הזה, מדורגים מהמועדף ומטה. הרשימה נשמרת
+    /// לאורך חיי התהליך: היא כמעט אינה משתנה, ואין טעם לשאול שוב בכל כשל.
+    /// </summary>
+    private async Task<IReadOnlyList<string>> DiscoverModelsAsync()
     {
+        if (_resolver.Available is { Count: > 0 } cached) return cached;
+
         try
         {
             using var response = await _http.GetAsync($"{BaseUrl}/models?key={_apiKey}");
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("Could not list Gemini models: {Status}.", (int)response.StatusCode);
-                return null;
+                return [];
             }
 
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-            if (!document.RootElement.TryGetProperty("models", out var models)) return null;
+            if (!document.RootElement.TryGetProperty("models", out var models)) return [];
 
             var available = models.EnumerateArray().Select(ToModelInfo).Where(m => m.Name.Length > 0).ToList();
             _logger.LogInformation(
                 "Models available to this Gemini key: {Available}", string.Join(", ", available.Select(m => m.Name)));
 
-            return GeminiModelChoice.Pick(available);
+            var ranked = GeminiModelChoice.Rank(available);
+            _resolver.RememberAvailable(ranked);
+            return ranked;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Could not list the models available to this Gemini key.");
-            return null;
+            return [];
         }
     }
 
