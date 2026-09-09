@@ -133,7 +133,7 @@ export class LessonsListComponent implements OnInit {
     return buildTeacherCalendarEvents(lessons, requests, this.personalEvents());
   });
 
-  /** שיעורים שהמועד שלהם עבר ועדיין "מתוזמן" — ממתינים לסימום (התקיים/בוטל). */
+  /** שיעורים שהמועד שלהם עבר ועדיין "מתוזמן" — ממתינים לסימון (התקיים/בוטל). */
   protected readonly pendingToMark = computed(() => {
     const now = Date.now();
     return this.lessons()
@@ -833,7 +833,7 @@ export class LessonsListComponent implements OnInit {
       });
   }
 
-  /** פותח את דיאלוג הסיום עבור השיעור הראשון שממתין לסימום (מהבאנר). */
+  /** פותח את דיאלוג הסיום עבור השיעור הראשון שממתין לסימון (מהבאנר). */
   markNextPending(): void {
     const next = this.pendingToMark()[0];
     if (next) this.openCompleteDialog(next);
