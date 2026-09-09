@@ -157,10 +157,11 @@ app.UseAuthorization();
 // המורה צריכה ליצור כל שיעור ביד.
 // לוח הבקרה של Hangfire נשאר לפיתוח בלבד; הוא מאמת דרך Cookie ולא מכיר את ה-JWT.
 //
-// השורה הזו נחוצה למרות ש-AddHangfireServer כבר רשום ב-DI: היא זו שמאתחלת את
-// JobStorage.Current, וה-API הסטטי RecurringJob שלמטה קורא ממנו. בלעדיה העלייה
-// נופלת ב-"Current JobStorage instance has not been initialized yet".
-app.UseHangfireServer();
+// ה-API הסטטי RecurringJob שלמטה קורא מ-JobStorage.Current, ובלעדיו העלייה נופלת
+// ב-"Current JobStorage instance has not been initialized yet". השרת עצמו כבר רשום
+// ב-DI דרך AddHangfireServer ורץ כשירות רקע, ולכן נותר רק להצביע על אותו אחסון —
+// במקום UseHangfireServer, שהוא מיושן ומרים שרת שני.
+JobStorage.Current = app.Services.GetRequiredService<JobStorage>();
 
 RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
     "monthly-payment-reminders",

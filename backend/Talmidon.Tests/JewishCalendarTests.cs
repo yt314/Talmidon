@@ -121,7 +121,7 @@ public class JewishCalendarTests
     }
 
     private static DateOnly SingleDayWith(string reason, int year) =>
-        Assert.Single(AllDaysIn(year).Where(d => JewishCalendar.NoLessonReason(d) == reason));
+        Assert.Single(AllDaysIn(year), d => JewishCalendar.NoLessonReason(d) == reason);
 
     private static DateOnly FirstDayWith(string reason, int year) =>
         AllDaysIn(year).First(d => JewishCalendar.NoLessonReason(d) == reason);

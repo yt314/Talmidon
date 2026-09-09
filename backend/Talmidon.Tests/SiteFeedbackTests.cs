@@ -28,7 +28,7 @@ public class SiteFeedbackTests(TalmidonWebApplicationFactory factory)
         var admin = await TestHelpers.CreateAuthorizedAdminClientAsync(factory);
         var rows = await admin.GetFromJsonAsync<List<SiteFeedbackDto>>("/api/admin/feedback");
 
-        var saved = Assert.Single(rows!.Where(f => f.Message == marker));
+        var saved = Assert.Single(rows!, f => f.Message == marker);
         Assert.Equal("0501234567", saved.ContactInfo);
         Assert.Equal("https://talmidon.vercel.app/app/lessons", saved.PageUrl);
         Assert.False(saved.IsHandled);
@@ -89,7 +89,7 @@ public class SiteFeedbackTests(TalmidonWebApplicationFactory factory)
 
         var admin = await TestHelpers.CreateAuthorizedAdminClientAsync(factory);
         var open = await admin.GetFromJsonAsync<List<SiteFeedbackDto>>("/api/admin/feedback");
-        var row = Assert.Single(open!.Where(f => f.Message == marker));
+        var row = Assert.Single(open!, f => f.Message == marker);
 
         var handled = await admin.PostAsync($"/api/admin/feedback/{row.Id}/handled", null);
         Assert.Equal(HttpStatusCode.NoContent, handled.StatusCode);
