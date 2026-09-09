@@ -195,6 +195,27 @@ public class GeminiModelChoiceTests
         Assert.Equal("m: HTTP 500 upstream connect error", GeminiFailure.Describe(500, "m", "upstream connect error"));
     }
 
+    /// <summary>
+    /// כיבוי החשיבה נשלח רק למי שמקבל אותו. שליחה לכולם ותיקון אחרי כישלון עולה
+    /// בקשה מיותרת בכל הפעלה, ובזמן שהמורה ממתינה.
+    /// </summary>
+    [Theory]
+    [InlineData("gemini-2.5-flash")]
+    [InlineData("gemini-2.5-flash-lite")]
+    public void ThinkingCanBeTurnedOffOnFlash(string model)
+    {
+        Assert.True(GeminiModelChoice.SupportsThinkingBudget(model));
+    }
+
+    [Theory]
+    [InlineData("gemini-2.5-pro")]       // מינימום גדול מאפס
+    [InlineData("gemini-2.0-flash")]     // אינו מכיר את השדה
+    [InlineData("gemini-flash-latest")]  // כינוי — לא ידוע לאן הוא מצביע
+    public void AndNotOnModelsThatRefuseIt(string model)
+    {
+        Assert.False(GeminiModelChoice.SupportsThinkingBudget(model));
+    }
+
     [Fact]
     public void NothingAvailableMeansNoChoice()
     {
