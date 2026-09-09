@@ -36,8 +36,10 @@ public class AiController(ILessonPlanner planner) : ControllerBase
             string.IsNullOrWhiteSpace(request.GradeLevel) ? null : request.GradeLevel.Trim(),
             string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim()));
 
+        // הניקוי כאן ולא אצל הספק: כל ספק כותב ב-Markdown וב-LaTeX מאותה סיבה,
+        // והמערך מוצג ונשמר כטקסט רגיל בלי קשר למי כתב אותו.
         return result.Ok
-            ? Ok(new LessonPlanResponse(result.Plan!))
+            ? Ok(new LessonPlanResponse(LessonPlanText.Clean(result.Plan)))
             : BadRequest(new { message = result.Error });
     }
 }
