@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EventInput } from 'fullcalendar';
@@ -17,20 +17,18 @@ import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calenda
 import { LESSON_STATUS_CLASS, LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, LessonStatus } from '../../lessons/lessons.models';
 import { StudentLesson } from '../student-portal.models';
 import { StudentPortalService } from '../student-portal.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-student-lessons',
-  imports: [
-    DatePipe,
-    ReactiveFormsModule,
+  imports: [ ReactiveFormsModule,
     ButtonModule,
     DatePickerModule,
     DialogModule,
     TagModule,
     TextareaModule,
     LessonCalendarComponent,
-    PageHeaderComponent
-  ],
+    PageHeaderComponent, IsraelDatePipe],
   templateUrl: './student-lessons.component.html'
 })
 export class StudentLessonsComponent implements OnInit {

@@ -344,7 +344,7 @@
   @if (selectedLesson(); as lesson) {
     <div class="flex flex-column gap-2">
       <div><strong>תלמיד:</strong> {{ lesson.studentName }}</div>
-      <div><strong>מועד:</strong> {{ lesson.startTime | date: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | date: 'HH:mm' }}</div>
+      <div><strong>מועד:</strong> {{ lesson.startTime | ilDate: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | ilDate: 'HH:mm' }}</div>
       <div><strong>סטטוס:</strong> <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" /></div>
       @if (lesson.seriesId) {
         <div><p-tag value="🔁 שיעור חוזר" severity="info" /></div>
@@ -389,9 +389,9 @@
     <div class="flex flex-column gap-2">
       <div><strong>תלמיד:</strong> {{ request.studentName }}</div>
       <div><strong>הורה מבקש:</strong> {{ request.parentName }}</div>
-      <div><strong>מועד נוכחי:</strong> {{ request.lessonStartTime | date: 'dd/MM/yyyy HH:mm' }} – {{ request.lessonEndTime | date: 'HH:mm' }}</div>
+      <div><strong>מועד נוכחי:</strong> {{ request.lessonStartTime | ilDate: 'dd/MM/yyyy HH:mm' }} – {{ request.lessonEndTime | ilDate: 'HH:mm' }}</div>
       @if (request.type === ChangeRequestType.Reschedule && request.proposedStartTime) {
-        <div><strong>מועד מוצע:</strong> {{ request.proposedStartTime | date: 'dd/MM/yyyy HH:mm' }} – {{ request.proposedEndTime | date: 'HH:mm' }}</div>
+        <div><strong>מועד מוצע:</strong> {{ request.proposedStartTime | ilDate: 'dd/MM/yyyy HH:mm' }} – {{ request.proposedEndTime | ilDate: 'HH:mm' }}</div>
       }
       @if (request.reason) {
         <div><strong>סיבה:</strong> {{ request.reason }}</div>

@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -18,19 +18,19 @@ import { lessonToCalendarEvent } from '../../lessons/lesson-calendar.util';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestType, Lesson, LessonStatus } from '../../lessons/lessons.models';
 import { MyChild } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-parent-lessons',
-  imports: [ReactiveFormsModule,
+  imports: [ ReactiveFormsModule,
     FormsModule,
-    DatePipe,
     ButtonModule,
     DatePickerModule,
     DialogModule,
     InputTextModule,
     SelectModule,
     TagModule,
-    LessonCalendarComponent, PageHeaderComponent],
+    LessonCalendarComponent, PageHeaderComponent, IsraelDatePipe],
   templateUrl: './parent-lessons.component.html'
 })
 export class ParentLessonsComponent implements OnInit {

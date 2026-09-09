@@ -1,8 +1,9 @@
-import { DatePipe } from '@angular/common';
+
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { PortalResource, StudentResource, resourceColor, resourceHost, resourceIcon, resourceKindLabel } from './resources.models';
+import { IsraelDatePipe } from '../../core/i18n/israel-date.pipe';
 
 /**
  * רשימת חומרי לימוד — משותפת למסך המורה ולשני הפורטלים, כדי שחומר ייראה אותו דבר
@@ -11,7 +12,7 @@ import { PortalResource, StudentResource, resourceColor, resourceHost, resourceI
  */
 @Component({
   selector: 'app-resource-list',
-  imports: [DatePipe, ButtonModule, TooltipModule],
+  imports: [ ButtonModule, TooltipModule, IsraelDatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ul class="resource-list">
@@ -27,7 +28,7 @@ import { PortalResource, StudentResource, resourceColor, resourceHost, resourceI
               @if (showStudentName()) {
                 · {{ studentNameOf(resource) }}
               }
-              · {{ resource.createdAt | date: 'dd/MM/yyyy' }}
+              · {{ resource.createdAt | ilDate: 'dd/MM/yyyy' }}
             </span>
             @if (resource.description) {
               <p class="resource-description">{{ resource.description }}</p>

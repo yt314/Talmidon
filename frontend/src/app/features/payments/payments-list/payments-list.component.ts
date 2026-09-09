@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -19,12 +19,12 @@ import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { OpenCharge, Payment } from '../payments.models';
 import { PaymentsService } from '../payments.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-payments-list',
-  imports: [ReactiveFormsModule,
+  imports: [ ReactiveFormsModule,
     FormsModule,
-    DatePipe,
     ButtonModule,
     CheckboxModule,
     DatePickerModule,
@@ -32,7 +32,7 @@ import { PaymentsService } from '../payments.service';
     SelectModule,
     TableModule,
     TabsModule,
-    TagModule, PageHeaderComponent, EmptyStateComponent],
+    TagModule, PageHeaderComponent, EmptyStateComponent, IsraelDatePipe],
   templateUrl: './payments-list.component.html'
 })
 export class PaymentsListComponent implements OnInit {

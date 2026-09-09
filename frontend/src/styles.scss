@@ -437,6 +437,37 @@ a:hover {
   .library-content {
     padding-inline: 0.9rem;
   }
+
+  /* בטלפון הסרגל העליון הוא לוגו ועוד שורת אייקונים, והם רחבים יחד ממסך של 390px.
+     ילד של flex לא מתכווץ מתחת לתוכנו כל עוד min-width הוא auto — ולכן במקום
+     להצטמצם, הסרגל דחף את העמוד כולו ל-485px וכל המסכים נגללו הצידה. */
+  .app-shell-topbar .p-menubar,
+  .app-shell-topbar .p-menubar-start,
+  .app-shell-topbar .p-menubar-end,
+  .app-shell-topbar .p-menubar-root-list {
+    min-width: 0;
+  }
+  .app-shell-topbar .p-menubar-end {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    row-gap: 0.25rem;
+  }
+  /* חמישה אייקונים בשורה אחת: מצמצמים ריווח ופנימיים כדי שייכנסו לרוחב הטלפון. */
+  .app-shell-topbar .p-menubar-end .p-button.p-button-icon-only,
+  .app-shell-topbar .p-menubar-end .user-menu-trigger {
+    padding: 0.35rem;
+  }
+  .app-shell-topbar .p-menubar-end > .flex {
+    gap: 0.15rem;
+  }
+  /* שם המותג לא מתקצר: "תלמידון" שנחתך ל"תלמיד" הוא מותג שבור, לא חיסכון במקום. */
+  .app-shell-topbar .brand {
+    flex: none;
+  }
+  /* רשת ביטחון: אף פיקסל חורג בסרגל לא יגרום לכל העמוד להיגלל הצידה. */
+  .app-shell {
+    overflow-x: clip;
+  }
 }
 
 /* ------------------------------------------------- כותרת מסך (page-header) ---- */

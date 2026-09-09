@@ -22,7 +22,7 @@
         <ng-template pTemplate="body" let-charge>
           <tr>
             <td>{{ charge.studentName }}</td>
-            <td>{{ charge.lessonStartTime | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ charge.lessonStartTime | ilDate: 'dd/MM/yyyy' }}</td>
             <td>{{ charge.amount }} ₪</td>
           </tr>
         </ng-template>
@@ -47,7 +47,7 @@
         <ng-template pTemplate="body" let-payment>
           <tr>
             <td>{{ payment.amount }} ₪</td>
-            <td>{{ payment.paidDate | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ payment.paidDate | ilDate: 'dd/MM/yyyy' }}</td>
             <td>{{ payment.method || '—' }}</td>
             <td>{{ payment.lessonCount }}</td>
           </tr>

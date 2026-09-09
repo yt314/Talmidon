@@ -151,7 +151,7 @@
   @if (selectedLesson(); as lesson) {
     <div class="flex flex-column gap-2">
       <div><strong>ילד/ה:</strong> {{ lesson.studentName }}</div>
-      <div><strong>מועד:</strong> {{ lesson.startTime | date: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | date: 'HH:mm' }}</div>
+      <div><strong>מועד:</strong> {{ lesson.startTime | ilDate: 'dd/MM/yyyy HH:mm' }} – {{ lesson.endTime | ilDate: 'HH:mm' }}</div>
       <div><strong>סטטוס:</strong> <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" /></div>
       @if (lesson.homework) {
         <div><strong>שיעורי בית:</strong> {{ lesson.homework }}</div>

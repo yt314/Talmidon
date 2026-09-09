@@ -19,7 +19,7 @@
       icon="pi-calendar"
       tone="info"
       link="/parent/lessons"
-      [value]="nextLesson() ? (nextLesson()!.startTime | date: 'dd/MM HH:mm') : (lessons() === null ? null : '—')"
+      [value]="nextLesson() ? (nextLesson()!.startTime | ilDate: 'dd/MM HH:mm') : (lessons() === null ? null : '—')"
       [hint]="nextLesson() ? nextLesson()!.studentName : (lessons() === null ? null : 'אין שיעורים קרובים')" />
   </div>
 
@@ -47,7 +47,7 @@
       @for (lesson of upcomingLessons(); track lesson.id) {
         <li class="flex justify-content-between align-items-center py-2">
           <div class="flex align-items-center gap-3">
-            <span class="text-color-secondary">{{ lesson.startTime | date: 'dd/MM HH:mm' }}</span>
+            <span class="text-color-secondary">{{ lesson.startTime | ilDate: 'dd/MM HH:mm' }}</span>
             <span>{{ lesson.studentName }}</span>
           </div>
           <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" />

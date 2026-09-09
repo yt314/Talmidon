@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -19,21 +19,19 @@ import {
   ContactRequestStatus
 } from './contact-requests.models';
 import { ContactRequestsService } from './contact-requests.service';
+import { IsraelDatePipe } from '../../core/i18n/israel-date.pipe';
 
 /** תיבת הפניות שהגיעו מהספרייה הציבורית. */
 @Component({
   selector: 'app-contact-requests',
-  imports: [
-    FormsModule,
-    DatePipe,
+  imports: [ FormsModule,
     ButtonModule,
     CardModule,
     SelectButtonModule,
     TagModule,
     TooltipModule,
     EmptyStateComponent,
-    PageHeaderComponent
-  ],
+    PageHeaderComponent, IsraelDatePipe],
   templateUrl: './contact-requests.component.html'
 })
 export class ContactRequestsComponent implements OnInit {

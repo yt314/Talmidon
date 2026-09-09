@@ -1,6 +1,7 @@
-import { DatePipe } from '@angular/common';
+
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MessageAuthor, ThreadSummary } from './messages.models';
+import { IsraelDatePipe } from '../../core/i18n/israel-date.pipe';
 
 /**
  * רשימת השיחות. אותה רשימה משרתת את המורה ואת מי שמדבר איתה, ומה שמשתנה הוא רק
@@ -9,7 +10,7 @@ import { MessageAuthor, ThreadSummary } from './messages.models';
 @Component({
   selector: 'app-thread-list',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
+  imports: [ IsraelDatePipe],
   templateUrl: './thread-list.component.html',
   styleUrl: './messages.scss'
 })

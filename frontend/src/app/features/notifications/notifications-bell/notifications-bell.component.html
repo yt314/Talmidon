@@ -30,7 +30,7 @@
             <div class="flex-1">
               <div class="font-medium">{{ n.title }}</div>
               <div class="text-sm text-color-secondary">{{ n.message }}</div>
-              <div class="text-xs text-color-secondary mt-1">{{ n.createdAt | date: 'dd/MM/yyyy HH:mm' }}</div>
+              <div class="text-xs text-color-secondary mt-1">{{ n.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}</div>
             </div>
           </li>
         }

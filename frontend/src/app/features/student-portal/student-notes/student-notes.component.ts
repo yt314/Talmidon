@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -7,10 +7,11 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { StudentNote } from '../student-portal.models';
 import { StudentPortalService } from '../student-portal.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-student-notes',
-  imports: [DatePipe, ButtonModule, SkeletonModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [ ButtonModule, SkeletonModule, PageHeaderComponent, EmptyStateComponent, IsraelDatePipe],
   templateUrl: './student-notes.component.html'
 })
 export class StudentNotesComponent implements OnInit {

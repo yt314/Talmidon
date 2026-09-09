@@ -14,7 +14,7 @@
             }
             {{ title(thread) }}
           </span>
-          <span class="thread-row-time">{{ thread.lastMessageAt | date: 'dd/MM HH:mm' }}</span>
+          <span class="thread-row-time">{{ thread.lastMessageAt | ilDate: 'dd/MM HH:mm' }}</span>
         </span>
 
         @if (context(thread); as line) {

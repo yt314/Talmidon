@@ -31,7 +31,7 @@
     <div class="mb-4">
       <div class="mb-1"><span class="text-color-secondary">כיתה: </span>{{ student()!.gradeLevel || '—' }}</div>
       <div class="mb-1">
-        <span class="text-color-secondary">תאריך לידה: </span>{{ (student()!.birthDate | date: 'dd/MM/yyyy') || '—' }}
+        <span class="text-color-secondary">תאריך לידה: </span>{{ (student()!.birthDate | ilDate: 'dd/MM/yyyy') || '—' }}
       </div>
       <div class="mb-1">
         <span class="text-color-secondary">מחיר לשיעור: </span>{{ student()!.defaultPricePerLesson != null ? student()!.defaultPricePerLesson + ' ₪' : 'ברירת מחדל של המורה' }}
@@ -116,7 +116,7 @@
             <div class="flex gap-2 mt-2 align-items-center">
               <p-tag [value]="note.visibleToStudent ? 'גלוי לתלמיד' : 'מוסתר מתלמיד'" [severity]="note.visibleToStudent ? 'success' : 'secondary'" />
               <p-tag [value]="note.visibleToParent ? 'גלוי להורה' : 'מוסתר מהורה'" [severity]="note.visibleToParent ? 'success' : 'secondary'" />
-              <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              <span class="text-sm text-color-secondary">{{ note.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}</span>
             </div>
           </li>
         }

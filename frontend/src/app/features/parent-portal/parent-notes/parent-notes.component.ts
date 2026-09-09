@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,10 +11,11 @@ import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { MyChild, ParentNote } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-parent-notes',
-  imports: [FormsModule, DatePipe, ButtonModule, CardModule, SelectModule, SkeletonModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [ FormsModule, ButtonModule, CardModule, SelectModule, SkeletonModule, PageHeaderComponent, EmptyStateComponent, IsraelDatePipe],
   templateUrl: './parent-notes.component.html'
 })
 export class ParentNotesComponent implements OnInit {

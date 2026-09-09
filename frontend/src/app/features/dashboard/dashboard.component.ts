@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -15,20 +15,18 @@ import { ContactRequestsService } from '../contact-requests/contact-requests.ser
 import { PaymentsService } from '../payments/payments.service';
 import { StudentsService } from '../students/students.service';
 import { ProfileSetupService } from '../teacher/profile-setup/profile-setup.service';
+import { IsraelDatePipe } from '../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [
-    RouterLink,
-    DatePipe,
+  imports: [ RouterLink,
     ButtonModule,
     CardModule,
     TagModule,
     EmptyStateComponent,
     PageHeaderComponent,
     StatCardComponent,
-    SpotlightDirective
-  ],
+    SpotlightDirective, IsraelDatePipe],
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {

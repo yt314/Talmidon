@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -31,14 +31,13 @@ import { StudentResource } from '../../resources/resources.models';
 import { ResourcesService } from '../../resources/resources.service';
 import { ParentSummary, StudentDetail } from '../students.models';
 import { StudentsService } from '../students.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-student-detail',
-  imports: [
-    ReactiveFormsModule,
+  imports: [ ReactiveFormsModule,
     FormsModule,
     RouterLink,
-    DatePipe,
     ButtonModule,
     CardModule,
     CheckboxModule,
@@ -51,8 +50,7 @@ import { StudentsService } from '../students.service';
     TextareaModule,
     TooltipModule,
     EmptyStateComponent,
-    ResourceListComponent
-  ],
+    ResourceListComponent, IsraelDatePipe],
   templateUrl: './student-detail.component.html'
 })
 export class StudentDetailComponent implements OnInit {
