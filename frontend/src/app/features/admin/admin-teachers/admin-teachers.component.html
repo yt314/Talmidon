@@ -24,7 +24,7 @@
       </td>
       <td>{{ teacher.email }}</td>
       <td>{{ teacher.studentCount }}</td>
-      <td>{{ teacher.createdAt | date: 'dd/MM/yyyy' }}</td>
+      <td>{{ teacher.createdAt | ilDate: 'dd/MM/yyyy' }}</td>
       <td>
         <p-tag [value]="teacher.isPublic ? 'מוצגת' : 'לא מוצגת'" [severity]="teacher.isPublic ? 'success' : 'secondary'" />
       </td>

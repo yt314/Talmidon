@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -11,6 +11,7 @@ import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { AdminSiteFeedback } from '../admin.models';
 import { AdminService } from '../admin.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 /**
  * ההודעות שנשלחו מרצועת "בהרצה". פותח על מה שלא טופל — רשימה שמצטברת בלי סימון
@@ -18,16 +19,13 @@ import { AdminService } from '../admin.service';
  */
 @Component({
   selector: 'app-admin-feedback',
-  imports: [
-    DatePipe,
-    FormsModule,
+  imports: [ FormsModule,
     ButtonModule,
     CardModule,
     TagModule,
     ToggleSwitchModule,
     EmptyStateComponent,
-    PageHeaderComponent
-  ],
+    PageHeaderComponent, IsraelDatePipe],
   templateUrl: './admin-feedback.component.html'
 })
 export class AdminFeedbackComponent implements OnInit {

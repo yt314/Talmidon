@@ -44,7 +44,7 @@
     @for (message of thread().messages; track message.id) {
       <article class="bubble" [class.is-mine]="message.senderRole === me()">
         <p class="bubble-body">{{ message.body }}</p>
-        <time class="bubble-time">{{ message.createdAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+        <time class="bubble-time">{{ message.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}</time>
       </article>
     }
   </div>

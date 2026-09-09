@@ -46,7 +46,7 @@
             </span>
             <span class="font-bold">{{ note.studentName }}</span>
           </div>
-          <span class="text-sm text-color-secondary">{{ note.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+          <span class="text-sm text-color-secondary">{{ note.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}</span>
         </div>
         <p class="m-0" style="white-space: pre-wrap">{{ note.content }}</p>
         <div class="mt-2">

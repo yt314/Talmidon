@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
@@ -6,10 +6,11 @@ import { TagModule } from 'primeng/tag';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { OpenCharge, Payment } from '../../payments/payments.models';
 import { ParentPortalService } from '../parent-portal.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-parent-payments',
-  imports: [DatePipe, TableModule, TabsModule, TagModule, PageHeaderComponent],
+  imports: [ TableModule, TabsModule, TagModule, PageHeaderComponent, IsraelDatePipe],
   templateUrl: './parent-payments.component.html'
 })
 export class ParentPaymentsComponent implements OnInit {

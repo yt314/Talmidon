@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
@@ -8,10 +8,11 @@ import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, Lesson, LessonStatus } fr
 import { OpenCharge } from '../../payments/payments.models';
 import { MyChild } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-parent-dashboard',
-  imports: [DatePipe, CardModule, TagModule, PageHeaderComponent, StatCardComponent],
+  imports: [ CardModule, TagModule, PageHeaderComponent, StatCardComponent, IsraelDatePipe],
   templateUrl: './parent-dashboard.component.html'
 })
 export class ParentDashboardComponent implements OnInit {

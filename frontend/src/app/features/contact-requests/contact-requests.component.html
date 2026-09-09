@@ -31,7 +31,7 @@
           <div>
             <h3 class="m-0">{{ contact.fullName }}</h3>
             <span class="text-sm text-color-secondary">
-              {{ contact.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+              {{ contact.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}
               @if (contact.subject) {
                 · {{ contact.subject }}
               }

@@ -1,10 +1,11 @@
-import { DatePipe } from '@angular/common';
+
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageAuthor, ThreadDetail } from './messages.models';
+import { IsraelDatePipe } from '../../core/i18n/israel-date.pipe';
 
 /**
  * חלון השיחה: ההודעות לפי סדר, וחלון כתיבה בתחתית.
@@ -15,7 +16,7 @@ import { MessageAuthor, ThreadDetail } from './messages.models';
 @Component({
   selector: 'app-conversation',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule, ButtonModule, TextareaModule, TooltipModule],
+  imports: [ FormsModule, ButtonModule, TextareaModule, TooltipModule, IsraelDatePipe],
   templateUrl: './conversation.component.html',
   styleUrl: './messages.scss'
 })

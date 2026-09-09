@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -10,10 +10,11 @@ import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { AdminService } from '../admin.service';
 import { AdminTeacher } from '../admin.models';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-admin-teachers',
-  imports: [DatePipe, ButtonModule, TableModule, TagModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [ ButtonModule, TableModule, TagModule, PageHeaderComponent, EmptyStateComponent, IsraelDatePipe],
   templateUrl: './admin-teachers.component.html'
 })
 export class AdminTeachersComponent implements OnInit {

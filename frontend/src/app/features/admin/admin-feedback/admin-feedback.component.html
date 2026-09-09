@@ -23,7 +23,7 @@
           <div class="flex-1" style="min-width: 16rem">
             <p class="mt-0 mb-2" style="white-space: pre-wrap">{{ row.message }}</p>
             <div class="flex gap-2 flex-wrap text-sm" style="color: var(--p-text-muted-color)">
-              <span>{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              <span>{{ row.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}</span>
               @if (row.contactInfo) {
                 <span>· {{ row.contactInfo }}</span>
               }

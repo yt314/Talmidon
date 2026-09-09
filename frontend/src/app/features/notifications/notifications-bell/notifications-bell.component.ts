@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+
 import { Component, DestroyRef, OnInit, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
@@ -9,10 +9,11 @@ import { timer } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { AppNotification, NotificationType, notificationIcon } from '../notifications.models';
 import { NotificationsService } from '../notifications.service';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-notifications-bell',
-  imports: [DatePipe, ButtonModule, PopoverModule, EmptyStateComponent],
+  imports: [ ButtonModule, PopoverModule, EmptyStateComponent, IsraelDatePipe],
   templateUrl: './notifications-bell.component.html'
 })
 export class NotificationsBellComponent implements OnInit {

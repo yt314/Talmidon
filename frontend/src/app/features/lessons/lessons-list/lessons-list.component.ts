@@ -1,4 +1,4 @@
-import { DatePipe, formatDate } from '@angular/common';
+import { formatDate } from '@angular/common';
 import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -39,12 +39,12 @@ import {
 import { LessonsService } from '../lessons.service';
 import { CalendarEventsService } from '../calendar-events.service';
 import { CalendarEventItem } from '../calendar-events.models';
+import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-lessons-list',
-  imports: [ReactiveFormsModule,
+  imports: [ ReactiveFormsModule,
     FormsModule,
-    DatePipe,
     PrimeTemplate,
     ButtonModule,
     CheckboxModule,
@@ -56,7 +56,7 @@ import { CalendarEventItem } from '../calendar-events.models';
     SelectModule,
     TagModule,
     TextareaModule,
-    LessonCalendarComponent, PageHeaderComponent],
+    LessonCalendarComponent, PageHeaderComponent, IsraelDatePipe],
   templateUrl: './lessons-list.component.html'
 })
 export class LessonsListComponent implements OnInit {
