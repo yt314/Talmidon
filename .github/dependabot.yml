@@ -30,28 +30,52 @@ updates:
       interval: weekly
       day: sunday
     open-pull-requests-limit: 5
+    # Majors of the framework packages are a migration, not a bump: `ng update`
+    # moves Angular, its CLI and the TypeScript it pins together, and PrimeNG's
+    # majors track Angular's. A bot pull request for those can only ever be red.
+    ignore:
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "primeng"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@primeng/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "primeicons"
+        update-types: ["version-update:semver-major"]
     groups:
       angular:
+        # TypeScript belongs in this group: Angular pins a narrow peer range for
+        # it, so moving one without the other leaves npm unable to resolve.
         patterns:
           - "@angular/*"
           - "@angular-devkit/*"
-          - "@angular/cli"
+          - "typescript"
+        update-types: ["minor", "patch"]
       primeng:
         patterns:
           - "primeng"
           - "@primeng/*"
           - "primeicons"
           - "primeflex"
+        update-types: ["minor", "patch"]
       other-npm:
         patterns:
           - "*"
         exclude-patterns:
           - "@angular/*"
           - "@angular-devkit/*"
+          - "typescript"
           - "primeng"
           - "@primeng/*"
           - "primeicons"
           - "primeflex"
+        # Anything major here arrives as its own pull request, where one failing
+        # package is obvious instead of sinking a group of six.
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: github-actions
     directory: /
