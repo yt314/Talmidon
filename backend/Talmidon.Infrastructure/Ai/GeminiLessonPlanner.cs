@@ -62,7 +62,21 @@ public class GeminiLessonPlanner : ILessonPlanner
             return new LessonPlanResult(false, null, "התכונה אינה מוגדרת בשרת.");
 
         var model = _resolver.Resolved ?? _configuredModel;
-        var attempt = await TryWithRetriesAsync(model, BuildBody(request, allowThinking: true));
+
+        // חשיבה כבויה כברירת מחדל. המודלים החדשים "חושבים" לפני שהם עונים, וזה מוסיף
+        // עשרות שניות להמתנה של המורה — על משימה שהיא טקסט קצר ומובנה לפי מבנה נתון,
+        // ולא בעיה שדורשת מחשבה. מי שהמתין דקה למערך לא ינסה שוב.
+        var thinking = _resolver.ThinkingRequired;
+        var attempt = await TryWithRetriesAsync(model, BuildBody(request, thinking));
+
+        // מודל שאינו מכיר את השדה, או שאינו מרשה אפס — מוותרים על הכיבוי ולא נכשלים
+        if (attempt.ThinkingRejected)
+        {
+            _logger.LogWarning("Gemini model {Model} rejected the thinking setting; letting it think.", model);
+            _resolver.RememberThinkingRequired();
+            thinking = true;
+            attempt = await TryWithRetriesAsync(model, BuildBody(request, allowThinking: true));
+        }
 
         // שם שאינו קיים אצל הספק — שואלים מה כן זמין למפתח הזה ומנסים פעם אחת נוספת
         if (attempt.ModelMissing)
@@ -77,7 +91,7 @@ public class GeminiLessonPlanner : ILessonPlanner
             }
 
             _logger.LogWarning("Gemini model {Model} is unavailable; using {Discovered} instead.", model, discovered);
-            attempt = await TryWithRetriesAsync(discovered, BuildBody(request, allowThinking: true));
+            attempt = await TryWithRetriesAsync(discovered, BuildBody(request, thinking));
             model = discovered;
         }
 
@@ -89,7 +103,7 @@ public class GeminiLessonPlanner : ILessonPlanner
             if (alternative is not null)
             {
                 _logger.LogWarning("Gemini model {Model} is overloaded; trying {Alternative}.", model, alternative);
-                var viaAlternative = await TryWithRetriesAsync(alternative, BuildBody(request, allowThinking: true));
+                var viaAlternative = await TryWithRetriesAsync(alternative, BuildBody(request, thinking));
                 if (!viaAlternative.ProviderBusy)
                 {
                     attempt = viaAlternative;
@@ -101,7 +115,7 @@ public class GeminiLessonPlanner : ILessonPlanner
         // המודלים החדשים "חושבים" לפני שהם עונים, והחשיבה נגרעת מאותו תקציב פלט. מודל
         // כזה יכול לכלות את כולו לפני שנכתבה מילה אחת ולהחזיר תשובה ריקה בהצלחה מדומה,
         // ולכן ניסיון שני בלי חשיבה עדיף על הודעת שגיאה למורה.
-        if (attempt.SpentBudgetBeforeAnswering)
+        if (attempt.SpentBudgetBeforeAnswering && thinking)
         {
             _logger.LogWarning(
                 "Gemini model {Model} used its whole output budget before writing anything; retrying without thinking.",
@@ -122,7 +136,12 @@ public class GeminiLessonPlanner : ILessonPlanner
         GeminiRequest.Build(request, MaxOutputTokens, Temperature, allowThinking);
 
     private readonly record struct Attempt(
-        bool Succeeded, bool ModelMissing, bool SpentBudgetBeforeAnswering, bool ProviderBusy, LessonPlanResult Result);
+        bool Succeeded,
+        bool ModelMissing,
+        bool SpentBudgetBeforeAnswering,
+        bool ProviderBusy,
+        bool ThinkingRejected,
+        LessonPlanResult Result);
 
     /// <summary>
     /// מנסה שוב כשהספק עמוס. עומס הוא המצב השכיח ביותר בשכבה החינמית, והוא חולף תוך
@@ -159,13 +178,16 @@ public class GeminiLessonPlanner : ILessonPlanner
                 _logger.LogError(
                     "Gemini returned {Status} for model {Model}: {Body}", status, model, Truncate(error));
 
-                if (GeminiModelChoice.IsModelProblem(status, error))
+                if (GeminiFailure.IsModelProblem(status, error))
                     return Failed(true, false, "המודל המוגדר אינו זמין.");
+
+                if (GeminiFailure.IsThinkingRejected(status, error))
+                    return Failed(false, false, "המודל אינו מקבל את ההגדרה הזו.", thinkingRejected: true);
 
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                     return Failed(false, false, "חרגנו ממכסת השימוש החינמית. נסי שוב מאוחר יותר.");
 
-                if (GeminiModelChoice.IsTransient(status))
+                if (GeminiFailure.IsTransient(status))
                     return Failed(false, false,
                         "השירות של Gemini עמוס כרגע. ניסינו כמה פעמים — כדאי לנסות שוב בעוד דקה.",
                         providerBusy: true);
@@ -179,7 +201,7 @@ public class GeminiLessonPlanner : ILessonPlanner
             var answer = ReadAnswer(document.RootElement);
 
             if (!string.IsNullOrWhiteSpace(answer.Text))
-                return new Attempt(true, false, false, false, new LessonPlanResult(true, answer.Text, null));
+                return new Attempt(true, false, false, false, false, new LessonPlanResult(true, answer.Text, null));
 
             // תשובה ריקה מגיעה כהצלחה, ולכן חייבים לקרוא את הסיבה כדי לדעת מה קרה
             _logger.LogWarning(
@@ -203,8 +225,11 @@ public class GeminiLessonPlanner : ILessonPlanner
         }
     }
 
-    private static Attempt Failed(bool modelMissing, bool spentBudget, string message, bool providerBusy = false) =>
-        new(false, modelMissing, spentBudget, providerBusy, new LessonPlanResult(false, null, message));
+    private static Attempt Failed(
+        bool modelMissing, bool spentBudget, string message,
+        bool providerBusy = false, bool thinkingRejected = false) =>
+        new(false, modelMissing, spentBudget, providerBusy, thinkingRejected,
+            new LessonPlanResult(false, null, message));
 
     private readonly record struct Answer(string Text, string? FinishReason, string? BlockReason);
 

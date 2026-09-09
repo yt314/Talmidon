@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -52,6 +52,13 @@ export class LessonPlanComponent implements OnInit {
    * אינה מסבירה דבר, וגם אי אפשר לדווח עליה.
    */
   protected readonly error = signal<string | null>(null);
+  /**
+   * שניות ההמתנה. המסך אמר "זה לוקח כמה שניות" גם כשזה לקח דקה, וזה גרוע יותר
+   * מלהמתין: מי שממתין בלי לדעת כמה מניחה שנתקע.
+   */
+  protected readonly elapsed = signal(0);
+  private readonly destroyRef = inject(DestroyRef);
+  private ticker?: ReturnType<typeof setInterval>;
 
   protected readonly form = this.fb.nonNullable.group({
     subject: ['', [Validators.required, Validators.maxLength(100)]],
@@ -74,6 +81,7 @@ export class LessonPlanComponent implements OnInit {
     const raw = this.form.getRawValue();
     this.building.set(true);
     this.error.set(null);
+    this.startTicking();
     this.ai
       .buildLessonPlan({
         subject: raw.subject.trim(),
@@ -84,16 +92,30 @@ export class LessonPlanComponent implements OnInit {
       })
       .subscribe({
         next: result => {
+          this.stopTicking();
           this.building.set(false);
           this.plan.set(result.plan);
         },
         error: err => {
           const message = extractErrorMessage(err, 'בניית המערך נכשלה.');
+          this.stopTicking();
           this.building.set(false);
           this.error.set(message);
           this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: message });
         }
       });
+  }
+
+  private startTicking(): void {
+    this.elapsed.set(0);
+    this.ticker = setInterval(() => this.elapsed.update(seconds => seconds + 1), 1000);
+    // עזיבת המסך באמצע בנייה השאירה מונה שרץ לנצח
+    this.destroyRef.onDestroy(() => this.stopTicking());
+  }
+
+  private stopTicking(): void {
+    if (this.ticker) clearInterval(this.ticker);
+    this.ticker = undefined;
   }
 
   protected copy(): void {
