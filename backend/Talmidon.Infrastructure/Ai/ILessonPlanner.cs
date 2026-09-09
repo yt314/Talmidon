@@ -8,7 +8,12 @@ public record LessonPlanRequest(
     string? GradeLevel,
     string? Notes);
 
-public record LessonPlanResult(bool Ok, string? Plan, string? Error);
+/// <summary>
+/// תוצאת בנייה. <paramref name="Detail"/> הוא מה שהספק עצמו אמר — הודעה טכנית באנגלית
+/// שאינה מוצגת למורה אלא מאחורי "פרטים". בלעדיה כל אבחון עובר דרך יומני השרת, ומי
+/// שנתקלת בתקלה אינה יכולה לומר מה קרה — רק שזה לא עבד.
+/// </summary>
+public record LessonPlanResult(bool Ok, string? Plan, string? Error, string? Detail = null);
 
 /// <summary>
 /// בונה מערכי שיעור. מופשט מהספק בכוונה: היום רץ מודל בשכבה חינמית, ומעבר לספק אחר

@@ -178,23 +178,27 @@ public class GeminiLessonPlanner : ILessonPlanner
                 _logger.LogError(
                     "Gemini returned {Status} for model {Model}: {Body}", status, model, Truncate(error));
 
+                var detail = GeminiFailure.Describe(status, model, error);
+
                 if (GeminiFailure.IsModelProblem(status, error))
-                    return Failed(true, false, "המודל המוגדר אינו זמין.");
+                    return Failed(true, false, "המודל המוגדר אינו זמין.", detail: detail);
 
                 if (GeminiFailure.IsThinkingRejected(status, error))
-                    return Failed(false, false, "המודל אינו מקבל את ההגדרה הזו.", thinkingRejected: true);
+                    return Failed(false, false, "המודל אינו מקבל את ההגדרה הזו.",
+                        thinkingRejected: true, detail: detail);
 
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
-                    return Failed(false, false, "חרגנו ממכסת השימוש החינמית. נסי שוב מאוחר יותר.");
+                    return Failed(false, false, "חרגנו ממכסת השימוש החינמית. נסי שוב מאוחר יותר.", detail: detail);
 
                 if (GeminiFailure.IsTransient(status))
                     return Failed(false, false,
                         "השירות של Gemini עמוס כרגע. ניסינו כמה פעמים — כדאי לנסות שוב בעוד דקה.",
-                        providerBusy: true);
+                        providerBusy: true, detail: detail);
 
                 // מספר השגיאה מוצג בכוונה: בלעדיו כל כשל מהספק נראה זהה, ואי אפשר לדעת
                 // מהמסך אם מדובר במפתח, במכסה או בתקלה זמנית אצלו.
-                return Failed(false, false, $"בניית המערך נכשלה (שגיאה {status} מהספק). נסי שוב בעוד רגע.");
+                return Failed(false, false, $"בניית המערך נכשלה (שגיאה {status} מהספק). נסי שוב בעוד רגע.",
+                    detail: detail);
             }
 
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -208,28 +212,32 @@ public class GeminiLessonPlanner : ILessonPlanner
                 "Gemini model {Model} returned no text (finishReason={Finish}, blockReason={Block}).",
                 model, answer.FinishReason ?? "-", answer.BlockReason ?? "-");
 
+            var emptyDetail = $"{model}: no text (finishReason={answer.FinishReason ?? "-"}, " +
+                              $"blockReason={answer.BlockReason ?? "-"})";
+
             if (answer.BlockReason is not null || answer.FinishReason is "SAFETY" or "PROHIBITED_CONTENT")
-                return Failed(false, false, "הבקשה נחסמה על ידי מסנן התוכן של הספק. נסי לנסח את נושא השיעור אחרת.");
+                return Failed(false, false,
+                    "הבקשה נחסמה על ידי מסנן התוכן של הספק. נסי לנסח את נושא השיעור אחרת.", detail: emptyDetail);
 
             if (answer.FinishReason == "MAX_TOKENS")
-                return Failed(false, true, "התשובה נקטעה לפני שנכתב דבר. נסי שוב.");
+                return Failed(false, true, "התשובה נקטעה לפני שנכתב דבר. נסי שוב.", detail: emptyDetail);
 
-            return Failed(false, false, "לא התקבל מערך שיעור. נסי שוב.");
+            return Failed(false, false, "לא התקבל מערך שיעור. נסי שוב.", detail: emptyDetail);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lesson plan generation failed (Gemini).");
             // חיבור שנקטע הוא חולף בדיוק כמו עומס, ולכן גם הוא ראוי לניסיון נוסף
             return Failed(false, false, "לא הצלחנו להגיע לשירות בניית המערכים. נסי שוב בעוד רגע.",
-                providerBusy: true);
+                providerBusy: true, detail: $"{model}: {ex.GetType().Name} — {ex.Message}");
         }
     }
 
     private static Attempt Failed(
         bool modelMissing, bool spentBudget, string message,
-        bool providerBusy = false, bool thinkingRejected = false) =>
+        bool providerBusy = false, bool thinkingRejected = false, string? detail = null) =>
         new(false, modelMissing, spentBudget, providerBusy, thinkingRejected,
-            new LessonPlanResult(false, null, message));
+            new LessonPlanResult(false, null, message, detail));
 
     private readonly record struct Answer(string Text, string? FinishReason, string? BlockReason);
 

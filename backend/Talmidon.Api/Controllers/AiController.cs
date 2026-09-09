@@ -40,6 +40,6 @@ public class AiController(ILessonPlanner planner) : ControllerBase
         // והמערך מוצג ונשמר כטקסט רגיל בלי קשר למי כתב אותו.
         return result.Ok
             ? Ok(new LessonPlanResponse(LessonPlanText.Clean(result.Plan)))
-            : BadRequest(new { message = result.Error });
+            : BadRequest(new { message = result.Error, detail = result.Detail });
     }
 }

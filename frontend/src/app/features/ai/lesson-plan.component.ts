@@ -57,6 +57,8 @@ export class LessonPlanComponent implements OnInit {
    * מלהמתין: מי שממתין בלי לדעת כמה מניחה שנתקע.
    */
   protected readonly elapsed = signal(0);
+  /** מה שהספק עצמו אמר. טכני ובאנגלית, ולכן מוצג רק למי שפותחת את "פרטים". */
+  protected readonly errorDetail = signal<string | null>(null);
   private readonly destroyRef = inject(DestroyRef);
   private ticker?: ReturnType<typeof setInterval>;
 
@@ -81,6 +83,7 @@ export class LessonPlanComponent implements OnInit {
     const raw = this.form.getRawValue();
     this.building.set(true);
     this.error.set(null);
+    this.errorDetail.set(null);
     this.startTicking();
     this.ai
       .buildLessonPlan({
@@ -101,6 +104,7 @@ export class LessonPlanComponent implements OnInit {
           this.stopTicking();
           this.building.set(false);
           this.error.set(message);
+          this.errorDetail.set((err as { error?: { detail?: string } })?.error?.detail ?? null);
           this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: message });
         }
       });
@@ -145,5 +149,6 @@ export class LessonPlanComponent implements OnInit {
   protected reset(): void {
     this.plan.set('');
     this.error.set(null);
+    this.errorDetail.set(null);
   }
 }
