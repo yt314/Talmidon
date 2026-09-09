@@ -47,6 +47,11 @@ export class LessonPlanComponent implements OnInit {
 
   protected readonly building = signal(false);
   protected readonly plan = signal<string>('');
+  /**
+   * השגיאה האחרונה. מוצגת במסך ולא רק כהודעה חולפת — הודעה שנעלמת לפני שקוראים אותה
+   * אינה מסבירה דבר, וגם אי אפשר לדווח עליה.
+   */
+  protected readonly error = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     subject: ['', [Validators.required, Validators.maxLength(100)]],
@@ -68,6 +73,7 @@ export class LessonPlanComponent implements OnInit {
 
     const raw = this.form.getRawValue();
     this.building.set(true);
+    this.error.set(null);
     this.ai
       .buildLessonPlan({
         subject: raw.subject.trim(),
@@ -82,12 +88,10 @@ export class LessonPlanComponent implements OnInit {
           this.plan.set(result.plan);
         },
         error: err => {
+          const message = extractErrorMessage(err, 'בניית המערך נכשלה.');
           this.building.set(false);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'שגיאה',
-            detail: extractErrorMessage(err, 'בניית המערך נכשלה.')
-          });
+          this.error.set(message);
+          this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: message });
         }
       });
   }
@@ -118,5 +122,6 @@ export class LessonPlanComponent implements OnInit {
 
   protected reset(): void {
     this.plan.set('');
+    this.error.set(null);
   }
 }
