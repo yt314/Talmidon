@@ -19,6 +19,7 @@ import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { endAfterStartValidator } from '../../../core/forms/validators';
 import { CalendarEventDrop, CalendarEventExtendedProps, CalendarSlotSelection } from '../../../shared/calendar/lesson-calendar.model';
 import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
+import { AiService } from '../../ai/ai.service';
 import { StudentListItem } from '../../students/students.models';
 import { StudentsService } from '../../students/students.service';
 import { AvailabilityWindow } from '../../teacher/profile/profile.models';
@@ -66,6 +67,10 @@ export class LessonsListComponent implements OnInit {
   private readonly profileService = inject(TeacherProfileService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly ai = inject(AiService);
+
+  /** מוסתר כשאין ספק מוגדר בשרת — כפתור שמוביל למסך שמתנצל אינו כפתור. */
+  protected readonly lessonPlannerAvailable = this.ai.lessonPlannerAvailable;
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly locale = inject(LOCALE_ID);
@@ -216,6 +221,7 @@ export class LessonsListComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.ai.loadAvailability();
     this.loadLessons();
     this.loadChangeRequests();
     this.loadPersonalEvents();
