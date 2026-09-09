@@ -116,6 +116,10 @@
         </p-card>
       } @else if (building()) {
         <app-empty-state icon="pi-spin pi-spinner" title="בונה את המערך…" hint="זה לוקח כמה שניות." />
+      } @else if (error(); as message) {
+        <app-empty-state icon="pi-exclamation-triangle" title="בניית המערך לא הצליחה" [hint]="message">
+          <p-button label="ניסיון נוסף" icon="pi pi-refresh" (onClick)="build()" />
+        </app-empty-state>
       } @else {
         <app-empty-state
           icon="pi-file-edit"
