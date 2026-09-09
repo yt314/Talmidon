@@ -1,6 +1,7 @@
 
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -36,6 +37,7 @@ import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 export class ParentLessonsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly portalService = inject(ParentPortalService);
+  private readonly route = inject(ActivatedRoute);
   private readonly messageService = inject(MessageService);
 
   protected readonly LessonStatus = LessonStatus;
@@ -80,7 +82,12 @@ export class ParentLessonsComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.portalService.myChildren().subscribe(children => this.children.set(children));
+    this.portalService.myChildren().subscribe(children => {
+      this.children.set(children);
+      // הגעה מ"בקש שיעור" שבמסך הבית. נפתח רק אחרי שהילדים נטענו, כי הטופס
+      // נפתח על הילד/ה שנבחר/ה — לפני כן הוא היה נפתח ריק.
+      if (this.route.snapshot.queryParamMap.get('request') === '1') this.openRequestDialog();
+    });
     this.load();
   }
 

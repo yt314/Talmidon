@@ -1,5 +1,7 @@
 
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { StatCardComponent } from '../../../shared/ui/stat-card.component';
@@ -12,7 +14,7 @@ import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-parent-dashboard',
-  imports: [ CardModule, TagModule, PageHeaderComponent, StatCardComponent, IsraelDatePipe],
+  imports: [RouterLink, ButtonModule, CardModule, TagModule, PageHeaderComponent, StatCardComponent, IsraelDatePipe],
   templateUrl: './parent-dashboard.component.html'
 })
 export class ParentDashboardComponent implements OnInit {
