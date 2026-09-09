@@ -108,17 +108,23 @@ public class GeminiLessonPlanner : ILessonPlanner
             using var response = await _http.PostAsJsonAsync(
                 $"{BaseUrl}/models/{model}:generateContent?key={_apiKey}", body);
 
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                return Failed(true, false, "המודל המוגדר אינו זמין.");
-
             if (!response.IsSuccessStatusCode)
             {
+                var status = (int)response.StatusCode;
                 // גוף השגיאה עשוי לכלול את המפתח בכתובת — נרשם בלוג בלבד
                 var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Gemini returned {Status}: {Body}", (int)response.StatusCode, Truncate(error));
-                return Failed(false, false, response.StatusCode == HttpStatusCode.TooManyRequests
-                    ? "חרגנו ממכסת השימוש החינמית. נסי שוב מאוחר יותר."
-                    : "בניית המערך נכשלה. נסי שוב בעוד רגע.");
+                _logger.LogError(
+                    "Gemini returned {Status} for model {Model}: {Body}", status, model, Truncate(error));
+
+                if (GeminiModelChoice.IsModelProblem(status, error))
+                    return Failed(true, false, "המודל המוגדר אינו זמין.");
+
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                    return Failed(false, false, "חרגנו ממכסת השימוש החינמית. נסי שוב מאוחר יותר.");
+
+                // מספר השגיאה מוצג בכוונה: בלעדיו כל כשל מהספק נראה זהה, ואי אפשר לדעת
+                // מהמסך אם מדובר במפתח, במכסה או בתקלה זמנית אצלו.
+                return Failed(false, false, $"בניית המערך נכשלה (שגיאה {status} מהספק). נסי שוב בעוד רגע.");
             }
 
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -143,7 +149,7 @@ public class GeminiLessonPlanner : ILessonPlanner
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lesson plan generation failed (Gemini).");
-            return Failed(false, false, "בניית המערך נכשלה. נסי שוב בעוד רגע.");
+            return Failed(false, false, "לא הצלחנו להגיע לשירות בניית המערכים. נסי שוב בעוד רגע.");
         }
     }
 

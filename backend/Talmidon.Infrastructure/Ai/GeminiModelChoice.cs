@@ -29,6 +29,20 @@ public static class GeminiModelChoice
             .FirstOrDefault();
     }
 
+    /// <summary>
+    /// האם הכשל הוא בשם המודל, כלומר האם כדאי לשאול את הספק מה כן זמין ולנסות שוב.
+    ///
+    /// התשובה הרשמית על שם שאינו קיים היא 404, אבל מודל שקיים ואינו תומך ביצירת תוכן
+    /// חוזר כ-400 עם ההסבר בגוף. בלי הענף השני שגיאת מודל נראית ככשל כללי, והגילוי
+    /// האוטומטי — כל מה שאמור להציל את המצב הזה — אינו מופעל כלל.
+    /// </summary>
+    public static bool IsModelProblem(int statusCode, string? errorBody) =>
+        statusCode == 404 ||
+        (statusCode == 400 && errorBody is not null &&
+         (errorBody.Contains("is not found", StringComparison.OrdinalIgnoreCase) ||
+          errorBody.Contains("not supported", StringComparison.OrdinalIgnoreCase) ||
+          errorBody.Contains("NOT_FOUND", StringComparison.Ordinal)));
+
     /// <summary>"models/gemini-2.5-flash" → "gemini-2.5-flash".</summary>
     private static string Strip(string name) =>
         name.StartsWith("models/", StringComparison.OrdinalIgnoreCase) ? name["models/".Length..] : name;

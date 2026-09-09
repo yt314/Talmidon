@@ -78,6 +78,34 @@ public class GeminiModelChoiceTests
         Assert.Null(picked);
     }
 
+    /// <summary>
+    /// שם מודל פסול חוזר מהספק גם כ-400 ולא רק כ-404. הענף הזה הוא מה שמפעיל את הגילוי
+    /// האוטומטי, ובלעדיו התקלה שדווחה מהייצור נראית ככשל כללי ונשארת כזו.
+    /// </summary>
+    [Theory]
+    [InlineData(404, "")]
+    [InlineData(400, "{\"error\":{\"message\":\"models/gemini-9-flash is not found for API version v1beta\"}}")]
+    [InlineData(400, "{\"error\":{\"message\":\"Model is not supported for generateContent\"}}")]
+    [InlineData(400, "{\"error\":{\"status\":\"NOT_FOUND\"}}")]
+    public void AModelProblemTriggersDiscovery(int status, string body)
+    {
+        Assert.True(GeminiModelChoice.IsModelProblem(status, body));
+    }
+
+    /// <summary>
+    /// כשל שאינו קשור לשם המודל — מפתח פסול, מכסה, תקלה אצל הספק — אינו מפעיל גילוי:
+    /// החלפת מודל לא תתקן אותו, והניסיון הנוסף רק יבזבז מכסה.
+    /// </summary>
+    [Theory]
+    [InlineData(403, "{\"error\":{\"message\":\"API key not valid\"}}")]
+    [InlineData(429, "{\"error\":{\"message\":\"Quota exceeded\"}}")]
+    [InlineData(500, "{\"error\":{\"message\":\"Internal error\"}}")]
+    [InlineData(400, "{\"error\":{\"message\":\"Invalid JSON payload\"}}")]
+    public void AnUnrelatedFailureDoesNot(int status, string body)
+    {
+        Assert.False(GeminiModelChoice.IsModelProblem(status, body));
+    }
+
     [Fact]
     public void NothingAvailableMeansNoChoice()
     {
