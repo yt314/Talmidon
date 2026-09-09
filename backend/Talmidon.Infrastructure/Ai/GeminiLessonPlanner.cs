@@ -49,7 +49,9 @@ public class GeminiLessonPlanner : ILessonPlanner
         _resolver = resolver;
         _apiKey = configuration["Ai:Gemini:ApiKey"]
             ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY");
-        _configuredModel = configuration["Ai:Gemini:Model"] ?? "gemini-flash-latest";
+        // מודל יציב שידוע שמקבל את כיבוי החשיבה, ולא כינוי שאיננו יודעים לאן הוא מצביע.
+        // אם הוא אינו זמין למפתח הזה, הגילוי האוטומטי ימצא תחליף.
+        _configuredModel = configuration["Ai:Gemini:Model"] ?? "gemini-2.5-flash";
         _logger = logger;
     }
 
@@ -66,7 +68,7 @@ public class GeminiLessonPlanner : ILessonPlanner
         // חשיבה כבויה כברירת מחדל. המודלים החדשים "חושבים" לפני שהם עונים, וזה מוסיף
         // עשרות שניות להמתנה של המורה — על משימה שהיא טקסט קצר ומובנה לפי מבנה נתון,
         // ולא בעיה שדורשת מחשבה. מי שהמתין דקה למערך לא ינסה שוב.
-        var thinking = _resolver.ThinkingRequired;
+        var thinking = LetItThink(model);
         var attempt = await TryWithRetriesAsync(model, BuildBody(request, thinking));
 
         // מודל שאינו מכיר את השדה, או שאינו מרשה אפס — מוותרים על הכיבוי ולא נכשלים
@@ -91,8 +93,9 @@ public class GeminiLessonPlanner : ILessonPlanner
             }
 
             _logger.LogWarning("Gemini model {Model} is unavailable; using {Discovered} instead.", model, discovered);
-            attempt = await TryWithRetriesAsync(discovered, BuildBody(request, thinking));
             model = discovered;
+            thinking = LetItThink(model);
+            attempt = await TryWithRetriesAsync(model, BuildBody(request, thinking));
         }
 
         // עומס אצל הספק הוא לכל מודל בנפרד. אחרי שהניסיונות החוזרים על המודל הזה מוצו,
@@ -103,11 +106,12 @@ public class GeminiLessonPlanner : ILessonPlanner
             if (alternative is not null)
             {
                 _logger.LogWarning("Gemini model {Model} is overloaded; trying {Alternative}.", model, alternative);
-                var viaAlternative = await TryWithRetriesAsync(alternative, BuildBody(request, thinking));
+                var viaAlternative = await TryWithRetriesAsync(alternative, BuildBody(request, LetItThink(alternative)));
                 if (!viaAlternative.ProviderBusy)
                 {
                     attempt = viaAlternative;
                     model = alternative;
+                    thinking = LetItThink(model);
                 }
             }
         }
@@ -131,6 +135,14 @@ public class GeminiLessonPlanner : ILessonPlanner
 
         return attempt.Result;
     }
+
+    /// <summary>
+    /// האם להשאיר את החשיבה דלוקה למודל הזה. כבויה כשאפשר — היא עולה עשרות שניות על
+    /// משימה שהיא כתיבה לפי מבנה נתון — ודלוקה כשהמודל אינו מקבל את הכיבוי, או כשכבר
+    /// דחה אותו פעם אחת.
+    /// </summary>
+    private bool LetItThink(string model) =>
+        _resolver.ThinkingRequired || !GeminiModelChoice.SupportsThinkingBudget(model);
 
     private static GeminiRequest.RequestBody BuildBody(LessonPlanRequest request, bool allowThinking) =>
         GeminiRequest.Build(request, MaxOutputTokens, Temperature, allowThinking);

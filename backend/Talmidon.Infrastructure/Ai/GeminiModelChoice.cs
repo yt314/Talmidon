@@ -33,6 +33,16 @@ public static class GeminiModelChoice
             .ThenByDescending(name => name, StringComparer.Ordinal)
             .ToList();
 
+    /// <summary>
+    /// האם אפשר לבקש מהמודל הזה לא לחשוב לפני שהוא עונה. כיבוי החשיבה חוסך עשרות
+    /// שניות, אבל לא כל מודל מקבל אותו: ל-pro יש מינימום גדול מאפס, המודלים הישנים
+    /// אינם מכירים את השדה, והחדשים החליפו אותו בשם אחר. לכן שולחים אותו רק למי
+    /// שידוע שמקבל אותו — במקום לשלוח לכולם ולגלות מכישלון.
+    /// </summary>
+    public static bool SupportsThinkingBudget(string model) =>
+        model.Contains("2.5", StringComparison.Ordinal) &&
+        model.Contains("flash", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>"models/gemini-2.5-flash" → "gemini-2.5-flash".</summary>
     private static string Strip(string name) =>
         name.StartsWith("models/", StringComparison.OrdinalIgnoreCase) ? name["models/".Length..] : name;
