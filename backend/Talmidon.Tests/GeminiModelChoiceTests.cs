@@ -89,7 +89,7 @@ public class GeminiModelChoiceTests
     [InlineData(400, "{\"error\":{\"status\":\"NOT_FOUND\"}}")]
     public void AModelProblemTriggersDiscovery(int status, string body)
     {
-        Assert.True(GeminiModelChoice.IsModelProblem(status, body));
+        Assert.True(GeminiFailure.IsModelProblem(status, body));
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public class GeminiModelChoiceTests
     [InlineData(400, "{\"error\":{\"message\":\"Invalid JSON payload\"}}")]
     public void AnUnrelatedFailureDoesNot(int status, string body)
     {
-        Assert.False(GeminiModelChoice.IsModelProblem(status, body));
+        Assert.False(GeminiFailure.IsModelProblem(status, body));
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ public class GeminiModelChoiceTests
     [InlineData(504)]
     public void ServerSideFailuresAreWorthRetrying(int status)
     {
-        Assert.True(GeminiModelChoice.IsTransient(status));
+        Assert.True(GeminiFailure.IsTransient(status));
     }
 
     [Theory]
@@ -127,7 +127,7 @@ public class GeminiModelChoiceTests
     [InlineData(404)]
     public void EverythingElseIsNot(int status)
     {
-        Assert.False(GeminiModelChoice.IsTransient(status));
+        Assert.False(GeminiFailure.IsTransient(status));
     }
 
     /// <summary>
@@ -144,6 +144,26 @@ public class GeminiModelChoiceTests
         ]);
 
         Assert.Equal(new[] { "gemini-2.5-flash", "gemini-2.5-pro" }, ranked);
+    }
+
+    /// <summary>
+    /// כיבוי החשיבה הוא אופטימיזציה, לא דרישה. מודל שדוחה אותה צריך לקבל את הבקשה
+    /// שוב בלי הכיבוי — ולא להיכשל על משהו שנועד רק לקצר את ההמתנה.
+    /// </summary>
+    [Theory]
+    [InlineData(400, "{\"error\":{\"message\":\"Unknown name \\\"thinkingConfig\\\"\"}}")]
+    [InlineData(400, "{\"error\":{\"message\":\"Budget 0 is invalid for thinking\"}}")]
+    public void ARejectedThinkingSettingIsRecognised(int status, string body)
+    {
+        Assert.True(GeminiFailure.IsThinkingRejected(status, body));
+    }
+
+    [Theory]
+    [InlineData(400, "{\"error\":{\"message\":\"Invalid JSON payload\"}}")]
+    [InlineData(503, "{\"error\":{\"message\":\"The model is overloaded\"}}")]
+    public void AnotherFailureIsNotMistakenForIt(int status, string body)
+    {
+        Assert.False(GeminiFailure.IsThinkingRejected(status, body));
     }
 
     [Fact]
