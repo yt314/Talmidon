@@ -790,6 +790,39 @@ full-calendar [class*="lesson-cal-"] .fc-event-title {
     display: none;
   }
 }
+
+/* התצוגה של שורת הזמינות מנוהלת כאן ולא במחלקת העזר ‎flex‎ של PrimeFlex: היא
+   מוגדרת עם ‎!important‎, ולכן קיפול השורה בטלפון לא היה תופס מולה. */
+.availability-summary {
+  display: flex;
+}
+
+/* מתג שעות הזמינות — קיים בטלפון בלבד. */
+.availability-toggle {
+  display: none;
+}
+@media (max-width: 640px) {
+  .availability-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: var(--p-border-radius-md);
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .availability-summary {
+    display: none;
+  }
+  .availability-summary.availability-open {
+    display: flex;
+  }
+}
 .legend-dot {
   display: inline-block;
   width: 10px;

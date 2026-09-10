@@ -40,7 +40,19 @@
 </div>
 
 @if (availabilitySummary().length > 0) {
-  <div class="availability-summary flex align-items-center gap-2 flex-wrap mb-3 text-sm">
+  <!-- בטלפון שעות הזמינות מקופלות מאחורי מתג: זה מידע עזר, והוא דחף את היומן
+       עצמו מתחת לקיפול. במחשב אין מתג והשורה פתוחה תמיד. -->
+  <button
+    type="button"
+    class="availability-toggle"
+    [attr.aria-expanded]="showAvailability()"
+    (click)="showAvailability.set(!showAvailability())">
+    <i class="pi" [class.pi-chevron-down]="!showAvailability()" [class.pi-chevron-up]="showAvailability()"></i>
+    שעות זמינות
+  </button>
+  <div
+    class="availability-summary align-items-center gap-2 flex-wrap mb-3 text-sm"
+    [class.availability-open]="showAvailability()">
     <i class="pi pi-clock text-color-secondary"></i>
     <span class="text-color-secondary">שעות זמינות:</span>
     @for (slot of availabilitySummary(); track slot) {
