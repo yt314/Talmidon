@@ -14,26 +14,17 @@ public class LessonPlannerSelectionTests
         Assert.Equal(LessonPlannerProvider.None, LessonPlannerSelection.Choose(null, null, null));
     }
 
-    [Fact]
-    public void OnlyGeminiKey_SelectsGemini()
-    {
-        Assert.Equal(LessonPlannerProvider.Gemini, LessonPlannerSelection.Choose("g", null, null));
-    }
-
-    [Fact]
-    public void OnlyAnthropicKey_SelectsAnthropic()
-    {
-        Assert.Equal(LessonPlannerProvider.Anthropic, LessonPlannerSelection.Choose(null, "a", null));
-    }
-
     /// <summary>
-    /// כששני המפתחות מוגדרים, החינמי מנצח — אחרת מפתח בתשלום שנשאר "לניסיון" היה
-    /// מתחיל לחייב בלי שאיש שם לב.
+    /// מפתח שמונח בסביבה אינו בקשה להשתמש בו. תכונה שמדליקה את עצמה כך עולה זמן וכסף
+    /// למי שלא ביקש אותה, וכדי לכבות אותה צריך קודם לגלות שהיא פועלת.
     /// </summary>
-    [Fact]
-    public void BothKeys_PrefersTheFreeProvider()
+    [Theory]
+    [InlineData("g", null)]
+    [InlineData(null, "a")]
+    [InlineData("g", "a")]
+    public void AKeyOnItsOwnDoesNotTurnTheFeatureOn(string? geminiKey, string? anthropicKey)
     {
-        Assert.Equal(LessonPlannerProvider.Gemini, LessonPlannerSelection.Choose("g", "a", null));
+        Assert.Equal(LessonPlannerProvider.None, LessonPlannerSelection.Choose(geminiKey, anthropicKey, null));
     }
 
     [Theory]
@@ -42,24 +33,21 @@ public class LessonPlannerSelectionTests
     [InlineData("Claude", LessonPlannerProvider.Anthropic)]
     [InlineData("  ANTHROPIC  ", LessonPlannerProvider.Anthropic)]
     [InlineData("gemini", LessonPlannerProvider.Gemini)]
-    [InlineData("none", LessonPlannerProvider.None)]
-    public void ExplicitProvider_Wins(string configured, LessonPlannerProvider expected)
+    [InlineData("  Gemini ", LessonPlannerProvider.Gemini)]
+    public void AskingForAProviderTurnsItOn(string configured, LessonPlannerProvider expected)
     {
         Assert.Equal(expected, LessonPlannerSelection.Choose("g", "a", configured));
     }
 
-    /// <summary>שם ספק שאינו מוכר אינו מפיל את השרת — נופלים חזרה לבחירה לפי מפתח.</summary>
-    [Fact]
-    public void UnknownProviderName_FallsBackToKeyOrder()
+    /// <summary>"none" ושם שאינו מוכר מגיעים לאותו מקום — כבוי — ואף אחד מהם אינו מפיל את השרת.</summary>
+    [Theory]
+    [InlineData("none")]
+    [InlineData("llama")]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void AnythingElseLeavesItOff(string configured)
     {
-        Assert.Equal(LessonPlannerProvider.Gemini, LessonPlannerSelection.Choose("g", "a", "llama"));
-        Assert.Equal(LessonPlannerProvider.None, LessonPlannerSelection.Choose(null, null, "llama"));
-    }
-
-    [Fact]
-    public void BlankKeys_CountAsMissing()
-    {
-        Assert.Equal(LessonPlannerProvider.None, LessonPlannerSelection.Choose("   ", "", null));
+        Assert.Equal(LessonPlannerProvider.None, LessonPlannerSelection.Choose("g", "a", configured));
     }
 
     [Fact]
