@@ -42,6 +42,14 @@ export class UserMenuComponent {
   readonly name = input<string | null>(null);
   /** התיאור מתחת לשם — "מורה", "הורה" וכו'. */
   readonly roleLabel = input('');
+  /**
+   * פריטים שמופיעים מעל ההתנתקות — הגדרות החשבון, למשל.
+   *
+   * מקומם כאן ולא בסרגל: הסרגל מוגבל ברוחב, וכל פריט בו נלחם על אותו מקום עם הניווט
+   * היומיומי. הגדרות חשבון הן גם מה שמחפשים מתחת לתמונת המשתמשת בכל מוצר אחר.
+   */
+  readonly links = input<MenuItem[]>([]);
+
   /** נקרא כשנבחרת ההתנתקות. */
   readonly logout = output<void>();
 
@@ -51,6 +59,8 @@ export class UserMenuComponent {
 
   protected readonly items = computed<MenuItem[]>(() => [
     { separator: true },
+    ...this.links(),
+    ...(this.links().length > 0 ? [{ separator: true }] : []),
     { label: 'התנתקות', icon: 'pi pi-sign-out', command: () => this.logout.emit() }
   ]);
 }

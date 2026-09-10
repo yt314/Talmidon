@@ -385,6 +385,14 @@ a:hover {
   border: none;
   background: transparent;
 }
+/*
+  הסרגל מוגבל לרוחב עמודת התוכן, ולכן פריט אחד שנוסף שבר אותו לשתי שורות יותר מפעם
+  אחת. nowrap הופך את זה למשהו שאי אפשר לפספס: כשאין מקום הפריטים נדחסים ואז נחתכים,
+  ורואים את זה מיד — במקום שורה שנייה שנראית כאילו התכוונו אליה.
+*/
+.app-shell-topbar .p-menubar-root-list {
+  flex-wrap: nowrap;
+}
 
 .app-shell-content {
   max-width: 1140px;
