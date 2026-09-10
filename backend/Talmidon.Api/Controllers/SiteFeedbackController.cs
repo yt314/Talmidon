@@ -23,6 +23,7 @@ public class SiteFeedbackController(
     TalmidonDbContext db,
     IEmailSender emailSender,
     IConfiguration configuration,
+    AppLinks links,
     ILogger<SiteFeedbackController> logger) : ControllerBase
 {
     [HttpPost]
@@ -51,14 +52,16 @@ public class SiteFeedbackController(
         var adminEmail = configuration["Admin:Email"] ?? Environment.GetEnvironmentVariable("ADMIN_EMAIL");
         if (string.IsNullOrWhiteSpace(adminEmail)) return;
 
-        var body = $"""
-            <div dir="rtl" style="font-family:sans-serif">
-              <h2>הודעה חדשה מהאתר</h2>
-              <p>{System.Net.WebUtility.HtmlEncode(feedback.Message)}</p>
-              {(feedback.ContactInfo is null ? "" : $"<p><strong>ליצירת קשר:</strong> {System.Net.WebUtility.HtmlEncode(feedback.ContactInfo)}</p>")}
-              {(feedback.PageUrl is null ? "" : $"<p><strong>מהדף:</strong> {System.Net.WebUtility.HtmlEncode(feedback.PageUrl)}</p>")}
-            </div>
-            """;
+        var body = EmailLayout.Render(new EmailMessage(
+            "הודעה חדשה מהאתר",
+            Quote: feedback.Message,
+            Details:
+            [
+                ("ליצירת קשר", feedback.ContactInfo ?? ""),
+                ("מהדף", feedback.PageUrl ?? "")
+            ],
+            ActionLabel: "לצפייה בפניות",
+            ActionUrl: links.AdminFeedback));
 
         try
         {

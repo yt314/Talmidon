@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -32,6 +31,7 @@ public class MessagesController(
     ICurrentTenant currentTenant,
     UserManager<ApplicationUser> userManager,
     IEmailSender emailSender,
+    AppLinks links,
     ILogger<MessagesController> logger) : ControllerBase
 {
     private const int PreviewLength = 200;
@@ -516,13 +516,7 @@ public class MessagesController(
         });
     }
 
-    private static string BuildEmailHtml(string title, string message) =>
-        $"""
-        <div dir="rtl" style="font-family:Arial,sans-serif">
-          <h2>{WebUtility.HtmlEncode(title)}</h2>
-          <p style="white-space:pre-wrap">{WebUtility.HtmlEncode(message)}</p>
-        </div>
-        """;
+
 
     private async Task NotifyTeacherAsync(string subject, string message)
     {
@@ -532,7 +526,14 @@ public class MessagesController(
         var user = await userManager.FindByIdAsync(teacher.UserId);
         if (user?.Email is null) return;
 
-        try { await emailSender.SendAsync(user.Email, subject, BuildEmailHtml(subject, message)); }
+        var html = EmailLayout.Render(new EmailMessage(
+            subject,
+            Intro: "הודעה חדשה מחכה לך בתיבה.",
+            Quote: message,
+            ActionLabel: "לפתיחת השיחה",
+            ActionUrl: links.TeacherMessages));
+
+        try { await emailSender.SendAsync(user.Email, subject, html); }
         catch (Exception ex) { logger.LogError(ex, "Failed to send teacher message email."); }
     }
 
@@ -557,8 +558,14 @@ public class MessagesController(
 
         var teacherName = await db.Teachers.Where(t => t.Id == thread.TenantId).Select(t => t.FullName).FirstOrDefaultAsync();
         var title = EmailSubjects.MessageToCounterpart(teacherName ?? "", subject);
-        var text = $"בעניין {studentName}\n\n{body}";
-        try { await emailSender.SendAsync(email, title, BuildEmailHtml(title, text)); }
+        var html = EmailLayout.Render(new EmailMessage(
+            title,
+            Intro: $"בעניין {studentName}",
+            Quote: body,
+            ActionLabel: "לפתיחת השיחה",
+            ActionUrl: thread.CounterpartRole == MessageAuthor.Parent ? links.ParentMessages : links.StudentMessages));
+
+        try { await emailSender.SendAsync(email, title, html); }
         catch (Exception ex) { logger.LogError(ex, "Failed to send message email to the counterpart."); }
     }
 }

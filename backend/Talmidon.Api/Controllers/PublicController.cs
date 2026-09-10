@@ -18,6 +18,7 @@ namespace Talmidon.Api.Controllers;
 public class PublicController(
     TalmidonDbContext db,
     IEmailSender emailSender,
+    AppLinks links,
     ILogger<PublicController> logger) : ControllerBase
 {
     [HttpGet]
@@ -164,16 +165,19 @@ public class PublicController(
         var email = await db.Users.Where(u => u.Id == teacherUserId).Select(u => u.Email).FirstOrDefaultAsync();
         if (email is null) return;
 
-        var body = $"""
-            <div dir="rtl" style="font-family:sans-serif">
-              <h2>פנייה חדשה מהספרייה</h2>
-              <p><strong>שם:</strong> {contact.FullName}</p>
-              <p><strong>טלפון:</strong> {contact.Phone}</p>
-              {(contact.Email is null ? "" : $"<p><strong>מייל:</strong> {contact.Email}</p>")}
-              {(contact.Subject is null ? "" : $"<p><strong>תחום:</strong> {contact.Subject}</p>")}
-              <p><strong>הודעה:</strong><br>{contact.Message}</p>
-            </div>
-            """;
+        var body = EmailLayout.Render(new EmailMessage(
+            "פנייה חדשה מהספרייה",
+            Intro: "התקבלה פנייה דרך הכרטיס הציבורי שלך.",
+            Details:
+            [
+                ("שם", contact.FullName),
+                ("טלפון", contact.Phone),
+                ("מייל", contact.Email ?? ""),
+                ("תחום", contact.Subject ?? "")
+            ],
+            Quote: contact.Message,
+            ActionLabel: "לצפייה בפנייה",
+            ActionUrl: links.TeacherContactRequests));
 
         var subject = EmailSubjects.ContactRequest(contact.FullName, contact.Subject);
         try { await emailSender.SendAsync(email, subject, body); }

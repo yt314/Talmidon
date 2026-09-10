@@ -59,16 +59,13 @@ public class AccountProvisioning(
         var clientUrl = (configuration["App:ClientUrl"] ?? string.Empty).TrimEnd('/');
         var link = $"{clientUrl}/set-password?userId={user.Id}&token={encoded}";
 
-        var html =
-            $"""
-            <div dir="rtl" style="font-family:Arial,sans-serif">
-              <h2>הוזמנת לתלמידון 🎓</h2>
-              <p>שלום {System.Net.WebUtility.HtmlEncode(displayName)},</p>
-              <p>נוצר עבורך חשבון במערכת תלמידון. לקביעת הסיסמה והפעלת החשבון:</p>
-              <p><a href="{link}">קביעת סיסמה</a></p>
-              <p style="color:#888;font-size:12px">הקישור תקף לזמן מוגבל.</p>
-            </div>
-            """;
+        var html = EmailLayout.Render(new EmailMessage(
+            "הוזמנת לתלמידון",
+            Greeting: $"שלום {displayName},",
+            Intro: "נוצר עבורך חשבון בתלמידון. נשאר רק לקבוע סיסמה ולהתחיל:",
+            ActionLabel: "קביעת סיסמה",
+            ActionUrl: link,
+            Note: "הקישור תקף לזמן מוגבל."));
 
         try
         {

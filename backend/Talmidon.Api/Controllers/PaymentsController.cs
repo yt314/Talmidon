@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +23,7 @@ public class PaymentsController(
     ICurrentTenant currentTenant,
     IEmailSender emailSender,
     MonthlyPaymentReminderJob monthlyReminderJob,
+    AppLinks links,
     ILogger<PaymentsController> logger) : ControllerBase
 {
     private Guid TenantId => currentTenant.TenantId
@@ -208,13 +208,16 @@ public class PaymentsController(
     private async Task<bool> SendPaymentConfirmationAsync(
         Parent parent, decimal amount, DateOnly paidDate, List<Lesson> lessons)
     {
-        var lines = lessons.Select(l =>
-            $"<li>{WebUtility.HtmlEncode(l.Student.FullName)} — {l.StartTime:dd/MM/yyyy} — ₪{l.Amount}</li>");
-        var html = EmailTemplates.SimpleListEmail(
+        var lines = lessons
+            .Select(l => $"{l.Student.FullName} — {l.StartTime:dd/MM/yyyy} — ₪{l.Amount}")
+            .ToList();
+        var html = EmailLayout.Render(new EmailMessage(
             "אישור קבלת תשלום",
-            $"שלום {parent.FullName},",
-            $"התקבל תשלום בסך ₪{amount} בתאריך {paidDate:dd/MM/yyyy}, המכסה את השיעורים הבאים:",
-            lines);
+            Greeting: $"שלום {parent.FullName},",
+            Intro: $"התקבל תשלום בסך ₪{amount} בתאריך {paidDate:dd/MM/yyyy}, המכסה את השיעורים הבאים:",
+            Items: lines,
+            ActionLabel: "לצפייה בתשלומים",
+            ActionUrl: links.ParentPayments));
 
         try
         {
