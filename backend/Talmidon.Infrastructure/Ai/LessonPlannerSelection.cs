@@ -14,17 +14,19 @@ public enum LessonPlannerProvider
 public static class LessonPlannerSelection
 {
     /// <summary>
-    /// הגדרה מפורשת גוברת. בלעדיה נבחר לפי המפתח שקיים, כשהחינמי קודם — אחרת מפתח
-    /// בתשלום שנשאר מוגדר "לניסיון" היה מתחיל לחייב בשקט.
+    /// התכונה כבויה עד שמבקשים אותה במפורש, ב-AI_PROVIDER.
+    ///
+    /// קודם היא נדלקה מעצם קיומו של מפתח בסביבה. זה נראה נוח, אבל תכונה שמדליקה את
+    /// עצמה כי מפתח במקרה מונח שם היא הפתעה: היא עולה זמן וכסף, והכיבוי שלה דורש
+    /// לגלות קודם שהיא בכלל פועלת. מפתח שנשאר מוגדר אינו בקשה להשתמש בו.
+    ///
+    /// המפתחות עדיין נבדקים — ספק שנבחר בלי מפתח אינו יכול לפעול, והמסך אומר זאת.
     /// </summary>
     public static LessonPlannerProvider Choose(string? geminiKey, string? anthropicKey, string? configuredProvider) =>
         configuredProvider?.Trim().ToLowerInvariant() switch
         {
             "gemini" => LessonPlannerProvider.Gemini,
             "anthropic" or "claude" => LessonPlannerProvider.Anthropic,
-            "none" => LessonPlannerProvider.None,
-            _ when !string.IsNullOrWhiteSpace(geminiKey) => LessonPlannerProvider.Gemini,
-            _ when !string.IsNullOrWhiteSpace(anthropicKey) => LessonPlannerProvider.Anthropic,
             _ => LessonPlannerProvider.None
         };
 }
