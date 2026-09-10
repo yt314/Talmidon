@@ -10,6 +10,12 @@
   @if (passwordChanged()) {
     <p-message severity="success" text="הסיסמה עודכנה בהצלחה. יש להתחבר מחדש." styleClass="w-full mb-3" />
   }
+  @if (timedOut()) {
+    <p-message
+      severity="info"
+      text="התנתקנו אוטומטית אחרי חצי שעה בלי פעילות, מטעמי אבטחה."
+      styleClass="w-full mb-3" />
+  }
   @if (error()) {
     <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
   }
