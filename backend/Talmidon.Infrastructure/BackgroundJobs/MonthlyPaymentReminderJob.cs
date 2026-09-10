@@ -1,4 +1,3 @@
-using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Talmidon.Domain.Entities;
@@ -12,7 +11,7 @@ namespace Talmidon.Infrastructure.BackgroundJobs;
 /// האוטומטי החודשי (Hangfire, כל הדיירים) וגם את הכפתור הידני של המורה (דייר נוכחי בלבד).
 /// </summary>
 public class MonthlyPaymentReminderJob(
-    TalmidonDbContext db, IEmailSender emailSender, ILogger<MonthlyPaymentReminderJob> logger)
+    TalmidonDbContext db, IEmailSender emailSender, AppLinks links, ILogger<MonthlyPaymentReminderJob> logger)
 {
     /// <summary>נקרא ע"י הריצה החודשית האוטומטית — אין הקשר דייר (HTTP) בעבודת רקע, לכן מתעלמים מה-Global Query Filter וסורקים את כל הדיירים.</summary>
     public Task<int> RunForAllTenantsAsync() => RunAsync(ignoreTenantFilter: true);
@@ -51,13 +50,16 @@ public class MonthlyPaymentReminderJob(
         Parent parent, List<(string StudentName, DateTimeOffset StartTime, decimal Amount)> charges)
     {
         var total = charges.Sum(c => c.Amount);
-        var lines = charges.Select(c =>
-            $"<li>{WebUtility.HtmlEncode(c.StudentName)} — {c.StartTime:dd/MM/yyyy} — ₪{c.Amount}</li>");
-        var html = EmailTemplates.SimpleListEmail(
+        var lines = charges
+            .Select(c => $"{c.StudentName} — {c.StartTime:dd/MM/yyyy} — ₪{c.Amount}")
+            .ToList();
+        var html = EmailLayout.Render(new EmailMessage(
             "תזכורת תשלום חודשית",
-            $"שלום {parent.FullName},",
-            $"להלן החיובים הפתוחים לתשלום, בסך כולל של ₪{total}:",
-            lines);
+            Greeting: $"שלום {parent.FullName},",
+            Intro: $"להלן החיובים הפתוחים לתשלום, בסך כולל של ₪{total}:",
+            Items: lines,
+            ActionLabel: "לצפייה בתשלומים",
+            ActionUrl: links.ParentPayments));
 
         try
         {

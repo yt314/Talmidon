@@ -1,4 +1,3 @@
-using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Talmidon.Domain.Entities;
@@ -13,7 +12,7 @@ namespace Talmidon.Infrastructure.BackgroundJobs;
 /// ומסמן כל שיעור כ"נשלחה תזכורת" כדי למנוע כפילות. סורק את כל הדיירים (אין הקשר דייר בעבודת רקע).
 /// </summary>
 public class LessonReminderJob(
-    TalmidonDbContext db, IEmailSender emailSender, ILogger<LessonReminderJob> logger)
+    TalmidonDbContext db, IEmailSender emailSender, AppLinks links, ILogger<LessonReminderJob> logger)
 {
     /// <summary>חלון התזכורת: שיעורים שמתחילים עד 24 שעות קדימה.</summary>
     private static readonly TimeSpan ReminderHorizon = TimeSpan.FromHours(24);
@@ -68,9 +67,15 @@ public class LessonReminderJob(
             var ordered = items.OrderBy(i => i.StartTime).ToList();
             var subject = EmailSubjects.LessonReminder(ordered);
             var lines = ordered
-                .Select(i => $"<li>{WebUtility.HtmlEncode(i.StudentName)} — {i.StartTime:dd/MM/yyyy} בשעה {i.StartTime:HH:mm}</li>");
-            var html = EmailTemplates.SimpleListEmail(
-                "תזכורת שיעור", $"שלום {parent.FullName},", "תזכורת לשיעורים הקרובים:", lines);
+                .Select(i => $"{i.StudentName} — {i.StartTime:dd/MM/yyyy} בשעה {i.StartTime:HH:mm}")
+                .ToList();
+            var html = EmailLayout.Render(new EmailMessage(
+                "תזכורת לשיעורים הקרובים",
+                Greeting: $"שלום {parent.FullName},",
+                Intro: "אלה השיעורים הקרובים:",
+                Items: lines,
+                ActionLabel: "לצפייה ביומן",
+                ActionUrl: links.ParentLessons));
 
             try
             {

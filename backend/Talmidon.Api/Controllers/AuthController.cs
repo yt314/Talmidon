@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
@@ -324,16 +323,13 @@ public class AuthController(
             : apiBase.TrimEnd('/');
         var confirmUrl = $"{baseUrl}/api/auth/confirm-email?userId={user.Id}&token={encoded}";
 
-        var html =
-            $"""
-            <div dir="rtl" style="font-family:Arial,sans-serif">
-              <h2>ברוכה הבאה לתלמידון 🎓</h2>
-              <p>שלום {WebUtility.HtmlEncode(fullName)},</p>
-              <p>תודה שנרשמת. לאישור החשבון לחצי על הקישור:</p>
-              <p><a href="{confirmUrl}">אישור כתובת המייל</a></p>
-              <p style="color:#888;font-size:12px">אם לא נרשמת, ניתן להתעלם מהודעה זו.</p>
-            </div>
-            """;
+        var html = EmailLayout.Render(new EmailMessage(
+            "ברוכה הבאה לתלמידון",
+            Greeting: $"שלום {fullName},",
+            Intro: "תודה שנרשמת. נשאר רק לאשר את כתובת המייל:",
+            ActionLabel: "אישור כתובת המייל",
+            ActionUrl: confirmUrl,
+            Note: "אם לא נרשמת, אפשר להתעלם מההודעה."));
 
         try
         {
@@ -356,16 +352,13 @@ public class AuthController(
         var clientUrl = (configuration["App:ClientUrl"] ?? "http://localhost:4200").TrimEnd('/');
         var resetUrl = $"{clientUrl}/set-password?userId={user.Id}&token={encoded}";
 
-        var html =
-            $"""
-            <div dir="rtl" style="font-family:Arial,sans-serif">
-              <h2>איפוס סיסמה — תלמידון 🎓</h2>
-              <p>שלום {WebUtility.HtmlEncode(fullName)},</p>
-              <p>קיבלנו בקשה לאיפוס הסיסמה שלך. לקביעת סיסמה חדשה לחצי על הקישור:</p>
-              <p><a href="{resetUrl}">קביעת סיסמה חדשה</a></p>
-              <p style="color:#888;font-size:12px">אם לא ביקשת לאפס סיסמה, ניתן להתעלם מהודעה זו — החשבון שלך בטוח.</p>
-            </div>
-            """;
+        var html = EmailLayout.Render(new EmailMessage(
+            "איפוס סיסמה",
+            Greeting: $"שלום {fullName},",
+            Intro: "קיבלנו בקשה לאיפוס הסיסמה שלך.",
+            ActionLabel: "קביעת סיסמה חדשה",
+            ActionUrl: resetUrl,
+            Note: "אם לא ביקשת לאפס סיסמה, אפשר להתעלם מההודעה — החשבון שלך בטוח."));
 
         try
         {

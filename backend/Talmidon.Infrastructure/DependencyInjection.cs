@@ -62,6 +62,7 @@ public static class DependencyInjection
         else
             services.AddScoped<IEmailSender, SmtpEmailSender>();
 
+        services.AddSingleton<AppLinks>();
         services.AddScoped<IAccountProvisioning, AccountProvisioning>();
         // בניית מערכי שיעור — ראו LessonPlannerSelection לסדר ההעדפה.
         var chosen = LessonPlannerSelection.Choose(

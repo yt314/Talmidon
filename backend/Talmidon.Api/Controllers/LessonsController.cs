@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -27,6 +26,7 @@ public class LessonsController(
     ICurrentTenant currentTenant,
     UserManager<ApplicationUser> userManager,
     IEmailSender emailSender,
+    AppLinks links,
     ILogger<LessonsController> logger) : ControllerBase
 {
     private Guid TenantId => currentTenant.TenantId
@@ -498,13 +498,9 @@ public class LessonsController(
 
     private static string FormatDate(DateTimeOffset dt) => dt.ToString("dd/MM/yyyy HH:mm");
 
-    private static string BuildEmailHtml(string title, string message) =>
-        $"""
-        <div dir="rtl" style="font-family:Arial,sans-serif">
-          <h2>{WebUtility.HtmlEncode(title)}</h2>
-          <p>{WebUtility.HtmlEncode(message)}</p>
-        </div>
-        """;
+    private string BuildEmailHtml(string title, string message, string? actionUrl) =>
+        EmailLayout.Render(new EmailMessage(
+            title, Intro: message, ActionLabel: "לצפייה ביומן", ActionUrl: actionUrl));
 
     /// <summary>מוסיף התראה למרכז ההתראות של המורה (הדייר הנוכחי). נשמר יחד עם ה-SaveChanges הבא.</summary>
     private void AddTeacherNotification(NotificationType type, string title, string message, string? linkPath)
@@ -530,7 +526,7 @@ public class LessonsController(
             .Select(sp => sp.Parent.Email)
             .ToListAsync();
 
-        var html = BuildEmailHtml(subject, message);
+        var html = BuildEmailHtml(subject, message, links.ParentLessons);
         foreach (var email in parentEmails)
         {
             try { await emailSender.SendAsync(email, subject, html); }
@@ -547,7 +543,7 @@ public class LessonsController(
         var user = await userManager.FindByIdAsync(teacher.UserId);
         if (user?.Email is null) return;
 
-        try { await emailSender.SendAsync(user.Email, subject, BuildEmailHtml(subject, message)); }
+        try { await emailSender.SendAsync(user.Email, subject, BuildEmailHtml(subject, message, links.TeacherLessons)); }
         catch (Exception ex) { logger.LogError(ex, "Failed to send teacher notification email."); }
     }
 }
