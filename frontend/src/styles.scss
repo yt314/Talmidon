@@ -673,6 +673,48 @@ a.stat-card:hover {
   padding: 0.75rem 1rem;
 }
 
+/**
+ * טבלת "מי חייב כמה" מול כרטיסים: חמש עמודות אינן נכנסות לרוחב טלפון, ושם
+ * עמודת הסכום וכפתור הגבייה נחתכים — בדיוק מה שבאים למסך הזה בשבילו. לכן
+ * בטלפון אותם נתונים מוצגים ככרטיסים.
+ */
+.owed-cards { display: none; }
+
+@media (max-width: 640px) {
+  .owed-table { display: none; }
+  .owed-cards { display: block; }
+}
+
+.owed-card {
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-lg);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+/** הסכום נדחף לקצה הנגדי של שם ההורה. */
+.owed-card-amount { margin-inline-start: auto; }
+
+/**
+ * טבלת החיובים של הורה: ארבע עמודות חותכות בטלפון דווקא את עמודת הסכום, ולכן
+ * שם התאריך יורד מתחת לשם התלמיד והאווטאר יורד לגמרי.
+ */
+.charge-date-inline { display: none; }
+
+@media (max-width: 640px) {
+  .charge-date-col { display: none; }
+  .charge-date-inline { display: block; }
+  .charge-avatar { display: none; }
+}
+
+/** סך החוב הפתוח, בראש מסך התשלומים — המספר שהמורה באה לראות. */
+.owed-banner {
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+  border-radius: var(--p-border-radius-lg);
+  padding: 0.75rem 1rem;
+}
+
 /* --------------------------------------------------------------- טבלאות ---- */
 
 /* טבלאות בפריסתן הרגילה נדחסות למחיקות על מסך צר — עדיף גלילה אופקית מודעת

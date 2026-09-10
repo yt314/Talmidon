@@ -6,6 +6,16 @@ export interface OpenCharge {
   amount: number;
 }
 
+/** שורה בטבלת "מי חייב כמה". parentId ריק = שיעורים של תלמידים ללא הורה משויך. */
+export interface OpenChargeSummary {
+  parentId: string | null;
+  parentName: string;
+  studentCount: number;
+  lessonCount: number;
+  total: number;
+  oldestLessonStartTime: string;
+}
+
 export interface CreatePaymentRequest {
   parentId: string;
   lessonIds: string[];
