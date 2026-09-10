@@ -19,6 +19,10 @@ export interface TeacherProfile {
   neighborhood: string | null;
   bio: string | null;
   defaultPricePerLesson: number;
+  /** מחיר ל-45 דקות. null = לא הוגדר, והמחיר ייגזר יחסית מהמחיר לשעה. */
+  pricePer45Minutes: number | null;
+  /** מחיר ל-30 דקות. null = לא הוגדר. */
+  pricePer30Minutes: number | null;
   defaultDurationMinutes: number;
   rulesText: string | null;
   isPublic: boolean;
@@ -37,6 +41,10 @@ export interface UpdateTeacherProfileRequest {
   neighborhood?: string | null;
   bio?: string | null;
   defaultPricePerLesson: number;
+  /** מחיר ל-45 דקות. null = לא הוגדר, והמחיר ייגזר יחסית מהמחיר לשעה. */
+  pricePer45Minutes: number | null;
+  /** מחיר ל-30 דקות. null = לא הוגדר. */
+  pricePer30Minutes: number | null;
   defaultDurationMinutes: number;
   rulesText?: string | null;
   isPublic: boolean;

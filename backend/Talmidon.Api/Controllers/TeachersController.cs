@@ -42,6 +42,8 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
                 t.Neighborhood,
                 t.Bio,
                 t.DefaultPricePerLesson,
+                t.PricePer45Minutes,
+                t.PricePer30Minutes,
                 t.DefaultDurationMinutes,
                 t.RulesText,
                 t.IsPublic,
@@ -56,6 +58,8 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
             row.Id, row.FullName, row.Phone, row.ContactEmail, row.City, row.Neighborhood,
             row.Bio,
             row.DefaultPricePerLesson,
+            row.PricePer45Minutes,
+            row.PricePer30Minutes,
             row.DefaultDurationMinutes, row.RulesText, row.IsPublic,
             row.Subjects,
             row.PhotoLength,
@@ -77,6 +81,8 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
         teacher.Neighborhood = request.Neighborhood;
         teacher.Bio = request.Bio;
         teacher.DefaultPricePerLesson = request.DefaultPricePerLesson;
+        teacher.PricePer45Minutes = request.PricePer45Minutes;
+        teacher.PricePer30Minutes = request.PricePer30Minutes;
         teacher.DefaultDurationMinutes = request.DefaultDurationMinutes;
         teacher.RulesText = request.RulesText;
         teacher.IsPublic = request.IsPublic;

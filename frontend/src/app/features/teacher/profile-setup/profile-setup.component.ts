@@ -152,7 +152,9 @@ export class ProfileSetupComponent implements OnInit {
             neighborhood: raw.neighborhood || null,
             bio: raw.bio || null,
             defaultPricePerLesson: raw.defaultPricePerLesson,
-            // המסך הזה אינו עורך משך או כללים — נשמר מה שכבר קיים
+            // המסך הזה אינו עורך משך, מחירים לפי אורך שיעור או כללים — נשמר מה שכבר קיים
+            pricePer45Minutes: this.loaded()?.pricePer45Minutes ?? null,
+            pricePer30Minutes: this.loaded()?.pricePer30Minutes ?? null,
             defaultDurationMinutes: this.loaded()?.defaultDurationMinutes ?? 60,
             rulesText: this.loaded()?.rulesText ?? null,
             isPublic: true

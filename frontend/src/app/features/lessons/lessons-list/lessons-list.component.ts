@@ -40,6 +40,7 @@ import { LessonsService } from '../lessons.service';
 import { CalendarEventsService } from '../calendar-events.service';
 import { CalendarEventItem } from '../calendar-events.models';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
+import { LessonAmountSuggestion, lessonDurationMinutes, suggestLessonAmountDetailed } from '../lesson-pricing.util';
 
 @Component({
   selector: 'app-lessons-list',
@@ -76,7 +77,12 @@ export class LessonsListComponent implements OnInit {
   private readonly locale = inject(LOCALE_ID);
 
   /** ברירות מחדל של המורה (מחיר ומשך), למילוי אוטומטי בקביעת שיעור. */
-  private readonly teacherDefaults = signal<{ price: number; durationMinutes: number }>({ price: 0, durationMinutes: 60 });
+  private readonly teacherDefaults = signal<{
+    price: number;
+    pricePer45: number | null;
+    pricePer30: number | null;
+    durationMinutes: number;
+  }>({ price: 0, pricePer45: null, pricePer30: null, durationMinutes: 60 });
 
   /** מדכא מילוי-אוטומטי של שעת הסיום כשהמקור הוא גרירה ביומן (הטווח כבר נבחר ידנית). */
   private suppressAutoEnd = false;
@@ -150,6 +156,10 @@ export class LessonsListComponent implements OnInit {
 
   protected readonly showCompleteDialog = signal(false);
   protected readonly completingLessonId = signal<string | null>(null);
+  /** השיעור שנמצא כרגע בדיאלוג הסיום — כדי שהמורה תראה על מה בדיוק היא מסמנת. */
+  protected readonly completingLesson = signal<Lesson | null>(null);
+  /** ההצעה שחושבה בפתיחת דיאלוג הסיום — משמשת להסבר שמתחת לשדה הסכום. */
+  protected readonly amountSuggestion = signal<LessonAmountSuggestion | null>(null);
   protected readonly savingComplete = signal(false);
 
   protected readonly showLessonDetailDialog = signal(false);
@@ -230,7 +240,12 @@ export class LessonsListComponent implements OnInit {
       this.openFromQueryParam();
     });
     this.profileService.getMyProfile().subscribe(profile =>
-      this.teacherDefaults.set({ price: profile.defaultPricePerLesson, durationMinutes: profile.defaultDurationMinutes }));
+      this.teacherDefaults.set({
+        price: profile.defaultPricePerLesson,
+        pricePer45: profile.pricePer45Minutes,
+        pricePer30: profile.pricePer30Minutes,
+        durationMinutes: profile.defaultDurationMinutes
+      }));
     this.profileService.getAvailability().subscribe(windows => this.availability.set(windows));
 
     // מילוי אוטומטי של שעת הסיום לפי משך ברירת המחדל (של התלמיד או של המורה)
@@ -258,10 +273,38 @@ export class LessonsListComponent implements OnInit {
     return student?.defaultDurationMinutes ?? this.teacherDefaults().durationMinutes;
   }
 
-  private resolveAmount(studentId: string): number {
-    const student = this.students().find(s => s.id === studentId);
-    return student?.defaultPricePerLesson ?? this.teacherDefaults().price;
+  /**
+   * הסכום המוצע לשיעור שהסתיים — לפי המשך שלו בפועל ולא לפי משך ברירת המחדל.
+   * הכלל עצמו ב-suggestLessonAmount, יחד עם הבדיקות שלו.
+   */
+  private resolveAmount(lesson: Lesson): LessonAmountSuggestion {
+    const student = this.students().find(s => s.id === lesson.studentId);
+    const defaults = this.teacherDefaults();
+    return suggestLessonAmountDetailed(
+      lessonDurationMinutes(lesson.startTime, lesson.endTime),
+      { pricePerHour: defaults.price, pricePer45: defaults.pricePer45, pricePer30: defaults.pricePer30 },
+      { pricePerLesson: student?.defaultPricePerLesson, durationMinutes: student?.defaultDurationMinutes }
+    );
   }
+
+  /** הסבר קצר בעברית לסכום שהוצע, כדי שהמורה תבין מאיפה הוא הגיע. */
+  protected readonly amountExplanation = computed(() => {
+    const suggestion = this.amountSuggestion();
+    if (!suggestion) return null;
+    const minutes = `${suggestion.durationMinutes} דק׳`;
+    switch (suggestion.source) {
+      case 'student':
+        return `לפי המחיר הקבוע שנקבע לתלמיד/ה (${minutes}).`;
+      case 'student-prorated':
+        return `המחיר הקבוע של התלמיד/ה, מחושב יחסית ל-${minutes} ומעוגל ל-5 ₪.`;
+      case 'exact':
+        return `לפי מחירון השיעורים שלך ל-${minutes}.`;
+      case 'prorated':
+        return `חושב יחסית למחיר לשעה לפי ${minutes}, ועוגל ל-5 ₪.`;
+      case 'unknown':
+        return 'לא הצלחנו לחשב סכום — אפשר להזין אותו ידנית.';
+    }
+  });
 
   /** קובע שעת סיום = שעת התחלה + משך ברירת המחדל (אלא אם הטווח נבחר בגרירה ביומן). */
   private applyDefaultEndTime(): void {
@@ -798,11 +841,16 @@ export class LessonsListComponent implements OnInit {
 
   openCompleteDialog(lesson: Lesson): void {
     this.completingLessonId.set(lesson.id);
+    this.completingLesson.set(lesson);
+    const suggestion = this.resolveAmount(lesson);
+    this.amountSuggestion.set(suggestion);
     this.completeForm.reset({
       completed: true,
-      paymentRequired: false,
-      // מחיר ברירת מחדל (של התלמיד או של המורה) — מוצג אוטומטית כשמסמנים "נדרש תשלום"
-      amount: this.resolveAmount(lesson.studentId),
+      // שיעור שהתקיים הוא שיעור שגובים עליו — זה המקרה הרגיל, והמורה מורידה את
+      // הסימון בחריגים (שיעור ניסיון, השלמה ללא תשלום).
+      paymentRequired: true,
+      // מחושב מהמשך בפועל של השיעור ומטבלת המחירים; ניתן לעריכה בשדה עצמו.
+      amount: suggestion.amount,
       homework: '',
       noteContent: '',
       noteVisibleToStudent: false,

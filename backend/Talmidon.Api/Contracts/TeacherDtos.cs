@@ -9,6 +9,13 @@ public record UpdateTeacherProfileRequest(
     [MaxLength(100)] string? Neighborhood,
     [MaxLength(2000)] string? Bio,
     [Range(0, double.MaxValue)] decimal DefaultPricePerLesson,
+
+    /// <summary>מחיר ל-45 דקות. ‎null‎ = לא הוגדר, והמחיר ייגזר יחסית מהמחיר לשעה.</summary>
+    [Range(0, double.MaxValue)] decimal? PricePer45Minutes,
+
+    /// <summary>מחיר ל-30 דקות. ‎null‎ = לא הוגדר.</summary>
+    [Range(0, double.MaxValue)] decimal? PricePer30Minutes,
+
     [Range(1, 1440)] int DefaultDurationMinutes,
     [MaxLength(4000)] string? RulesText,
     bool IsPublic,
@@ -47,6 +54,8 @@ public record TeacherProfileDto(
     string? Neighborhood,
     string? Bio,
     decimal DefaultPricePerLesson,
+    decimal? PricePer45Minutes,
+    decimal? PricePer30Minutes,
     int DefaultDurationMinutes,
     string? RulesText,
     bool IsPublic,
