@@ -21,7 +21,7 @@
           <app-messages-icon mode="teacher" link="/app/messages" />
           <app-notifications-bell />
           <app-theme-toggle />
-          <app-user-menu [name]="fullName()" roleLabel="מורה" (logout)="logout()" />
+          <app-user-menu [name]="fullName()" roleLabel="מורה" [links]="accountMenu" (logout)="logout()" />
         </div>
       </ng-template>
     </p-menubar>

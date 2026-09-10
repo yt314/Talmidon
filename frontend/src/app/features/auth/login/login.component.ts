@@ -59,7 +59,7 @@ export class LoginComponent implements OnInit {
     this.resendDone.set(false);
     const { email, password } = this.form.getRawValue();
     this.auth.login({ email, password }).subscribe({
-      next: () => this.router.navigateByUrl(this.auth.homePath()),
+      next: () => this.router.navigateByUrl(this.destination()),
       error: err => {
         const message = extractErrorMessage(err, 'ההתחברות נכשלה. נסה שוב.');
         this.error.set(message);
@@ -69,6 +69,18 @@ export class LoginComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  /**
+   * לאן ללכת אחרי התחברות: היעד שממנו הגיעה, ואם אין — עמוד הבית לפי התפקיד.
+   *
+   * היעד מתקבל ככתובת יחסית בלבד. returnUrl שמצביע החוצה הוא הדרך הקלאסית להשתמש
+   * במסך התחברות אמיתי כדי להעביר מישהי לאתר אחר בדיוק אחרי שהזינה סיסמה.
+   */
+  private destination(): string {
+    const requested = this.route.snapshot.queryParamMap.get('returnUrl');
+    const isInternal = requested?.startsWith('/') && !requested.startsWith('//');
+    return isInternal ? requested! : this.auth.homePath();
   }
 
   resendConfirmation(): void {

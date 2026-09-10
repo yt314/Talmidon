@@ -57,17 +57,19 @@ export class TeacherShellComponent implements OnInit {
     { label: 'יומן', icon: 'pi pi-calendar', routerLink: '/app/lessons' },
     { label: 'תשלומים', icon: 'pi pi-wallet', routerLink: '/app/payments' },
     { label: 'דוחות', icon: 'pi pi-chart-bar', routerLink: '/app/reports' },
-    { label: 'פניות', icon: 'pi pi-inbox', routerLink: '/app/contact-requests' },
-    // שתי מסכי ההגדרות מקובצים לתפריט משנה — פריטים רבים ברצף שברו את הסרגל
-    // לשתי שורות. ספריית המורות ירדה מכאן: הלוגו שמשמאל כבר מוביל אליה.
-    {
-      label: 'הגדרות',
-      icon: 'pi pi-cog',
-      items: [
-        { label: 'פרופיל ציבורי', icon: 'pi pi-id-card', routerLink: '/app/profile' },
-        { label: 'חשבון וסיסמה', icon: 'pi pi-lock', routerLink: '/app/account' }
-      ]
-    }
+    { label: 'פניות', icon: 'pi pi-inbox', routerLink: '/app/contact-requests' }
+  ];
+
+  /**
+   * ההגדרות עברו לתפריט שמתחת לעיגול המשתמשת.
+   *
+   * הסרגל מוגבל לרוחב עמודת התוכן, ושבעה פריטים לצד הלוגו, החיפוש ושלושה אייקונים
+   * לא נכנסים בו — הוא נשבר לשתי שורות. ניווט יומיומי נשאר בסרגל; הגדרות חשבון הן
+   * ממילא מה שמחפשים מתחת לתמונת המשתמשת.
+   */
+  protected readonly accountMenu: MenuItem[] = [
+    { label: 'פרופיל ציבורי', icon: 'pi pi-id-card', routerLink: '/app/profile' },
+    { label: 'חשבון וסיסמה', icon: 'pi pi-lock', routerLink: '/app/account' }
   ];
 
   ngOnInit(): void {
