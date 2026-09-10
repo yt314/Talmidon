@@ -281,6 +281,11 @@
 
 <p-dialog header="סיום שיעור" [(visible)]="showCompleteDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="completeForm" (ngSubmit)="saveComplete()">
+    @if (completingLesson(); as lesson) {
+      <p class="mt-0 mb-3 text-color-secondary text-sm">
+        {{ lesson.studentName }} · {{ lesson.startTime | ilDate: 'dd/MM HH:mm' }}
+      </p>
+    }
     <div class="field flex align-items-center gap-2">
       <p-checkbox inputId="c-completed" formControlName="completed" [binary]="true" />
       <label for="c-completed" class="m-0">השיעור התקיים</label>
@@ -300,11 +305,15 @@
             formControlName="amount"
             mode="decimal"
             [min]="0"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
             styleClass="w-full"
             inputStyleClass="w-full"
             [invalid]="isInvalid(completeForm.controls.amount)" />
           @if (fieldError(completeForm.controls.amount); as msg) {
             <small class="text-red-500 block mt-1">{{ msg }}</small>
+          } @else if (amountExplanation(); as hint) {
+            <small class="text-color-secondary block mt-1">{{ hint }}</small>
           }
         </div>
       }

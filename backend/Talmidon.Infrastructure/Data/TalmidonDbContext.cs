@@ -134,6 +134,8 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
             e.Property(t => t.RulesText).HasMaxLength(4000);
             e.Property(t => t.ContactInfo).HasMaxLength(1000);
             e.Property(t => t.DefaultPricePerLesson).HasPrecision(10, 2);
+            e.Property(t => t.PricePer45Minutes).HasPrecision(10, 2);
+            e.Property(t => t.PricePer30Minutes).HasPrecision(10, 2);
             e.Property(t => t.DefaultDurationMinutes).HasDefaultValue(60);
             e.Property(t => t.PhotoContentType).HasMaxLength(100);
 
@@ -150,6 +152,12 @@ public class TalmidonDbContext : IdentityDbContext<ApplicationUser>
                 t.HasCheckConstraint(
                     "CK_Teachers_DefaultPricePerLesson_NonNegative",
                     "\"DefaultPricePerLesson\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_Teachers_PricePer45Minutes_NonNegative",
+                    "\"PricePer45Minutes\" IS NULL OR \"PricePer45Minutes\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_Teachers_PricePer30Minutes_NonNegative",
+                    "\"PricePer30Minutes\" IS NULL OR \"PricePer30Minutes\" >= 0");
                 t.HasCheckConstraint(
                     "CK_Teachers_DefaultDurationMinutes_Positive",
                     "\"DefaultDurationMinutes\" > 0");

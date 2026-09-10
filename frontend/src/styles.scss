@@ -2307,3 +2307,19 @@ full-calendar th {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 }
+
+/**
+ * שורת המחירון בפרופיל המורה: מחיר לשעה, ל-45, ל-30 ומשך ברירת המחדל.
+ * ארבעה שדות צרים בשורה אחת נקראים בצפיפות במסך טלפון, שם הם יורדים זה מתחת לזה.
+ */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .pricing-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

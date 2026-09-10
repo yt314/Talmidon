@@ -43,6 +43,17 @@ public class Teacher
     /// <summary>משך ברירת מחדל לשיעור בדקות (למילוי אוטומטי של שעת הסיום ביומן).</summary>
     public int DefaultDurationMinutes { get; set; } = 60;
 
+    /// <summary>
+    /// מחיר לשיעור של 45 דקות. ‎null‎ = לא הוגדר, ואז המחיר נגזר יחסית מהמחיר לשעה.
+    ///
+    /// שדה נפרד ולא חישוב יחסי תמיד, כי תמחור של מורים אינו לינארי: מי שגובה 140 ₪
+    /// לשעה גובה לרוב 120 ₪ ל-45 דקות ולא 105.
+    /// </summary>
+    public decimal? PricePer45Minutes { get; set; }
+
+    /// <summary>מחיר לשיעור של 30 דקות. ‎null‎ = לא הוגדר (ראו <see cref="PricePer45Minutes"/>).</summary>
+    public decimal? PricePer30Minutes { get; set; }
+
     /// <summary>דף הכללים — כללי ביטול/תשלום.</summary>
     public string? RulesText { get; set; }
 

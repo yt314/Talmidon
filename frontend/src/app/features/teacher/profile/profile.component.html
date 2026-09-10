@@ -105,9 +105,9 @@
         }
       </div>
 
-      <div class="flex gap-3">
-        <div class="field flex-1">
-          <label for="t-price">מחיר לשיעור (₪) *</label>
+      <div class="pricing-grid">
+        <div class="field">
+          <label for="t-price">מחיר לשעה (₪) *</label>
           <p-inputnumber
             inputId="t-price"
             formControlName="defaultPricePerLesson"
@@ -120,7 +120,27 @@
             <small class="text-red-500 block mt-1">{{ msg }}</small>
           }
         </div>
-        <div class="field flex-1">
+        <div class="field">
+          <label for="t-price-45">מחיר ל-45 דקות (₪)</label>
+          <p-inputnumber
+            inputId="t-price-45"
+            formControlName="pricePer45Minutes"
+            mode="decimal"
+            [min]="0"
+            styleClass="w-full"
+            inputStyleClass="w-full" />
+        </div>
+        <div class="field">
+          <label for="t-price-30">מחיר ל-30 דקות (₪)</label>
+          <p-inputnumber
+            inputId="t-price-30"
+            formControlName="pricePer30Minutes"
+            mode="decimal"
+            [min]="0"
+            styleClass="w-full"
+            inputStyleClass="w-full" />
+        </div>
+        <div class="field">
           <label for="t-duration">משך שיעור (דקות) *</label>
           <p-inputnumber
             inputId="t-duration"
@@ -136,7 +156,7 @@
           }
         </div>
       </div>
-      <small class="block -mt-2 mb-3 text-color-secondary">משמשים כברירת מחדל בקביעת שיעור חדש. ניתן לקבוע ערך שונה לכל תלמיד בכרטיס שלו.</small>
+      <small class="block -mt-2 mb-3 text-color-secondary">משמשים כברירת מחדל בקביעת שיעור חדש ובחישוב הסכום בסיום שיעור. מחיר ל-45 או ל-30 דקות שנשאר ריק יחושב יחסית למחיר לשעה. ניתן לקבוע ערך שונה לכל תלמיד בכרטיס שלו.</small>
 
       <div class="field">
         <label for="t-rules">כללי ביטול ותשלום</label>
