@@ -296,11 +296,11 @@ export class LessonsListComponent implements OnInit {
       case 'student':
         return `לפי המחיר הקבוע שנקבע לתלמיד/ה (${minutes}).`;
       case 'student-prorated':
-        return `המחיר הקבוע של התלמיד/ה, מחושב יחסית ל-${minutes} ומעוגל ל-5 ₪.`;
+        return `המחיר הקבוע של התלמיד/ה, מחושב יחסית ל-${minutes}.`;
       case 'exact':
         return `לפי מחירון השיעורים שלך ל-${minutes}.`;
       case 'prorated':
-        return `חושב יחסית למחיר לשעה לפי ${minutes}, ועוגל ל-5 ₪.`;
+        return `חושב יחסית למחיר לשעה לפי ${minutes}.`;
       case 'unknown':
         return 'לא הצלחנו לחשב סכום — אפשר להזין אותו ידנית.';
     }

@@ -48,7 +48,7 @@ export interface LessonAmountSuggestion {
  *    עדיף על חישוב.
  * 4. **חישוב יחסי מהמחיר לשעה** לכל משך אחר (למשל 90 דקות).
  *
- * כל חישוב יחסי מעוגל ל-5 ₪ הקרובים, כדי לא לייצר סכומים כמו 157.5 ₪.
+ * חישוב יחסי מעוגל לאגורות בלבד — הסכום נשאר מדויק, והמורה מעגלת בעצמה אם תרצה.
  * המורה תמיד יכולה לדרוס את התוצאה בשדה הסכום — זו הצעה, לא החלטה.
  */
 export function suggestLessonAmountDetailed(
@@ -65,7 +65,7 @@ export function suggestLessonAmountDetailed(
     }
     if (durationMinutes > 0) {
       return {
-        amount: roundToFive((studentPrice * durationMinutes) / studentDuration),
+        amount: toAgorot((studentPrice * durationMinutes) / studentDuration),
         source: 'student-prorated',
         durationMinutes
       };
@@ -82,7 +82,7 @@ export function suggestLessonAmountDetailed(
   }
 
   return {
-    amount: roundToFive((pricing.pricePerHour * durationMinutes) / 60),
+    amount: toAgorot((pricing.pricePerHour * durationMinutes) / 60),
     source: 'prorated',
     durationMinutes
   };
@@ -104,9 +104,9 @@ function exactMatch(minutes: number, pricing: TeacherPricing): number | null {
   return null;
 }
 
-/** 157.5 ₪ הוא סכום שאיש אינו גובה. */
-function roundToFive(value: number): number {
-  return Math.round(value / 5) * 5;
+/** חיתוך לאגורות — כדי ש-140 ל-40 דקות ייתן 93.33 ולא 93.33333333333333. */
+function toAgorot(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 /** משך השיעור בדקות, מתוך הזמנים שלו. */

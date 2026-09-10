@@ -293,6 +293,8 @@
             formControlName="amount"
             mode="decimal"
             [min]="0"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
             styleClass="w-full"
             inputStyleClass="w-full"
             [invalid]="isInvalid(completeForm.controls.amount)" />

@@ -31,9 +31,9 @@ describe('suggestLessonAmount', () => {
     expect(suggestLessonAmount(90, pricing)).toBe(210);
   });
 
-  it('מעגל חישוב יחסי ל-5 ₪ הקרובים', () => {
-    // 140 * 40/60 = 93.33 → 95
-    expect(suggestLessonAmount(40, pricing)).toBe(95);
+  it('מחשב יחסית במדויק, בלי לעגל למעלה', () => {
+    // 140 * 40/60 = 93.33 — ולא 95
+    expect(suggestLessonAmount(40, pricing)).toBe(93.33);
   });
 
   it('נופל לחישוב יחסי כשהמחירים לפי אורך אינם מוגדרים', () => {
