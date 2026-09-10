@@ -1,4 +1,10 @@
-<app-page-header title="ראשי" icon="pi-home" />
+<app-page-header title="ראשי" icon="pi-home">
+  <p-button
+    label="בקש שיעור חדש"
+    icon="pi pi-plus"
+    routerLink="/parent/lessons"
+    [queryParams]="{ request: 1 }" />
+</app-page-header>
 
 <div class="grid">
   <div class="col-12 md:col-4">
