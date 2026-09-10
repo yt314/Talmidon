@@ -61,7 +61,7 @@ public class MonthlyPaymentReminderJob(
 
         try
         {
-            await emailSender.SendAsync(parent.Email, "תזכורת תשלום חודשית", html);
+            await emailSender.SendAsync(parent.Email, EmailSubjects.PaymentReminder(total, charges.Count), html);
             return true;
         }
         catch (Exception ex)

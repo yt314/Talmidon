@@ -175,7 +175,8 @@ public class PublicController(
             </div>
             """;
 
-        try { await emailSender.SendAsync(email, "פנייה חדשה מהספרייה", body); }
+        var subject = EmailSubjects.ContactRequest(contact.FullName, contact.Subject);
+        try { await emailSender.SendAsync(email, subject, body); }
         catch (Exception ex) { logger.LogError(ex, "Failed to send contact request email."); }
     }
 }

@@ -97,7 +97,7 @@ public class LessonsController(
         db.Lessons.Add(lesson);
         await db.SaveChangesAsync();
 
-        await NotifyParentsAsync(student.Id, "הוספת שיעור",
+        await NotifyParentsAsync(student.Id, EmailSubjects.LessonAdded(student.FullName, lesson.StartTime),
             $"נקבע שיעור חדש עבור {student.FullName} בתאריך {FormatDate(lesson.StartTime)}.");
 
         return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
@@ -119,7 +119,7 @@ public class LessonsController(
         lesson.EndTime = request.EndTime;
         await db.SaveChangesAsync();
 
-        await NotifyParentsAsync(lesson.StudentId, "עדכון שיעור",
+        await NotifyParentsAsync(lesson.StudentId, EmailSubjects.LessonUpdated(lesson.Student.FullName, lesson.StartTime),
             $"מועד השיעור של {lesson.Student.FullName} עודכן ל-{FormatDate(lesson.StartTime)}.");
 
         return NoContent();
@@ -139,7 +139,7 @@ public class LessonsController(
         db.Lessons.Remove(lesson);
         await db.SaveChangesAsync();
 
-        await NotifyParentsAsync(studentId, "ביטול שיעור",
+        await NotifyParentsAsync(studentId, EmailSubjects.LessonCancelled(studentName, startTime),
             $"השיעור של {studentName} בתאריך {FormatDate(startTime)} בוטל.");
 
         return NoContent();
@@ -193,7 +193,7 @@ public class LessonsController(
 
         if (!request.Completed)
         {
-            await NotifyParentsAsync(lesson.StudentId, "ביטול שיעור",
+            await NotifyParentsAsync(lesson.StudentId, EmailSubjects.LessonCancelled(lesson.Student.FullName, lesson.StartTime),
                 $"השיעור של {lesson.Student.FullName} בתאריך {FormatDate(lesson.StartTime)} בוטל.");
         }
 
@@ -364,7 +364,7 @@ public class LessonsController(
         AddTeacherNotification(NotificationType.LessonRequest, "בקשת שיעור חדשה", message, "/app/lessons");
         await db.SaveChangesAsync();
 
-        await NotifyTeacherAsync("בקשה לקביעת שיעור", message);
+        await NotifyTeacherAsync(EmailSubjects.LessonRequest(student.FullName, lesson.StartTime), message);
 
         return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
     }
@@ -401,7 +401,7 @@ public class LessonsController(
         AddTeacherNotification(NotificationType.LessonRequest, "בקשת שיעור חדשה", message, "/app/lessons");
         await db.SaveChangesAsync();
 
-        await NotifyTeacherAsync("בקשה לקביעת שיעור", message);
+        await NotifyTeacherAsync(EmailSubjects.LessonRequest(student.FullName, lesson.StartTime), message);
 
         return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
     }
@@ -456,11 +456,14 @@ public class LessonsController(
         };
         db.LessonChangeRequests.Add(changeRequest);
         var subject = request.Type == ChangeRequestType.Cancel ? "בקשה לביטול שיעור" : "בקשה לעדכון שיעור";
+        var emailSubject = request.Type == ChangeRequestType.Cancel
+            ? EmailSubjects.LessonCancelRequest(lesson.Student.FullName, lesson.StartTime)
+            : EmailSubjects.LessonRescheduleRequest(lesson.Student.FullName, lesson.StartTime);
         AddTeacherNotification(NotificationType.ChangeRequest, subject,
             $"התקבלה {subject} עבור {lesson.Student.FullName} (שיעור בתאריך {FormatDate(lesson.StartTime)}).", "/app/lessons");
         await db.SaveChangesAsync();
 
-        await NotifyTeacherAsync(subject,
+        await NotifyTeacherAsync(emailSubject,
             $"התקבלה {subject} עבור {lesson.Student.FullName} (שיעור בתאריך {FormatDate(lesson.StartTime)}).");
 
         return Ok(new ChangeRequestDto(

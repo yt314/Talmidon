@@ -62,7 +62,7 @@ public class SiteFeedbackController(
 
         try
         {
-            await emailSender.SendAsync(adminEmail, "תלמידון — הודעה חדשה מהאתר", body);
+            await emailSender.SendAsync(adminEmail, EmailSubjects.SiteFeedback(feedback.Message), body);
         }
         catch (Exception ex)
         {

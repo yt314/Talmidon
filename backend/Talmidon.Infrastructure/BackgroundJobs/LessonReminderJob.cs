@@ -65,15 +65,16 @@ public class LessonReminderJob(
         var sent = 0;
         foreach (var (parent, items) in byParent.Values)
         {
-            var lines = items
-                .OrderBy(i => i.StartTime)
+            var ordered = items.OrderBy(i => i.StartTime).ToList();
+            var subject = EmailSubjects.LessonReminder(ordered);
+            var lines = ordered
                 .Select(i => $"<li>{WebUtility.HtmlEncode(i.StudentName)} — {i.StartTime:dd/MM/yyyy} בשעה {i.StartTime:HH:mm}</li>");
             var html = EmailTemplates.SimpleListEmail(
                 "תזכורת שיעור", $"שלום {parent.FullName},", "תזכורת לשיעורים הקרובים:", lines);
 
             try
             {
-                await emailSender.SendAsync(parent.Email, "תזכורת שיעור", html);
+                await emailSender.SendAsync(parent.Email, subject, html);
                 sent++;
             }
             catch (Exception ex)

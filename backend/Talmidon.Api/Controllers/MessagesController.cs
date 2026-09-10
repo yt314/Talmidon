@@ -294,10 +294,11 @@ public class MessagesController(
         db.MessageThreads.Add(thread);
 
         var studentName = await db.Students.Where(s => s.Id == studentId).Select(s => s.FullName).FirstAsync();
-        AddTeacherNotification(subject, MessageNotificationText(me.Value.Name, studentName, body));
+        var text = MessageNotificationText(me.Value.Name, studentName, body);
+        AddTeacherNotification(subject, text);
         await db.SaveChangesAsync();
 
-        await NotifyTeacherAsync($"הודעה חדשה: {subject}", MessageNotificationText(me.Value.Name, studentName, body));
+        await NotifyTeacherAsync(EmailSubjects.MessageToTeacher(me.Value.Name, subject), text);
 
         return CreatedAtAction(nameof(MyThread), new { id = thread.Id }, await ToDetailAsync(thread));
     }
@@ -329,7 +330,7 @@ public class MessagesController(
         if (!alreadyWaiting) AddTeacherNotification(thread.Subject, text);
         await db.SaveChangesAsync();
 
-        if (!alreadyWaiting) await NotifyTeacherAsync($"הודעה חדשה: {thread.Subject}", text);
+        if (!alreadyWaiting) await NotifyTeacherAsync(EmailSubjects.MessageToTeacher(me.Value.Name, thread.Subject), text);
 
         return Ok(ToDto(message));
     }
@@ -554,7 +555,8 @@ public class MessagesController(
 
         if (string.IsNullOrWhiteSpace(email)) return;
 
-        var title = $"הודעה מהמורה: {subject}";
+        var teacherName = await db.Teachers.Where(t => t.Id == thread.TenantId).Select(t => t.FullName).FirstOrDefaultAsync();
+        var title = EmailSubjects.MessageToCounterpart(teacherName ?? "", subject);
         var text = $"בעניין {studentName}\n\n{body}";
         try { await emailSender.SendAsync(email, title, BuildEmailHtml(title, text)); }
         catch (Exception ex) { logger.LogError(ex, "Failed to send message email to the counterpart."); }
