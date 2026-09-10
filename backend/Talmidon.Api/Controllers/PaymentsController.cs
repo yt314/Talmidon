@@ -218,7 +218,7 @@ public class PaymentsController(
 
         try
         {
-            await emailSender.SendAsync(parent.Email, "אישור קבלת תשלום", html);
+            await emailSender.SendAsync(parent.Email, EmailSubjects.PaymentReceived(amount, paidDate), html);
             return true;
         }
         catch (Exception ex)
