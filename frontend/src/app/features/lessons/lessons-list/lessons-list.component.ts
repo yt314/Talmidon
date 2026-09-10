@@ -124,6 +124,9 @@ export class LessonsListComponent implements OnInit {
   protected readonly changeRequestsLoading = signal(true);
 
   /** סינון היומן לפי תלמיד (null = כל התלמידים). */
+  /** פתיחת שעות הזמינות בטלפון. במחשב השורה פתוחה תמיד ב-CSS. */
+  protected readonly showAvailability = signal(false);
+
   protected readonly studentFilter = signal<string | null>(null);
 
   protected readonly calendarEvents = computed(() => {
