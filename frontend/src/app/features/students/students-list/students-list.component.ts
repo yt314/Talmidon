@@ -53,6 +53,8 @@ export class StudentsListComponent implements OnInit {
 
   protected readonly showStudentDialog = signal(false);
   protected readonly showParentDialog = signal(false);
+  /** נפתח מתוך דיאלוג התלמיד — ההורה החדש ייבחר שם אוטומטית. */
+  private readonly parentDialogReturnsToStudent = signal(false);
   protected readonly savingStudent = signal(false);
   protected readonly savingParent = signal(false);
   protected readonly fieldError = fieldError;
@@ -96,6 +98,18 @@ export class StudentsListComponent implements OnInit {
   }
 
   openParentDialog(): void {
+    this.parentDialogReturnsToStudent.set(false);
+    this.parentForm.reset({ fullName: '', gender: null, email: '', phone: '' });
+    this.showParentDialog.set(true);
+  }
+
+  /**
+   * הורה חדש מתוך דיאלוג הוספת התלמיד. בלי זה המורה נאלצת לעזוב באמצע, ליצור
+   * את ההורה בלשונית ההורים ולחזור — ובדרך נשכח לקשר, והשיעורים של התלמיד
+   * נשארים בלי מי שישלם עליהם (ראו מסך התשלומים).
+   */
+  openParentDialogForStudent(): void {
+    this.parentDialogReturnsToStudent.set(true);
     this.parentForm.reset({ fullName: '', gender: null, email: '', phone: '' });
     this.showParentDialog.set(true);
   }
@@ -172,10 +186,17 @@ export class StudentsListComponent implements OnInit {
     this.savingParent.set(true);
     const raw = this.parentForm.getRawValue();
     this.parentsService.create({ fullName: raw.fullName, gender: raw.gender, email: raw.email, phone: raw.phone || null }).subscribe({
-      next: () => {
+      next: parent => {
         this.savingParent.set(false);
         this.showParentDialog.set(false);
         this.messageService.add({ severity: 'success', summary: 'ההורה נוסף בהצלחה' });
+        // ההורה כבר ברשימה המקומית, כדי שה-multiselect יוכל להציג אותו מיד
+        this.parents.set([...this.parents(), parent].sort((a, b) => a.fullName.localeCompare(b.fullName, 'he')));
+        if (this.parentDialogReturnsToStudent()) {
+          this.parentDialogReturnsToStudent.set(false);
+          const selected = this.studentForm.controls.parentIds.value ?? [];
+          this.studentForm.controls.parentIds.setValue([...selected, parent.id]);
+        }
         this.loadParents();
       },
       error: err => {

@@ -174,15 +174,28 @@
     </div>
     <div class="field">
       <label for="s-parentIds">הורים מקושרים</label>
-      <p-multiselect
-        inputId="s-parentIds"
-        [options]="parents()"
-        optionLabel="fullName"
-        optionValue="id"
-        formControlName="parentIds"
-        placeholder="בחר הורים (אופציונלי)"
-        display="chip"
-        styleClass="w-full" />
+      <div class="parent-picker-row">
+        <p-multiselect
+          inputId="s-parentIds"
+          [options]="parents()"
+          optionLabel="fullName"
+          optionValue="id"
+          formControlName="parentIds"
+          placeholder="בחר הורים (אופציונלי)"
+          display="chip"
+          styleClass="flex-1"
+          [style]="{ 'min-width': 0 }" />
+        <p-button
+          label="הורה חדש"
+          icon="pi pi-user-plus"
+          severity="secondary"
+          [outlined]="true"
+          type="button"
+          (onClick)="openParentDialogForStudent()" />
+      </div>
+      <small class="text-color-secondary block mt-1">
+        התשלום על השיעורים נרשם על ההורה. בלי הורה מקושר לא נוכל לגבות עליהם במסך התשלומים.
+      </small>
     </div>
 
     <div class="flex justify-content-end gap-2 mt-4">
