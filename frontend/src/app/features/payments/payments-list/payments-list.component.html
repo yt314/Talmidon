@@ -16,20 +16,105 @@
 
   <p-tabpanels>
     <p-tabpanel value="open">
-      <div class="field" style="max-width: 360px">
-        <label for="p-parent">הורה</label>
-        <p-select
-          inputId="p-parent"
-          [options]="parents()"
-          optionLabel="fullName"
-          optionValue="id"
-          placeholder="בחר הורה"
-          [ngModel]="selectedParentId()"
-          (ngModelChange)="selectedParentId.set($event); onParentChange()"
-          styleClass="w-full" />
-      </div>
+      @if (!selectedParentId()) {
+        <div class="owed-banner flex flex-wrap align-items-baseline gap-2 mb-3">
+          <span class="text-2xl font-bold">{{ totalOwed() | number: '1.0-2' }} ₪</span>
+          <span class="text-color-secondary">פתוחים לגבייה · {{ totalOpenLessons() }} שיעורים</span>
+        </div>
+
+        <div class="owed-table">
+        <p-table [value]="summary()" [loading]="summaryLoading()" dataKey="parentName">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>הורה</th>
+              <th>שיעורים</th>
+              <th>ממתין מאז</th>
+              <th>סכום</th>
+              <th style="width: 10rem"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>
+                <div class="flex align-items-center gap-2">
+                  <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(row.parentName)">
+                    {{ initials(row.parentName) }}
+                  </span>
+                  <span>
+                    {{ row.parentName }}
+                    @if (row.studentCount > 1) {
+                      <small class="block text-color-secondary">{{ row.studentCount }} תלמידים</small>
+                    }
+                  </span>
+                </div>
+              </td>
+              <td>{{ row.lessonCount }}</td>
+              <td>
+                {{ row.oldestLessonStartTime | ilDate: 'dd/MM/yyyy' }}
+                <small class="block text-color-secondary">לפני {{ daysWaiting(row.oldestLessonStartTime) }} ימים</small>
+              </td>
+              <td class="font-bold">{{ row.total | number: '1.0-2' }} ₪</td>
+              <td>
+                @if (row.parentId) {
+                  <p-button label="גבייה" icon="pi pi-wallet" size="small" [text]="true" (onClick)="openParent(row)" />
+                } @else {
+                  <small class="text-color-secondary">אין הורה לשייך אליו תשלום</small>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5">
+                <app-empty-state icon="pi-check-circle" title="אין חיובים פתוחים" hint="כל השיעורים שהתקיימו שולמו." />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        </div>
+
+        <div class="owed-cards">
+          @for (row of summary(); track row.parentName) {
+            <div class="owed-card">
+              <div class="flex align-items-center gap-2 mb-2">
+                <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(row.parentName)">
+                  {{ initials(row.parentName) }}
+                </span>
+                <span class="font-medium">{{ row.parentName }}</span>
+                <span class="owed-card-amount font-bold">{{ row.total | number: '1.0-2' }} ₪</span>
+              </div>
+              <div class="text-color-secondary text-sm mb-2">
+                {{ row.lessonCount }} שיעורים · ממתין מאז {{ row.oldestLessonStartTime | ilDate: 'dd/MM/yyyy' }} ({{ daysWaiting(row.oldestLessonStartTime) }} ימים)
+              </div>
+              @if (row.parentId) {
+                <p-button label="גבייה" icon="pi pi-wallet" size="small" [outlined]="true" (onClick)="openParent(row)" />
+              } @else {
+                <small class="text-color-secondary">אין הורה לשייך אליו תשלום</small>
+              }
+            </div>
+          } @empty {
+            <app-empty-state icon="pi-check-circle" title="אין חיובים פתוחים" hint="כל השיעורים שהתקיימו שולמו." />
+          }
+        </div>
+
+      }
 
       @if (selectedParentId()) {
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <p-button label="חזרה לכל ההורים" icon="pi pi-arrow-right" severity="secondary" [text]="true" (onClick)="backToSummary()" />
+          <div class="field m-0" style="min-width: 220px">
+            <p-select
+              inputId="p-parent"
+              [options]="parents()"
+              optionLabel="fullName"
+              optionValue="id"
+              placeholder="בחר הורה"
+              [ngModel]="selectedParentId()"
+              (ngModelChange)="selectedParentId.set($event); onParentChange()"
+              styleClass="w-full" />
+          </div>
+        </div>
+
         <p-table [value]="openCharges()" [loading]="openChargesLoading()" dataKey="lessonId" class="mt-3">
           <ng-template pTemplate="header">
             <tr>
@@ -40,7 +125,7 @@
                   (onChange)="toggleAll()" />
               </th>
               <th>תלמיד</th>
-              <th>תאריך שיעור</th>
+              <th class="charge-date-col">תאריך שיעור</th>
               <th>סכום</th>
             </tr>
           </ng-template>
@@ -51,14 +136,18 @@
               </td>
               <td>
                 <div class="flex align-items-center gap-2">
-                  <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(charge.studentName)">
+                  <span class="avatar-circle charge-avatar" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(charge.studentName)">
                     {{ initials(charge.studentName) }}
                   </span>
-                  {{ charge.studentName }}
+                  <span>
+                    {{ charge.studentName }}
+                    <!-- בטלפון עמודת התאריך מוסתרת, והתאריך יורד לכאן -->
+                    <small class="charge-date-inline text-color-secondary">{{ charge.lessonStartTime | ilDate: 'dd/MM/yyyy' }}</small>
+                  </span>
                 </div>
               </td>
-              <td>{{ charge.lessonStartTime | ilDate: 'dd/MM/yyyy' }}</td>
-              <td>{{ charge.amount }} ₪</td>
+              <td class="charge-date-col">{{ charge.lessonStartTime | ilDate: 'dd/MM/yyyy' }}</td>
+              <td>{{ charge.amount | number: '1.0-2' }} ₪</td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
@@ -74,7 +163,7 @@
           <form [formGroup]="paymentForm" (ngSubmit)="markAsPaid()" class="mt-4" style="max-width: 480px">
             <div class="payment-summary-bar flex justify-content-between align-items-center mb-3">
               <span class="font-medium">סה"כ נבחר</span>
-              <span class="font-bold text-xl">{{ selectedTotal() }} ₪</span>
+              <span class="font-bold text-xl">{{ selectedTotal() | number: '1.0-2' }} ₪</span>
             </div>
             @if (noSelectionError()) {
               <small class="text-red-500 block mb-3">יש לבחור לפחות שיעור אחד</small>
@@ -143,7 +232,7 @@
                 {{ payment.parentName }}
               </div>
             </td>
-            <td>{{ payment.amount }} ₪</td>
+            <td>{{ payment.amount | number: '1.0-2' }} ₪</td>
             <td>{{ payment.paidDate | ilDate: 'dd/MM/yyyy' }}</td>
             <td>{{ payment.method || '—' }}</td>
             <td>{{ payment.lessonCount }}</td>

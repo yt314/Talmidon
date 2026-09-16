@@ -1,4 +1,5 @@
 
+import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -17,7 +18,7 @@ import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
-import { OpenCharge, Payment } from '../payments.models';
+import { OpenCharge, OpenChargeSummary, Payment } from '../payments.models';
 import { PaymentsService } from '../payments.service';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
@@ -32,7 +33,7 @@ import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
     SelectModule,
     TableModule,
     TabsModule,
-    TagModule, PageHeaderComponent, EmptyStateComponent, IsraelDatePipe],
+    TagModule, PageHeaderComponent, EmptyStateComponent, IsraelDatePipe, DecimalPipe],
   templateUrl: './payments-list.component.html'
 })
 export class PaymentsListComponent implements OnInit {
@@ -46,6 +47,9 @@ export class PaymentsListComponent implements OnInit {
   protected readonly avatarColor = getAvatarColor;
 
   protected readonly parents = signal<Parent[]>([]);
+  /** "מי חייב כמה" — התמונה שנפתחת ראשונה, לפני שבוחרים הורה מסוים. */
+  protected readonly summary = signal<OpenChargeSummary[]>([]);
+  protected readonly summaryLoading = signal(true);
   protected readonly selectedParentId = signal<string | null>(null);
   protected readonly openCharges = signal<OpenCharge[]>([]);
   protected readonly openChargesLoading = signal(false);
@@ -58,6 +62,9 @@ export class PaymentsListComponent implements OnInit {
   protected readonly noSelectionError = signal(false);
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
+
+  protected readonly totalOwed = computed(() => this.summary().reduce((sum, row) => sum + row.total, 0));
+  protected readonly totalOpenLessons = computed(() => this.summary().reduce((sum, row) => sum + row.lessonCount, 0));
 
   protected readonly selectedTotal = computed(() => {
     const ids = this.selectedLessonIds();
@@ -74,7 +81,37 @@ export class PaymentsListComponent implements OnInit {
 
   ngOnInit(): void {
     this.parentsService.list().subscribe(parents => this.parents.set(parents));
+    this.loadSummary();
     this.loadPayments();
+  }
+
+  private loadSummary(): void {
+    this.summaryLoading.set(true);
+    this.paymentsService.openChargesSummary().subscribe({
+      next: rows => {
+        this.summary.set(rows);
+        this.summaryLoading.set(false);
+      },
+      error: () => this.summaryLoading.set(false)
+    });
+  }
+
+  /** לחיצה על שורה בטבלת החוב — פותחת את החיובים של אותו הורה. */
+  openParent(row: OpenChargeSummary): void {
+    if (!row.parentId) return;
+    this.selectedParentId.set(row.parentId);
+    this.onParentChange();
+  }
+
+  backToSummary(): void {
+    this.selectedParentId.set(null);
+    this.onParentChange();
+  }
+
+  /** כמה ימים עברו מהשיעור הפתוח הוותיק ביותר — חוב של חודש נראה אחרת מחוב של אתמול. */
+  daysWaiting(isoDate: string): number {
+    const days = Math.floor((Date.now() - new Date(isoDate).getTime()) / 86_400_000);
+    return days > 0 ? days : 0;
   }
 
   onParentChange(): void {
@@ -89,6 +126,8 @@ export class PaymentsListComponent implements OnInit {
     this.paymentsService.openCharges(parentId).subscribe({
       next: charges => {
         this.openCharges.set(charges);
+        // המורה נכנסה כדי לגבות — הכול מסומן, והיא מורידה סימון מהחריגים
+        this.selectedLessonIds.set(new Set(charges.map(c => c.lessonId)));
         this.openChargesLoading.set(false);
       },
       error: () => this.openChargesLoading.set(false)
@@ -138,6 +177,7 @@ export class PaymentsListComponent implements OnInit {
           this.messageService.add({ severity: 'success', summary: 'התשלום נרשם ונשלח אישור להורה' });
           this.paymentForm.reset({ paidDate: new Date(), method: '', note: '' });
           this.onParentChange();
+          this.loadSummary();
           this.loadPayments();
         },
         error: err => {
@@ -177,6 +217,7 @@ export class PaymentsListComponent implements OnInit {
     this.paymentsService.delete(id).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'התשלום בוטל' });
+        this.loadSummary();
         this.loadPayments();
         if (this.selectedParentId()) this.onParentChange();
       },

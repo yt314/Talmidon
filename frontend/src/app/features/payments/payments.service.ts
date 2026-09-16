@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreatePaymentRequest, OpenCharge, Payment, PaymentDetail } from './payments.models';
+import { CreatePaymentRequest, OpenCharge, OpenChargeSummary, Payment, PaymentDetail } from './payments.models';
 
 @Injectable({ providedIn: 'root' })
 export class PaymentsService {
@@ -14,6 +14,11 @@ export class PaymentsService {
     let params = new HttpParams();
     if (parentId) params = params.set('parentId', parentId);
     return this.http.get<OpenCharge[]>(`${this.api}/open-charges`, { params });
+  }
+
+  /** סיכום החוב הפתוח לפי הורה — מה שנטען כשנכנסים למסך. */
+  openChargesSummary(): Observable<OpenChargeSummary[]> {
+    return this.http.get<OpenChargeSummary[]>(`${this.api}/open-charges/summary`);
   }
 
   list(): Observable<Payment[]> {

@@ -56,6 +56,55 @@ public class PaymentsController(
         return Ok(charges);
     }
 
+    /// <summary>
+    /// "מי חייב כמה" — סיכום החיובים הפתוחים לפי הורה, כדי שהמורה תראה את התמונה
+    /// בלי לבחור הורה־הורה. תלמיד המשויך לשני הורים נספר פעם אחת בלבד, אצל ההורה
+    /// הראשון בסדר אלפביתי, כדי שהסכומים יסתכמו לסך החוב האמיתי.
+    /// </summary>
+    [Authorize(Roles = Roles.Teacher)]
+    [HttpGet("open-charges/summary")]
+    public async Task<ActionResult<IEnumerable<OpenChargeSummaryDto>>> OpenChargesSummary()
+    {
+        var charges = await db.Lessons
+            .Where(l => l.PaymentRequired && l.PaymentId == null)
+            .Select(l => new
+            {
+                l.StudentId,
+                l.StartTime,
+                l.Amount,
+                Parents = l.Student.StudentParents
+                    .Select(sp => new { sp.ParentId, sp.Parent.FullName })
+                    .ToList()
+            })
+            .ToListAsync();
+
+        var summary = charges
+            .Select(c =>
+            {
+                var payer = c.Parents.OrderBy(p => p.FullName).ThenBy(p => p.ParentId).FirstOrDefault();
+                return new
+                {
+                    ParentId = payer?.ParentId,
+                    ParentName = payer?.FullName ?? "ללא הורה משויך",
+                    c.StudentId,
+                    c.StartTime,
+                    c.Amount
+                };
+            })
+            .GroupBy(c => new { c.ParentId, c.ParentName })
+            .Select(g => new OpenChargeSummaryDto(
+                g.Key.ParentId,
+                g.Key.ParentName,
+                g.Select(c => c.StudentId).Distinct().Count(),
+                g.Count(),
+                g.Sum(c => c.Amount),
+                g.Min(c => c.StartTime)))
+            .OrderBy(s => s.OldestLessonStartTime)
+            .ToList();
+
+        return Ok(summary);
+    }
+
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PaymentDto>>> List([FromQuery] Guid? parentId)
