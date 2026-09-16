@@ -32,6 +32,99 @@ body {
     color 0.25s ease;
 }
 
+.branch-protection-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: min(100%, 1420px);
+  margin: 0 auto;
+  padding: 1.2rem 1.2rem 1.25rem 1.15rem;
+  border: 1px solid #b8d6e8;
+  border-radius: 0.62rem;
+  background: #dfeef7;
+  color: #1f2328;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.banner-icon {
+  flex: 0 0 auto;
+  width: 2.3rem;
+  height: 2.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f6feb;
+}
+
+.banner-icon svg {
+  width: 1.8rem;
+  height: 1.8rem;
+  display: block;
+}
+
+.banner-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.banner-copy h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 2.15rem);
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #1f2328;
+}
+
+.banner-copy p {
+  margin: 0.35rem 0 0;
+  font-size: clamp(0.9rem, 1.5vw, 1.35rem);
+  line-height: 1.5;
+  color: #1f2328;
+}
+
+.banner-copy a {
+  color: #0969da;
+  text-decoration: underline;
+}
+
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+}
+
+.banner-button {
+  appearance: none;
+  border: 1px solid #c7d7e4;
+  border-radius: 0.5rem;
+  padding: 0.68rem 1.15rem;
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.15s ease, background-color 0.15s ease;
+}
+
+.banner-button:hover {
+  filter: brightness(0.99);
+}
+
+.banner-button.primary {
+  background: #0969da;
+  border-color: #0969da;
+  color: #fff;
+}
+
+.banner-button.secondary {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #b6d0df;
+  color: #1f2328;
+}
+
 h1,
 h2,
 h3,
