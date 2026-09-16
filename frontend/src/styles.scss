@@ -2365,3 +2365,28 @@ full-calendar th {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/**
+ * בחירת ההורים בדיאלוג הוספת תלמיד, לצד כפתור "הורה חדש". בטלפון אין מקום
+ * לשניהם באותה שורה בלי לחתוך את הטקסט בתיבה, ולכן הם נערמים.
+ */
+.parent-picker-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.parent-picker-row > p-multiselect {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .parent-picker-row {
+    flex-direction: column;
+  }
+
+  .parent-picker-row > * {
+    width: 100%;
+  }
+}
