@@ -9,7 +9,7 @@
       tone="primary"
       link="/student/lessons"
       [value]="nextLesson() ? (nextLesson()!.startTime | ilDate: 'dd/MM HH:mm') : (lessons() === null ? null : '—')"
-      [hint]="nextLesson() ? null : (lessons() === null ? null : 'אין שיעורים קרובים')" />
+      [hint]="nextLessonHint()" />
   </div>
 
   @if (recentHomework(); as hw) {
@@ -32,7 +32,7 @@
   @if (upcomingLessons() === null) {
     <p class="text-color-secondary">טוען...</p>
   } @else if (upcomingLessons()!.length === 0) {
-    <p class="text-color-secondary">אין שיעורים קרובים מתוזמנים.</p>
+    <p class="text-color-secondary">אין שיעורים קרובים.</p>
   } @else {
     <ul class="parent-list">
       @for (lesson of upcomingLessons(); track lesson.id) {
