@@ -715,6 +715,17 @@ a.stat-card:hover {
   padding: 0.75rem 1rem;
 }
 
+/* שורת "מתוך הפנייה של..." בראש טופס שנפתח מתיבת הפניות — מסבירה מאיפה הגיעו
+   הפרטים שכבר מולאו. */
+.from-contact-note {
+  background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+  border-radius: var(--p-border-radius-md);
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
 /* כרטיס "בקשות שלא אושרו" בפורטלים. פס בצד ההתחלה, ולא מסגרת אדומה מלאה: זו
    תשובה שצריך לראות, לא שגיאה שקרתה. */
 .declined-card {

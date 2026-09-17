@@ -19,6 +19,10 @@ export class ContactRequestsService {
     return this.http.get<ContactRequest[]>(`${this.base}/contact-requests`, { params });
   }
 
+  get(id: string): Observable<ContactRequest> {
+    return this.http.get<ContactRequest>(`${this.base}/contact-requests/${id}`);
+  }
+
   newCount(): Observable<number> {
     return this.http.get<number>(`${this.base}/contact-requests/new-count`);
   }

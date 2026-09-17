@@ -112,6 +112,12 @@
 
 <p-dialog header="הוספת תלמיד" [(visible)]="showStudentDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="studentForm" (ngSubmit)="saveStudent()">
+    @if (fromContact(); as contact) {
+      <p class="from-contact-note">
+        <i class="pi pi-inbox text-xs"></i>
+        מתוך הפנייה של <strong>{{ contact.fullName }}</strong> · {{ contact.phone }}
+      </p>
+    }
     <div class="field">
       <label for="s-fullName">שם מלא *</label>
       <input pInputText id="s-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(studentForm.controls.fullName)" />
@@ -205,11 +211,21 @@
   </form>
 </p-dialog>
 
-<p-dialog header="הוספת הורה" [(visible)]="showParentDialog" [modal]="true" [style]="{ width: '420px' }">
+<p-dialog header="הוספת הורה" [(visible)]="showParentDialog" [modal]="true" [style]="{ width: '420px' }" (onShow)="onParentDialogShown()" (onHide)="onParentDialogHidden()">
   <form [formGroup]="parentForm" (ngSubmit)="saveParent()">
+    @if (fromContact(); as contact) {
+      <p class="from-contact-note">
+        <i class="pi pi-inbox text-xs"></i>
+        הפרטים מהפנייה של <strong>{{ contact.fullName }}</strong>
+        @if (contact.subject) {
+          · {{ contact.subject }}
+        }
+        <span class="block mt-1">אחרי השמירה נמשיך לפרטי התלמידה, וההורה כבר יהיה מקושר.</span>
+      </p>
+    }
     <div class="field">
       <label for="p-fullName">שם מלא *</label>
-      <input pInputText id="p-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(parentForm.controls.fullName)" />
+      <input pInputText id="p-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(parentForm.controls.fullName)" (focus)="onParentNameFocused()" />
       @if (fieldError(parentForm.controls.fullName); as msg) {
         <small class="text-red-500 block mt-1">{{ msg }}</small>
       }

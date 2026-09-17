@@ -1,6 +1,7 @@
 
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -38,12 +39,22 @@ export class ContactRequestsComponent implements OnInit {
   private readonly service = inject(ContactRequestsService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly router = inject(Router);
 
   protected readonly statusLabel = (s: ContactRequestStatus): string => CONTACT_STATUS_LABELS[s];
   protected readonly statusSeverity = (s: ContactRequestStatus) => CONTACT_STATUS_SEVERITY[s];
   protected readonly hasWhatsapp = hasWhatsapp;
   protected readonly hasEmail = hasEmail;
   protected readonly Status = ContactRequestStatus;
+
+  /**
+   * הפרטים שההורה כבר הקליד — שם, טלפון ומייל — קיימים רק כאן. עד לשינוי הזה
+   * הדרך היחידה להפוך פנייה לתלמידה הייתה להעתיק אותם ביד למסך אחר, ושם
+   * להתחיל מדף ריק.
+   */
+  openAsStudent(contact: ContactRequest): void {
+    this.router.navigate(['/app/students'], { queryParams: { fromContact: contact.id } });
+  }
 
   protected readonly loading = signal(true);
   protected readonly all = signal<ContactRequest[]>([]);
