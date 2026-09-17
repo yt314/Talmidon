@@ -74,3 +74,9 @@ public record CreateStudentLessonRequest(
     [Required] DateTimeOffset StartTime,
     [Required] DateTimeOffset EndTime,
     [MaxLength(1000)] string? Reason);
+
+/// <summary>
+/// תוצאת ביטול סדרה. מספר השיעורים שנמחקו בפועל מגיע מהשרת ולא נספר בלקוח,
+/// כדי שההודעה למורה תשקף את מה שקרה ולא את מה שהמסך הספיק לטעון.
+/// </summary>
+public record CancelLessonSeriesResultDto(int CancelledCount);

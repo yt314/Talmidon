@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  CancelSeriesResult,
   ChangeRequest,
   ChangeRequestStatus,
   CompleteLessonRequest,
@@ -36,9 +37,9 @@ export class LessonsService {
     return this.http.post<LessonSeriesResult>(this.seriesApi, request);
   }
 
-  cancelSeries(id: string, deleteFutureOccurrences: boolean): Observable<void> {
+  cancelSeries(id: string, deleteFutureOccurrences: boolean): Observable<CancelSeriesResult> {
     const params = new HttpParams().set('deleteFutureOccurrences', deleteFutureOccurrences);
-    return this.http.delete<void>(`${this.seriesApi}/${id}`, { params });
+    return this.http.delete<CancelSeriesResult>(`${this.seriesApi}/${id}`, { params });
   }
 
   update(id: string, request: UpdateLessonRequest): Observable<void> {

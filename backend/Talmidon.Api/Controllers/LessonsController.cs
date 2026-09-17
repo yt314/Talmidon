@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
+using Talmidon.Api.Services;
 using Talmidon.Domain.Entities;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Auth;
@@ -27,6 +28,7 @@ public class LessonsController(
     UserManager<ApplicationUser> userManager,
     IEmailSender emailSender,
     AppLinks links,
+    FamilyNotifier familyNotifier,
     ILogger<LessonsController> logger) : ControllerBase
 {
     private Guid TenantId => currentTenant.TenantId
@@ -97,7 +99,7 @@ public class LessonsController(
         db.Lessons.Add(lesson);
         await db.SaveChangesAsync();
 
-        await NotifyParentsAsync(student.Id, EmailSubjects.LessonAdded(student.FullName, lesson.StartTime),
+        await familyNotifier.NotifyParentsAsync(student.Id, EmailSubjects.LessonAdded(student.FullName, lesson.StartTime),
             $"נקבע שיעור חדש עבור {student.FullName} בתאריך {FormatDate(lesson.StartTime)}.");
 
         return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
@@ -119,7 +121,7 @@ public class LessonsController(
         lesson.EndTime = request.EndTime;
         await db.SaveChangesAsync();
 
-        await NotifyParentsAsync(lesson.StudentId, EmailSubjects.LessonUpdated(lesson.Student.FullName, lesson.StartTime),
+        await familyNotifier.NotifyParentsAsync(lesson.StudentId, EmailSubjects.LessonUpdated(lesson.Student.FullName, lesson.StartTime),
             $"מועד השיעור של {lesson.Student.FullName} עודכן ל-{FormatDate(lesson.StartTime)}.");
 
         return NoContent();
@@ -139,7 +141,7 @@ public class LessonsController(
         db.Lessons.Remove(lesson);
         await db.SaveChangesAsync();
 
-        await NotifyParentsAsync(studentId, EmailSubjects.LessonCancelled(studentName, startTime),
+        await familyNotifier.NotifyParentsAsync(studentId, EmailSubjects.LessonCancelled(studentName, startTime),
             $"השיעור של {studentName} בתאריך {FormatDate(startTime)} בוטל.");
 
         return NoContent();
@@ -193,7 +195,7 @@ public class LessonsController(
 
         if (!request.Completed)
         {
-            await NotifyParentsAsync(lesson.StudentId, EmailSubjects.LessonCancelled(lesson.Student.FullName, lesson.StartTime),
+            await familyNotifier.NotifyParentsAsync(lesson.StudentId, EmailSubjects.LessonCancelled(lesson.Student.FullName, lesson.StartTime),
                 $"השיעור של {lesson.Student.FullName} בתאריך {FormatDate(lesson.StartTime)} בוטל.");
         }
 
@@ -218,7 +220,7 @@ public class LessonsController(
 
         // ההורה הוא מי שאינו יודע. התלמיד/ה היה/הייתה שם או לא, והשיעור נעלם
         // מהמסכים בלי חיוב — כך שבלי ההודעה הזו אין שום סימן שמשהו קרה.
-        await NotifyParentsAsync(lesson.StudentId,
+        await familyNotifier.NotifyParentsAsync(lesson.StudentId,
             EmailSubjects.LessonNoShow(lesson.Student.FullName, lesson.StartTime),
             $"{lesson.Student.FullName} לא הגיע/ה לשיעור בתאריך {FormatDate(lesson.StartTime)}. השיעור לא חויב.");
 
@@ -240,7 +242,7 @@ public class LessonsController(
         await db.SaveChangesAsync();
 
         var studentName = lesson.Student.FullName;
-        await NotifyFamilyAsync(lesson.StudentId,
+        await familyNotifier.NotifyFamilyAsync(lesson.StudentId,
             EmailSubjects.LessonRequestApproved(studentName, lesson.StartTime),
             $"בקשת השיעור של {studentName} לתאריך {FormatDate(lesson.StartTime)} אושרה, והשיעור נקבע ביומן.");
 
@@ -264,7 +266,7 @@ public class LessonsController(
         await db.SaveChangesAsync();
 
         var studentName = lesson.Student.FullName;
-        await NotifyFamilyAsync(lesson.StudentId,
+        await familyNotifier.NotifyFamilyAsync(lesson.StudentId,
             EmailSubjects.LessonRequestDeclined(studentName, lesson.StartTime),
             $"המועד שהתבקש עבור {studentName} — {FormatDate(lesson.StartTime)} — אינו מתאים למורה. אפשר לבקש מועד אחר מהיומן.");
 
@@ -321,13 +323,13 @@ public class LessonsController(
         var studentName = request.Lesson.Student.FullName;
         if (request.Type == ChangeRequestType.Cancel)
         {
-            await NotifyFamilyAsync(request.Lesson.StudentId,
+            await familyNotifier.NotifyFamilyAsync(request.Lesson.StudentId,
                 EmailSubjects.LessonCancelled(studentName, originalStart),
                 $"בקשת הביטול אושרה. השיעור של {studentName} בתאריך {FormatDate(originalStart)} בוטל.");
         }
         else
         {
-            await NotifyFamilyAsync(request.Lesson.StudentId,
+            await familyNotifier.NotifyFamilyAsync(request.Lesson.StudentId,
                 EmailSubjects.LessonUpdated(studentName, request.Lesson.StartTime),
                 $"בקשת שינוי המועד אושרה. השיעור של {studentName} נקבע ל-{FormatDate(request.Lesson.StartTime)} במקום {FormatDate(originalStart)}.");
         }
@@ -355,7 +357,7 @@ public class LessonsController(
         var studentName = request.Lesson.Student.FullName;
         var lessonStart = request.Lesson.StartTime;
         var what = request.Type == ChangeRequestType.Cancel ? "בקשת הביטול" : "בקשת שינוי המועד";
-        await NotifyParentsAsync(request.Lesson.StudentId,
+        await familyNotifier.NotifyParentsAsync(request.Lesson.StudentId,
             EmailSubjects.LessonChangeRequestDeclined(studentName, lessonStart),
             $"{what} לשיעור של {studentName} לא אושרה. השיעור מתקיים כמתוכנן, בתאריך {FormatDate(lessonStart)}.");
 
@@ -600,46 +602,6 @@ public class LessonsController(
             IsRead = false,
             CreatedAt = DateTimeOffset.UtcNow
         });
-    }
-
-    /// <summary>שולח מייל לכל ההורים המקושרים לתלמיד (שינויים ביומן ע"י המורה).</summary>
-    private async Task NotifyParentsAsync(Guid studentId, string subject, string message)
-    {
-        var parentEmails = await db.StudentParents
-            .Where(sp => sp.StudentId == studentId)
-            .Select(sp => sp.Parent.Email)
-            .ToListAsync();
-
-        var html = BuildEmailHtml(subject, message, links.ParentLessons);
-        foreach (var email in parentEmails)
-        {
-            try { await emailSender.SendAsync(email, subject, html); }
-            catch (Exception ex) { logger.LogError(ex, "Failed to send lesson notification email."); }
-        }
-    }
-
-    /// <summary>
-    /// שולח לכל מי שהתשובה נוגעת לה: ההורים והתלמידה עצמה.
-    ///
-    /// תלמידה יכולה לבקש שיעור בעצמה (<c>my-requests</c>), ומייל להורה אינו מגיע אליה.
-    /// </summary>
-    private async Task NotifyFamilyAsync(Guid studentId, string subject, string message)
-    {
-        await NotifyParentsAsync(studentId, subject, message);
-        await NotifyStudentAsync(studentId, subject, message);
-    }
-
-    /// <summary>שולח מייל לתלמידה. תלמידה צעירה עשויה לא להיות מקושרת לחשבון — ואז אין למי לשלוח.</summary>
-    private async Task NotifyStudentAsync(Guid studentId, string subject, string message)
-    {
-        var userId = await db.Students.Where(s => s.Id == studentId).Select(s => s.UserId).FirstOrDefaultAsync();
-        if (userId is null) return;
-
-        var user = await userManager.FindByIdAsync(userId);
-        if (user?.Email is null) return;
-
-        try { await emailSender.SendAsync(user.Email, subject, BuildEmailHtml(subject, message, links.StudentLessons)); }
-        catch (Exception ex) { logger.LogError(ex, "Failed to send student notification email."); }
     }
 
     /// <summary>שולח מייל למורה (בקשות שמגיעות מהורה).</summary>
