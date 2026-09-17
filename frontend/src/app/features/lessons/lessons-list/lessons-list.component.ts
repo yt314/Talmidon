@@ -173,6 +173,25 @@ export class LessonsListComponent implements OnInit {
   protected readonly showChangeRequestDialog = signal(false);
   protected readonly selectedChangeRequest = signal<ChangeRequest | null>(null);
 
+  /**
+   * הבקשות שממתינות לתשובה: בקשה לשיעור חדש, ובקשה לשינוי מועד או ביטול לשיעור
+   * קיים. שתיהן יחד הן מה שלוח המחוונים סופר תחת "בקשות ממתינות".
+   *
+   * המיון לפי מועד השיעור ולא לפי מועד הבקשה: בקשה למחר מאבדת את משמעותה לפני
+   * בקשה לעוד חודש, גם אם נשלחה אחריה.
+   */
+  protected readonly pendingLessonRequests = computed(() =>
+    this.lessons().filter(l => l.status === LessonStatus.Requested)
+  );
+
+  protected readonly pendingChangeRequests = computed(() =>
+    this.changeRequests().filter(r => r.status === ChangeRequestStatus.Pending)
+  );
+
+  protected readonly pendingAnswersCount = computed(
+    () => this.pendingLessonRequests().length + this.pendingChangeRequests().length
+  );
+
   protected readonly showCancelSeriesDialog = signal(false);
   protected readonly cancellingSeriesId = signal<string | null>(null);
   protected readonly cancelSeriesDeleteFuture = signal(false);
@@ -646,6 +665,33 @@ export class LessonsListComponent implements OnInit {
         this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'ביטול הסדרה נכשל.') });
       }
     });
+  }
+
+  /**
+   * פותח את הבקשה שהשיעור שלה הכי קרוב (מהבאנר).
+   *
+   * עד לשינוי הזה הדרך היחידה להגיע לבקשה הייתה ללחוץ עליה ביומן — כלומר לנחש
+   * באיזה שבוע היא יושבת. המונה בלוח המחוונים קישר ליומן בשבוע הנוכחי, שבו לרוב
+   * היא לא נמצאת.
+   */
+  openNextPendingRequest(): void {
+    const lessonRequest = this.pendingLessonRequests()
+      .slice()
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0];
+    const changeRequest = this.pendingChangeRequests()
+      .slice()
+      .sort((a, b) => new Date(a.lessonStartTime).getTime() - new Date(b.lessonStartTime).getTime())[0];
+
+    const lessonAt = lessonRequest ? new Date(lessonRequest.startTime).getTime() : Infinity;
+    const changeAt = changeRequest ? new Date(changeRequest.lessonStartTime).getTime() : Infinity;
+
+    if (lessonAt <= changeAt && lessonRequest) {
+      this.selectedLesson.set(lessonRequest);
+      this.showLessonDetailDialog.set(true);
+    } else if (changeRequest) {
+      this.selectedChangeRequest.set(changeRequest);
+      this.showChangeRequestDialog.set(true);
+    }
   }
 
   changeRequestDetailApprove(): void {

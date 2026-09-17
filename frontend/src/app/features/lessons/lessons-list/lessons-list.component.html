@@ -29,6 +29,20 @@
   </div>
 }
 
+@if (pendingAnswersCount() > 0) {
+  <div class="pending-banner flex align-items-center justify-content-between gap-3 flex-wrap mb-3">
+    <span class="flex align-items-center gap-2">
+      <i class="pi pi-inbox"></i>
+      @if (pendingAnswersCount() === 1) {
+        בקשה אחת ממתינה לתשובה שלך.
+      } @else {
+        {{ pendingAnswersCount() }} בקשות ממתינות לתשובה שלך.
+      }
+    </span>
+    <p-button label="פתח את הבקשה" icon="pi pi-arrow-left" size="small" (onClick)="openNextPendingRequest()" />
+  </div>
+}
+
 <div class="calendar-legend">
   <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-scheduled"></span> מתוזמן</span>
   <span class="flex align-items-center gap-1"><span class="legend-dot lesson-cal-completed"></span> התקיים</span>
