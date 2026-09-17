@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ChangeRequestType, CreateLessonRequest, Lesson } from '../lessons/lessons.models';
+import { ChangeRequest, ChangeRequestType, CreateLessonRequest, Lesson } from '../lessons/lessons.models';
 import { OpenCharge, Payment } from '../payments/payments.models';
 import { MyChild, ParentNote } from './parent-portal.models';
 
@@ -34,6 +34,11 @@ export class ParentPortalService {
 
   requestChange(lessonId: string, request: CreateChangeRequestRequest): Observable<unknown> {
     return this.http.post(`${this.base}/lessons/${lessonId}/change-requests`, request);
+  }
+
+  /** הבקשות של הילדים שלי — כולל התשובה שהתקבלה עליהן. */
+  myChangeRequests(): Observable<ChangeRequest[]> {
+    return this.http.get<ChangeRequest[]>(`${this.base}/lessons/my-change-requests`);
   }
 
   myNotes(studentId?: string | null): Observable<ParentNote[]> {

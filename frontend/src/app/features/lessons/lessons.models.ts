@@ -23,6 +23,24 @@ export enum ChangeRequestStatus {
   Rejected = 2
 }
 
+export const CHANGE_REQUEST_TYPE_LABELS: Record<ChangeRequestType, string> = {
+  [ChangeRequestType.Cancel]: 'ביטול שיעור',
+  [ChangeRequestType.Reschedule]: 'שינוי מועד'
+};
+
+/** "לא אושרה" ולא "נדחתה": הבקשה היא על מועד, לא על מי ששלח אותה. */
+export const CHANGE_REQUEST_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
+  [ChangeRequestStatus.Pending]: 'ממתין לתשובת המורה',
+  [ChangeRequestStatus.Approved]: 'אושרה',
+  [ChangeRequestStatus.Rejected]: 'לא אושרה'
+};
+
+export const CHANGE_REQUEST_STATUS_SEVERITY: Record<ChangeRequestStatus, 'warn' | 'success' | 'danger'> = {
+  [ChangeRequestStatus.Pending]: 'warn',
+  [ChangeRequestStatus.Approved]: 'success',
+  [ChangeRequestStatus.Rejected]: 'danger'
+};
+
 export enum LessonSeriesEndCondition {
   Count = 0,
   EndDate = 1,
