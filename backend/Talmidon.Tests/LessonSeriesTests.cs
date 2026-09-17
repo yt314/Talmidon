@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Talmidon.Api.Contracts;
 using Talmidon.Domain.Common;
 using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Data;
@@ -104,7 +105,9 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
         completeResponse.EnsureSuccessStatusCode();
 
         var cancelResponse = await teacher.DeleteAsync($"/api/lesson-series/{series!.Id}?deleteFutureOccurrences=true");
-        Assert.Equal(HttpStatusCode.NoContent, cancelResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, cancelResponse.StatusCode);
+        // מדווח כמה נמחקו בפועל — השיעור שהושלם אינו ביניהם
+        Assert.Equal(2, (await cancelResponse.Content.ReadFromJsonAsync<CancelLessonSeriesResultDto>())!.CancelledCount);
 
         var lessonsAfterCancel = await teacher.GetFromJsonAsync<List<LessonDto>>($"/api/lessons?studentId={studentId}");
         Assert.Single(lessonsAfterCancel!);
@@ -131,7 +134,8 @@ public class LessonSeriesTests(TalmidonWebApplicationFactory factory)
         var series = await createResponse.Content.ReadFromJsonAsync<LessonSeriesDto>();
 
         var cancelResponse = await teacher.DeleteAsync($"/api/lesson-series/{series!.Id}?deleteFutureOccurrences=false");
-        Assert.Equal(HttpStatusCode.NoContent, cancelResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, cancelResponse.StatusCode);
+        Assert.Equal(0, (await cancelResponse.Content.ReadFromJsonAsync<CancelLessonSeriesResultDto>())!.CancelledCount);
 
         var lessonsAfterCancel = await teacher.GetFromJsonAsync<List<LessonDto>>($"/api/lessons?studentId={studentId}");
         Assert.Equal(3, lessonsAfterCancel!.Count);

@@ -14,6 +14,7 @@ using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.BackgroundJobs;
 using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Identity;
+using Talmidon.Api.Services;
 using Talmidon.Infrastructure.Multitenancy;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // ספק דייר אמיתי מתוך טוקן ה-JWT (מחליף את NullCurrentTenant)
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentTenant, HttpContextCurrentTenant>();
+
+// הודעות למשפחה של תלמיד/ה — משותף לבקרי השיעורים והסדרות
+builder.Services.AddScoped<FamilyNotifier>();
 
 // אימות JWT
 var jwt = builder.Configuration.GetSection("Jwt");

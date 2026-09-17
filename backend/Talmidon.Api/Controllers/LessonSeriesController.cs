@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
+using Talmidon.Api.Services;
 using Talmidon.Domain.Common;
 using Talmidon.Domain.Entities;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Multitenancy;
 using Talmidon.Infrastructure.Scheduling;
 
@@ -22,7 +24,8 @@ namespace Talmidon.Api.Controllers;
 public class LessonSeriesController(
     TalmidonDbContext db,
     ICurrentTenant currentTenant,
-    LessonSeriesGenerator generator) : ControllerBase
+    LessonSeriesGenerator generator,
+    FamilyNotifier familyNotifier) : ControllerBase
 {
     private const int HorizonWeeks = 8;
 
@@ -78,24 +81,59 @@ public class LessonSeriesController(
     /// שיעורים עתידיים שכבר נוצרו ועדיין מתוזמנים — לעולם לא נוגעת בשיעורים שהתקיימו/בוטלו/עברו.
     /// </summary>
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Cancel(Guid id, [FromQuery] bool deleteFutureOccurrences = false)
+    public async Task<ActionResult<CancelLessonSeriesResultDto>> Cancel(Guid id, [FromQuery] bool deleteFutureOccurrences = false)
     {
-        var series = await db.LessonSeries.FirstOrDefaultAsync(s => s.Id == id);
+        var series = await db.LessonSeries.Include(s => s.Student).FirstOrDefaultAsync(s => s.Id == id);
         if (series is null) return NotFound();
 
         series.IsActive = false;
 
+        var cancelled = new List<DateTimeOffset>();
         if (deleteFutureOccurrences)
         {
             var now = DateTimeOffset.UtcNow;
             var futureOccurrences = await db.Lessons
                 .Where(l => l.SeriesId == id && l.Status == LessonStatus.Scheduled && l.StartTime > now)
                 .ToListAsync();
+            cancelled.AddRange(futureOccurrences.Select(l => l.StartTime).Order());
             db.Lessons.RemoveRange(futureOccurrences);
         }
 
         await db.SaveChangesAsync();
-        return NoContent();
+
+        // רק כשנמחקו שיעורים בפועל. הפסקת ייצור עתידי לבדה אינה משנה דבר ביומן
+        // של המשפחה — אין על מה להודיע.
+        if (cancelled.Count > 0)
+        {
+            var studentName = series.Student.FullName;
+            await familyNotifier.NotifyFamilyAsync(series.StudentId,
+                EmailSubjects.LessonSeriesCancelled(studentName, cancelled.Count),
+                $"השיעור הקבוע של {studentName} לא יימשך, והשיעורים הבאים שכבר נקבעו בוטלו:",
+                CancelledLessonLines(cancelled));
+        }
+
+        return Ok(new CancelLessonSeriesResultDto(cancelled.Count));
+    }
+
+    /// <summary>
+    /// התאריכים שבוטלו, לגוף המייל. רשימה ארוכה במייל אינה נקראת, ולכן מעבר
+    /// לתקרה נאמר רק כמה נשארו.
+    /// </summary>
+    private const int MaxListedDates = 10;
+
+    private static List<string> CancelledLessonLines(IReadOnlyList<DateTimeOffset> cancelled)
+    {
+        // המרה לשעון ישראל: ב-DB נשמר UTC, וקורא המייל חושב בשעון שלו.
+        var lines = cancelled
+            .Take(MaxListedDates)
+            .Select(AppTimeZone.ToLocal)
+            .Select(d => $"{d:dd/MM/yyyy} בשעה {d:HH:mm}")
+            .ToList();
+
+        if (cancelled.Count > MaxListedDates)
+            lines.Add($"ועוד {cancelled.Count - MaxListedDates} שיעורים.");
+
+        return lines;
     }
 
     private static string? ValidateEndCondition(CreateLessonSeriesRequest request)

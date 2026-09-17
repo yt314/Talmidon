@@ -649,15 +649,35 @@ export class LessonsListComponent implements OnInit {
     this.showCancelSeriesDialog.set(true);
   }
 
+  /**
+   * כמה שיעורים תמחק הסימון "למחוק גם שיעורים עתידיים". בלי המספר הזה זו הייתה
+   * פעולה הרסנית בהיקף לא ידוע — שני שיעורים או שלושים, אותה תיבת סימון.
+   */
+  protected futureOccurrencesOfSeries(): number {
+    const seriesId = this.cancellingSeriesId();
+    if (!seriesId) return 0;
+    const now = Date.now();
+    return this.lessons().filter(
+      l => l.seriesId === seriesId && l.status === LessonStatus.Scheduled && new Date(l.startTime).getTime() > now
+    ).length;
+  }
+
   confirmCancelSeries(): void {
     const seriesId = this.cancellingSeriesId();
     if (!seriesId) return;
     this.cancellingSeries.set(true);
     this.lessonsService.cancelSeries(seriesId, this.cancelSeriesDeleteFuture()).subscribe({
-      next: () => {
+      next: result => {
         this.cancellingSeries.set(false);
         this.showCancelSeriesDialog.set(false);
-        this.messageService.add({ severity: 'success', summary: 'הסדרה בוטלה' });
+        // המספר מגיע מהשרת: הוא יודע מה באמת נמחק, גם אם המסך הספיק להתיישן.
+        this.messageService.add({
+          severity: 'success',
+          summary: 'הסדרה בוטלה',
+          detail: result.cancelledCount > 0
+            ? `${result.cancelledCount} שיעורים עתידיים בוטלו, והמשפחה קיבלה הודעה.`
+            : 'לא ייווצרו שיעורים חדשים מהסדרה. שיעורים שכבר נקבעו נשארו ביומן.'
+        });
         this.loadLessons();
       },
       error: err => {

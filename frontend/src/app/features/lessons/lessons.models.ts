@@ -147,3 +147,8 @@ export interface ChangeRequest {
   status: ChangeRequestStatus;
   createdAt: string;
 }
+
+/** תוצאת ביטול סדרה — כמה שיעורים עתידיים נמחקו בפועל. */
+export interface CancelSeriesResult {
+  cancelledCount: number;
+}

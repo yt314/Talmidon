@@ -62,6 +62,15 @@ public static class EmailSubjects
     public static string LessonNoShow(string studentName, DateTimeOffset start) =>
         $"{Clean(studentName)} לא הגיע/ה לשיעור — {Date(start)} בשעה {Time(start)}";
 
+    /// <summary>
+    /// הפסקת שיעור קבוע שגם מחקה שיעורים שכבר נקבעו. המספר בשורת הנושא, כי זה
+    /// ההבדל בין "שיעור אחד ירד" לבין "כל החודש הבא נמחק".
+    /// </summary>
+    public static string LessonSeriesCancelled(string studentName, int cancelledCount) =>
+        cancelledCount == 1
+            ? $"השיעור הקבוע של {Clean(studentName)} הופסק — שיעור אחד בוטל"
+            : $"השיעור הקבוע של {Clean(studentName)} הופסק — {cancelledCount} שיעורים בוטלו";
+
     /// <summary>תזכורת יכולה לכסות כמה ילדים; אז מונים במקום למנות.</summary>
     public static string LessonReminder(IReadOnlyList<(string StudentName, DateTimeOffset Start)> lessons)
     {
