@@ -715,6 +715,15 @@ a.stat-card:hover {
   padding: 0.75rem 1rem;
 }
 
+/* מונה ההתקדמות בדיאלוג סיום שיעור, כשמסמנים ברצף מ"סמן את הבא". */
+.marking-progress {
+  background: var(--p-content-hover-background);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  margin-inline-start: 0.5rem;
+  white-space: nowrap;
+}
+
 /* שורת "מתוך הפנייה של..." בראש טופס שנפתח מתיבת הפניות — מסבירה מאיפה הגיעו
    הפרטים שכבר מולאו. */
 .from-contact-note {

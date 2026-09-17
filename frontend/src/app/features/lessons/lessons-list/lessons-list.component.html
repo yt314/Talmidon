@@ -279,11 +279,14 @@
   </form>
 </p-dialog>
 
-<p-dialog header="סיום שיעור" [(visible)]="showCompleteDialog" [modal]="true" [style]="{ width: '480px' }">
+<p-dialog header="סיום שיעור" [(visible)]="showCompleteDialog" [modal]="true" [style]="{ width: '480px' }" (onHide)="onCompleteDialogHidden()">
   <form [formGroup]="completeForm" (ngSubmit)="saveComplete()">
     @if (completingLesson(); as lesson) {
       <p class="mt-0 mb-3 text-color-secondary text-sm">
         {{ lesson.studentName }} · {{ lesson.startTime | ilDate: 'dd/MM HH:mm' }}
+        @if (markingBatch() && remainingAfterCurrent() > 0) {
+          <span class="marking-progress">עוד {{ remainingAfterCurrent() }} אחרי זה</span>
+        }
       </p>
     }
     <div class="field flex align-items-center gap-2">

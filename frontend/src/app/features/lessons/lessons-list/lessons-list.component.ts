@@ -164,6 +164,8 @@ export class LessonsListComponent implements OnInit {
   /** ההצעה שחושבה בפתיחת דיאלוג הסיום — משמשת להסבר שמתחת לשדה הסכום. */
   protected readonly amountSuggestion = signal<LessonAmountSuggestion | null>(null);
   protected readonly savingComplete = signal(false);
+  /** true כשהסימון התחיל מ"סמן את הבא" — אז ממשיכים לשיעור הבא במקום לסגור. */
+  protected readonly markingBatch = signal(false);
 
   protected readonly showLessonDetailDialog = signal(false);
   protected readonly selectedLesson = signal<Lesson | null>(null);
@@ -842,7 +844,8 @@ export class LessonsListComponent implements OnInit {
     });
   }
 
-  openCompleteDialog(lesson: Lesson): void {
+  openCompleteDialog(lesson: Lesson, batch = false): void {
+    this.markingBatch.set(batch);
     this.completingLessonId.set(lesson.id);
     this.completingLesson.set(lesson);
     const suggestion = this.resolveAmount(lesson);
@@ -887,7 +890,14 @@ export class LessonsListComponent implements OnInit {
   /** פותח את דיאלוג הסיום עבור השיעור הראשון שממתין לסימון (מהבאנר). */
   markNextPending(): void {
     const next = this.pendingToMark()[0];
-    if (next) this.openCompleteDialog(next);
+    if (next) this.openCompleteDialog(next, true);
+  }
+
+  /** כמה עוד ממתינים לסימון אחרי זה שבדיאלוג. השיעור הנוכחי עדיין "מתוזמן", ולכן נספר. */
+  protected readonly remainingAfterCurrent = computed(() => Math.max(this.pendingToMark().length - 1, 0));
+
+  protected onCompleteDialogHidden(): void {
+    this.markingBatch.set(false);
   }
 
   /** סימון "לא הגיע" — התלמיד לא הופיע (ללא חיוב). */
@@ -924,9 +934,18 @@ export class LessonsListComponent implements OnInit {
       .subscribe({
         next: () => {
           this.savingComplete.set(false);
-          this.showCompleteDialog.set(false);
           this.messageService.add({ severity: 'success', summary: 'השיעור עודכן' });
           this.loadLessons();
+
+          // "סמן את הבא" נלחץ כדי לעבור על כולם. סגירה אחרי כל אחד הייתה מחזירה
+          // לבאנר ומחייבת פתיחה מחדש — בשבוע טיפוסי כאן חמישה שיעורים.
+          // הרשימה עדיין זו שלפני הטעינה מחדש, ולכן מדלגים על מה שהרגע נשמר.
+          const next = this.markingBatch() ? this.pendingToMark().find(l => l.id !== id) : undefined;
+          if (next) {
+            this.openCompleteDialog(next, true);
+            return;
+          }
+          this.showCompleteDialog.set(false);
         },
         error: err => {
           this.savingComplete.set(false);
