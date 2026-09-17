@@ -40,18 +40,35 @@ export class StudentDashboardComponent implements OnInit {
     });
   }
 
-  /** לא computed() בכוונה: תלוי בזמן הנוכחי, לא רק בסיגנל lessons — צריך להתעדכן בכל בדיקה, לא רק כשהשיעורים משתנים. */
+  /**
+   * לא computed() בכוונה: תלוי בזמן הנוכחי, לא רק בסיגנל lessons — צריך להתעדכן בכל בדיקה, לא רק כשהשיעורים משתנים.
+   *
+   * בקשה שממתינה לאישור נכללת כאן, כמו אצל ההורה. תלמידה יכולה לבקש שיעור
+   * מהיומן שלה, ובלי זה המסך היה עונה לה מיד "אין שיעורים קרובים" על בקשה
+   * שהיא בדיוק שלחה. התגית לצד השורה מבדילה בין "מתוזמן" ל"ממתין לאישור".
+   */
   protected upcomingLessons(): StudentLesson[] | null {
     const lessons = this.lessons();
     if (!lessons) return null;
     const now = new Date();
     return lessons
-      .filter(l => l.status === LessonStatus.Scheduled && new Date(l.startTime) >= now)
+      .filter(
+        l =>
+          (l.status === LessonStatus.Scheduled || l.status === LessonStatus.Requested) &&
+          new Date(l.startTime) >= now
+      )
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
       .slice(0, 5);
   }
 
   protected nextLesson(): StudentLesson | null {
     return this.upcomingLessons()?.[0] ?? null;
+  }
+
+  /** מתחת לשעה של השיעור הבא: אם הוא עדיין בקשה, שלא ייראה כאילו הוא סגור. */
+  protected nextLessonHint(): string | null {
+    const next = this.nextLesson();
+    if (next) return next.status === LessonStatus.Requested ? 'ממתין לאישור המורה' : null;
+    return this.lessons() === null ? null : 'אין שיעורים קרובים';
   }
 }
