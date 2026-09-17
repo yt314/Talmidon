@@ -365,13 +365,18 @@
 
       @if (completeForm.controls.noteContent.value) {
         <div class="field flex align-items-center gap-2">
-          <p-checkbox inputId="c-noteVisibleToStudent" formControlName="noteVisibleToStudent" [binary]="true" />
+          <p-checkbox
+            inputId="c-noteVisibleToStudent"
+            formControlName="noteVisibleToStudent"
+            [binary]="true"
+            (onChange)="onNoteVisibleToStudentChange($event.checked)" />
           <label for="c-noteVisibleToStudent" class="m-0">גלוי לתלמיד</label>
         </div>
         <div class="field flex align-items-center gap-2">
           <p-checkbox inputId="c-noteVisibleToParent" formControlName="noteVisibleToParent" [binary]="true" />
           <label for="c-noteVisibleToParent" class="m-0">גלוי להורה</label>
         </div>
+        <p class="text-sm text-color-secondary mt-0 mb-3">הערה שמסומנת "גלוי לתלמיד" גלויה אוטומטית גם להורה.</p>
       }
     } @else {
       <p class="text-color-secondary">השיעור יסומן כמבוטל.</p>

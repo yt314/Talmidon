@@ -113,6 +113,14 @@ export class StudentDetailComponent implements OnInit {
     description: ['', [Validators.maxLength(1000)]]
   });
 
+  /**
+   * הערה שגלויה לתלמידה גלויה תמיד גם להורה (נאכף בשרת). מסמנים גם את התיבה
+   * השנייה, כדי שמצב התיבות יהיה מה שיישמר בפועל ולא הבטחה שלא תתקיים.
+   */
+  protected onVisibleToStudentChange(checked: boolean): void {
+    if (checked) this.noteForm.controls.visibleToParent.setValue(true);
+  }
+
   protected readonly noteForm = this.fb.nonNullable.group({
     content: ['', [Validators.required, Validators.maxLength(4000)]],
     visibleToStudent: [false],

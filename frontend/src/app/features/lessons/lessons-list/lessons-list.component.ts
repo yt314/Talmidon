@@ -931,6 +931,16 @@ export class LessonsListComponent implements OnInit {
     this.showCompleteDialog.set(true);
   }
 
+  /**
+   * הערה שגלויה לתלמידה גלויה תמיד גם להורה — כלל שנאכף בשרת, ובצדק: אין להסתיר
+   * מהורה מה שנכתב על ילדו. מה שלא היה כאן הוא שהמסך יאמר את זה: אפשר היה לסמן
+   * "גלוי לתלמיד" בלבד, לשמור, ולחשוב שנכתב משהו שההורה לא יקרא — בזמן שהוא כבר
+   * גלוי לו. מסמנים גם את התיבה השנייה, כדי שמה שנראה יהיה מה שנשמר.
+   */
+  protected onNoteVisibleToStudentChange(checked: boolean): void {
+    if (checked) this.completeForm.controls.noteVisibleToParent.setValue(true);
+  }
+
   /** סימון מהיר "התקיים" ללא תשלום/הערה — ישירות מדיאלוג הפרטים. */
   quickComplete(lesson: Lesson): void {
     this.showLessonDetailDialog.set(false);
