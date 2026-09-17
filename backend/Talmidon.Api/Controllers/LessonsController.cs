@@ -216,6 +216,12 @@ public class LessonsController(
         lesson.CompletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
 
+        // ההורה הוא מי שאינו יודע. התלמיד/ה היה/הייתה שם או לא, והשיעור נעלם
+        // מהמסכים בלי חיוב — כך שבלי ההודעה הזו אין שום סימן שמשהו קרה.
+        await NotifyParentsAsync(lesson.StudentId,
+            EmailSubjects.LessonNoShow(lesson.Student.FullName, lesson.StartTime),
+            $"{lesson.Student.FullName} לא הגיע/ה לשיעור בתאריך {FormatDate(lesson.StartTime)}. השיעור לא חויב.");
+
         return Ok(ToDto(lesson, lesson.Student.FullName));
     }
 
@@ -289,11 +295,14 @@ public class LessonsController(
     [HttpPost("change-requests/{id:guid}/approve")]
     public async Task<IActionResult> ApproveChangeRequest(Guid id)
     {
-        var request = await db.LessonChangeRequests.Include(c => c.Lesson).FirstOrDefaultAsync(c => c.Id == id);
+        var request = await db.LessonChangeRequests
+            .Include(c => c.Lesson).ThenInclude(l => l.Student)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (request is null) return NotFound();
         if (request.Status != ChangeRequestStatus.Pending)
             return Conflict(new { message = "הבקשה כבר טופלה." });
 
+        var originalStart = request.Lesson.StartTime;
         if (request.Type == ChangeRequestType.Cancel)
         {
             request.Lesson.Status = LessonStatus.Cancelled;
@@ -307,6 +316,22 @@ public class LessonsController(
         request.Status = ChangeRequestStatus.Approved;
         request.ResolvedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
+
+        // המועד בפועל השתנה, ולכן גם התלמידה מקבלת — זה היומן שלה.
+        var studentName = request.Lesson.Student.FullName;
+        if (request.Type == ChangeRequestType.Cancel)
+        {
+            await NotifyFamilyAsync(request.Lesson.StudentId,
+                EmailSubjects.LessonCancelled(studentName, originalStart),
+                $"בקשת הביטול אושרה. השיעור של {studentName} בתאריך {FormatDate(originalStart)} בוטל.");
+        }
+        else
+        {
+            await NotifyFamilyAsync(request.Lesson.StudentId,
+                EmailSubjects.LessonUpdated(studentName, request.Lesson.StartTime),
+                $"בקשת שינוי המועד אושרה. השיעור של {studentName} נקבע ל-{FormatDate(request.Lesson.StartTime)} במקום {FormatDate(originalStart)}.");
+        }
+
         return NoContent();
     }
 
@@ -314,7 +339,9 @@ public class LessonsController(
     [HttpPost("change-requests/{id:guid}/reject")]
     public async Task<IActionResult> RejectChangeRequest(Guid id)
     {
-        var request = await db.LessonChangeRequests.FirstOrDefaultAsync(c => c.Id == id);
+        var request = await db.LessonChangeRequests
+            .Include(c => c.Lesson).ThenInclude(l => l.Student)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (request is null) return NotFound();
         if (request.Status != ChangeRequestStatus.Pending)
             return Conflict(new { message = "הבקשה כבר טופלה." });
@@ -322,6 +349,16 @@ public class LessonsController(
         request.Status = ChangeRequestStatus.Rejected;
         request.ResolvedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
+
+        // דחייה אינה משנה דבר במסכים: השיעור נשאר במועדו והבקשה יורדת מרשימת
+        // הממתינות. בלי ההודעה הזו ההורה ששאל פשוט לא מקבל תשובה.
+        var studentName = request.Lesson.Student.FullName;
+        var lessonStart = request.Lesson.StartTime;
+        var what = request.Type == ChangeRequestType.Cancel ? "בקשת הביטול" : "בקשת שינוי המועד";
+        await NotifyParentsAsync(request.Lesson.StudentId,
+            EmailSubjects.LessonChangeRequestDeclined(studentName, lessonStart),
+            $"{what} לשיעור של {studentName} לא אושרה. השיעור מתקיים כמתוכנן, בתאריך {FormatDate(lessonStart)}.");
+
         return NoContent();
     }
 

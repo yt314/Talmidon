@@ -54,6 +54,14 @@ public static class EmailSubjects
     public static string LessonRequestDeclined(string studentName, DateTimeOffset start) =>
         $"בקשת השיעור של {Clean(studentName)} לא אושרה — {Date(start)} בשעה {Time(start)}";
 
+    /// <summary>תשובה לבקשת ביטול/שינוי מועד לשיעור קיים שלא אושרה — השיעור נשאר במועדו.</summary>
+    public static string LessonChangeRequestDeclined(string studentName, DateTimeOffset start) =>
+        $"הבקשה לשינוי השיעור של {Clean(studentName)} לא אושרה — {Date(start)} בשעה {Time(start)}";
+
+    /// <summary>שיעור שהתלמיד/ה לא הגיע/ה אליו. שורה שהורה צריך לראות בלי לפתוח.</summary>
+    public static string LessonNoShow(string studentName, DateTimeOffset start) =>
+        $"{Clean(studentName)} לא הגיע/ה לשיעור — {Date(start)} בשעה {Time(start)}";
+
     /// <summary>תזכורת יכולה לכסות כמה ילדים; אז מונים במקום למנות.</summary>
     public static string LessonReminder(IReadOnlyList<(string StudentName, DateTimeOffset Start)> lessons)
     {
