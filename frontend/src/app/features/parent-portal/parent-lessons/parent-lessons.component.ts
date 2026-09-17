@@ -16,7 +16,18 @@ import { endAfterStartValidator } from '../../../core/forms/validators';
 import { CalendarEventExtendedProps } from '../../../shared/calendar/lesson-calendar.model';
 import { LessonCalendarComponent } from '../../../shared/calendar/lesson-calendar.component';
 import { lessonToCalendarEvent } from '../../lessons/lesson-calendar.util';
-import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, ChangeRequestType, Lesson, LessonStatus } from '../../lessons/lessons.models';
+import {
+  CHANGE_REQUEST_STATUS_LABELS,
+  CHANGE_REQUEST_STATUS_SEVERITY,
+  CHANGE_REQUEST_TYPE_LABELS,
+  LESSON_STATUS_LABELS,
+  LESSON_STATUS_SEVERITY,
+  ChangeRequest,
+  ChangeRequestStatus,
+  ChangeRequestType,
+  Lesson,
+  LessonStatus
+} from '../../lessons/lessons.models';
 import { MyChild } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
@@ -42,13 +53,43 @@ export class ParentLessonsComponent implements OnInit {
 
   protected readonly LessonStatus = LessonStatus;
   protected readonly ChangeRequestType = ChangeRequestType;
+  protected readonly ChangeRequestStatus = ChangeRequestStatus;
   protected readonly statusLabel = (status: LessonStatus): string => LESSON_STATUS_LABELS[status];
   protected readonly statusSeverity = (status: LessonStatus) => LESSON_STATUS_SEVERITY[status];
+  protected readonly changeTypeLabel = (type: ChangeRequestType): string => CHANGE_REQUEST_TYPE_LABELS[type];
+  protected readonly changeStatusLabel = (status: ChangeRequestStatus): string => CHANGE_REQUEST_STATUS_LABELS[status];
+  protected readonly changeStatusSeverity = (status: ChangeRequestStatus) => CHANGE_REQUEST_STATUS_SEVERITY[status];
 
   protected readonly children = signal<MyChild[]>([]);
   protected readonly selectedChildId = signal<string | null>(null);
   protected readonly lessons = signal<Lesson[]>([]);
   protected readonly loading = signal(true);
+  protected readonly changeRequests = signal<ChangeRequest[]>([]);
+
+  /**
+   * האם להציג גם את המועד המוצע לצד המועד הנוכחי. אחרי אישור של שינוי מועד
+   * השיעור כבר זז אל המוצע, ושני הערכים זהים — החץ היה מציג "23/09 ← 23/09".
+   */
+  protected showsProposedTime(request: ChangeRequest): boolean {
+    return (
+      request.type === ChangeRequestType.Reschedule &&
+      request.proposedStartTime != null &&
+      request.status !== ChangeRequestStatus.Approved
+    );
+  }
+
+  /**
+   * הבקשות ששווה עדיין להציג: כאלה שממתינות לתשובה, וכאלה שנענו והשיעור שלהן
+   * עוד לפנינו. אחרי שהמועד עבר הבקשה היא היסטוריה, ואין סיבה שתעמיס על המסך.
+   *
+   * לא computed() בכוונה: תלוי בזמן הנוכחי, לא רק בסיגנל.
+   */
+  protected relevantChangeRequests(): ChangeRequest[] {
+    const now = Date.now();
+    return this.changeRequests().filter(
+      r => r.status === ChangeRequestStatus.Pending || new Date(r.lessonStartTime).getTime() >= now
+    );
+  }
 
   protected readonly calendarEvents = computed(() => this.lessons().map(lessonToCalendarEvent));
 
@@ -200,6 +241,7 @@ export class ParentLessonsComponent implements OnInit {
           this.savingChange.set(false);
           this.showChangeDialog.set(false);
           this.messageService.add({ severity: 'success', summary: 'הבקשה נשלחה למורה' });
+          this.loadChangeRequests();
         },
         error: err => {
           this.savingChange.set(false);
@@ -216,6 +258,14 @@ export class ParentLessonsComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
+    });
+    this.loadChangeRequests();
+  }
+
+  private loadChangeRequests(): void {
+    this.portalService.myChangeRequests().subscribe({
+      next: requests => this.changeRequests.set(requests),
+      error: () => this.changeRequests.set([])
     });
   }
 }

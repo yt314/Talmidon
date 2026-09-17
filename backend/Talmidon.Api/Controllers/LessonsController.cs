@@ -469,6 +469,37 @@ public class LessonsController(
         return string.IsNullOrWhiteSpace(reason) ? text : $"{text} סיבה: {reason.Trim()}";
     }
 
+    /// <summary>
+    /// בקשות השינוי של ילדי ההורה — כולל התשובה שהתקבלה עליהן.
+    ///
+    /// עד לשינוי הזה לא הייתה להורה שום דרך לראות בקשה ששלח: הוא יכול היה ליצור
+    /// אחת, ומשם היא נעלמה מבחינתו. דחייה אינה משנה דבר במסכים, ולכן היא הייתה
+    /// בלתי נראית לגמרי; וגם הכלל "כבר קיימת בקשה ממתינה לשיעור זה" נשמע שרירותי
+    /// כשאי אפשר לראות את הבקשה שכבר קיימת.
+    ///
+    /// מוחזרות בקשות של כל ההורים המשויכים לאותו ילד ולא רק של המבקש: זו אותה
+    /// משפחה, וזה בדיוק מה שמסביר בקשה ממתינה שההורה השני פתח.
+    /// </summary>
+    [Authorize(Roles = Roles.Parent)]
+    [HttpGet("my-change-requests")]
+    public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> MyChangeRequests()
+    {
+        var parent = await CurrentParentAsync();
+        if (parent is null) return Forbid();
+
+        var childIds = db.StudentParents.Where(sp => sp.ParentId == parent.Id).Select(sp => sp.StudentId);
+
+        var items = await db.LessonChangeRequests
+            .Where(c => childIds.Contains(c.Lesson.StudentId))
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new ChangeRequestDto(
+                c.Id, c.LessonId, c.Lesson.StudentId, c.Lesson.Student.FullName, c.RequestedByParent.FullName,
+                c.Type, c.Lesson.StartTime, c.Lesson.EndTime, c.ProposedStartTime, c.ProposedEndTime,
+                c.Reason, c.Status, c.CreatedAt))
+            .ToListAsync();
+        return Ok(items);
+    }
+
     /// <summary>בקשת ביטול/שינוי מועד לשיעור קיים ומתוזמן.</summary>
     [Authorize(Roles = Roles.Parent)]
     [HttpPost("{lessonId:guid}/change-requests")]

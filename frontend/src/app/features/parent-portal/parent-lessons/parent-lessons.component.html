@@ -22,6 +22,36 @@
   <app-lesson-calendar [events]="calendarEvents()" [selectable]="false" (eventClicked)="onEventClicked($event)" />
 </div>
 
+@if (relevantChangeRequests().length > 0) {
+  <div class="change-request-list mt-4">
+    <h3 class="mt-0 mb-1">הבקשות שלי</h3>
+    <p class="mt-0 mb-3 text-sm text-color-secondary">בקשות לשינוי מועד או ביטול, והתשובה של המורה.</p>
+    @for (request of relevantChangeRequests(); track request.id) {
+      <div class="change-request-row">
+        <div class="flex justify-content-between align-items-start gap-2 flex-wrap">
+          <span class="font-medium">
+            {{ changeTypeLabel(request.type) }} · {{ request.studentName }}
+          </span>
+          <p-tag [value]="changeStatusLabel(request.status)" [severity]="changeStatusSeverity(request.status)" />
+        </div>
+        <div class="text-sm text-color-secondary mt-1">
+          {{ request.lessonStartTime | ilDate: 'dd/MM HH:mm' }}
+          @if (showsProposedTime(request)) {
+            ← {{ request.proposedStartTime | ilDate: 'dd/MM HH:mm' }}
+          }
+          · ביקש/ה {{ request.parentName }}
+        </div>
+        @if (request.reason) {
+          <div class="text-sm mt-1">{{ request.reason }}</div>
+        }
+        @if (request.status === ChangeRequestStatus.Rejected) {
+          <div class="text-sm text-color-secondary mt-1">השיעור מתקיים במועדו.</div>
+        }
+      </div>
+    }
+  </div>
+}
+
 <p-dialog header="בקשת שיעור חדש" [(visible)]="showRequestDialog" [modal]="true" [style]="{ width: '480px' }">
   <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
     <div class="field">
