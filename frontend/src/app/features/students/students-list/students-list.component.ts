@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -18,6 +18,8 @@ import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { downloadCsv } from '../../../shared/export/csv.util';
+import { ContactRequest, ContactRequestStatus } from '../../contact-requests/contact-requests.models';
+import { ContactRequestsService } from '../../contact-requests/contact-requests.service';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { StudentListItem } from '../students.models';
@@ -42,6 +44,8 @@ export class StudentsListComponent implements OnInit {
   private readonly studentsService = inject(StudentsService);
   private readonly parentsService = inject(ParentsService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly contactRequestsService = inject(ContactRequestsService);
   private readonly messageService = inject(MessageService);
 
   protected readonly genderOptions = GENDER_OPTIONS;
@@ -55,6 +59,10 @@ export class StudentsListComponent implements OnInit {
   protected readonly showParentDialog = signal(false);
   /** נפתח מתוך דיאלוג התלמיד — ההורה החדש ייבחר שם אוטומטית. */
   private readonly parentDialogReturnsToStudent = signal(false);
+  /** הפנייה שממנה הגענו, אם הגענו מתיבת הפניות. מסומנת "בטיפול" אחרי שהתלמידה נוספה. */
+  protected readonly fromContact = signal<ContactRequest | null>(null);
+  /** true מרגע שטופס ההורה נפתח ועד שהמיקוד התיישב בו. ראו onParentNameFocused. */
+  private readonly parentDialogSettling = signal(false);
   protected readonly savingStudent = signal(false);
   protected readonly savingParent = signal(false);
   protected readonly fieldError = fieldError;
@@ -90,11 +98,59 @@ export class StudentsListComponent implements OnInit {
   ngOnInit(): void {
     this.loadStudents();
     this.loadParents();
+
+    const contactId = this.route.snapshot.queryParamMap.get('fromContact');
+    if (contactId) this.startFromContact(contactId);
+  }
+
+  /**
+   * הגעה מתיבת הפניות. הפרטים שכבר הוקלדו שם — שם, טלפון ומייל — הם של מי
+   * שפנתה, ובמודל הזה רק להורה יש טלפון ומייל; לכן הם נכנסים לטופס ההורה,
+   * וממנו ממשיכים לטופס התלמידה עם ההורה כבר מקושר.
+   */
+  private startFromContact(contactId: string): void {
+    this.contactRequestsService.get(contactId).subscribe({
+      next: contact => {
+        this.fromContact.set(contact);
+        // רק טופס ההורה נפתח. שני דיאלוגים בבת אחת גזלו את המיקוד זה מזה, וטופס
+        // התלמידה הספיק להיות focus-then-blur — כלומר הציג "שדה חובה" עוד לפני
+        // שהוקלדה בו אות.
+        this.resetStudentForm();
+        this.parentDialogReturnsToStudent.set(true);
+        this.parentForm.reset({
+          fullName: contact.fullName,
+          gender: null,
+          email: contact.email ?? '',
+          phone: contact.phone
+        });
+        this.showParentDialog.set(true);
+      },
+      // פנייה שנמחקה בינתיים — פותחים טופס רגיל במקום להשאיר מסך שלא הגיב
+      error: () => this.openStudentDialog()
+    });
+  }
+
+  /** אחרי שהתלמידה נוספה: הפנייה כבר טופלה, ואין סיבה שתמשיך להופיע כ"חדשה". */
+  private closeContactLoop(): void {
+    const contact = this.fromContact();
+    this.fromContact.set(null);
+    this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+    if (!contact || contact.status !== ContactRequestStatus.New) return;
+
+    this.contactRequestsService.updateStatus(contact.id, ContactRequestStatus.Handled).subscribe({
+      error: () => {
+        // התלמידה כבר נוספה; הפנייה תסומן ידנית. אין טעם להטריד על כך.
+      }
+    });
   }
 
   openStudentDialog(): void {
-    this.studentForm.reset({ fullName: '', gender: null, gradeLevel: '', birthDate: null, generalInfo: '', loginEmail: '', parentIds: [] });
+    this.resetStudentForm();
     this.showStudentDialog.set(true);
+  }
+
+  private resetStudentForm(): void {
+    this.studentForm.reset({ fullName: '', gender: null, gradeLevel: '', birthDate: null, generalInfo: '', loginEmail: '', parentIds: [] });
   }
 
   openParentDialog(): void {
@@ -112,6 +168,35 @@ export class StudentsListComponent implements OnInit {
     this.parentDialogReturnsToStudent.set(true);
     this.parentForm.reset({ fullName: '', gender: null, email: '', phone: '' });
     this.showParentDialog.set(true);
+  }
+
+  protected onParentDialogShown(): void {
+    this.parentDialogSettling.set(true);
+  }
+
+  /**
+   * טופס שעוד לא הוקלדה בו אות פתח ב"שדה חובה" באדום: מלכודת המיקוד של הדיאלוג
+   * נוגעת בשדה אחד, עוברת ממנו אל שדה ה-autofocus, וה-blur שבדרך מסמן את הראשון
+   * כ"נגעו" — וגם הדיאלוג שנשאר מאחור מאבד כך את המיקוד שהיה בו.
+   *
+   * המיקוד שמגיע לשדה השם הוא סוף אותו ריקוד, ולכן זה הרגע לנקות — ולא טיימר
+   * שמנחש מתי הוא נגמר. פעם אחת לכל פתיחה, כדי שחזרה לשדה בהמשך לא תמחק סימון
+   * אמיתי.
+   */
+  protected onParentNameFocused(): void {
+    if (!this.parentDialogSettling()) return;
+    this.parentDialogSettling.set(false);
+    this.parentForm.markAsUntouched();
+    this.studentForm.markAsUntouched();
+  }
+
+  /**
+   * סגירת טופס ההורה כשהגענו מפנייה — בלחיצה על "ביטול", על ה-X או על Escape.
+   * בלעדיה ויתור על יצירת ההורה היה מחזיר למסך רשימה בלי שום טופס פתוח, אחרי
+   * שנלחץ "הוספה כתלמידה".
+   */
+  protected onParentDialogHidden(): void {
+    if (this.fromContact()) this.showStudentDialog.set(true);
   }
 
   openEditParentDialog(parent: Parent): void {
@@ -166,6 +251,7 @@ export class StudentsListComponent implements OnInit {
           this.showStudentDialog.set(false);
           this.messageService.add({ severity: 'success', summary: 'התלמיד נוסף בהצלחה' });
           this.loadStudents();
+          this.closeContactLoop();
         },
         error: err => {
           this.savingStudent.set(false);
@@ -196,6 +282,7 @@ export class StudentsListComponent implements OnInit {
           this.parentDialogReturnsToStudent.set(false);
           const selected = this.studentForm.controls.parentIds.value ?? [];
           this.studentForm.controls.parentIds.setValue([...selected, parent.id]);
+          this.showStudentDialog.set(true);
         }
         this.loadParents();
       },

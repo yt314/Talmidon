@@ -56,8 +56,9 @@
           @if (hasEmail(contact.email)) {
             <p-button label="מייל" icon="pi pi-envelope" severity="secondary" [outlined]="true" size="small" (onClick)="openEmail(contact)" />
           }
+          <p-button label="הוספה כתלמידה" icon="pi pi-user-plus" size="small" (onClick)="openAsStudent(contact)" />
           @if (contact.status === Status.New) {
-            <p-button label="סמן בטיפול" icon="pi pi-check" size="small" (onClick)="setStatus(contact, Status.Handled)" />
+            <p-button label="סמן בטיפול" icon="pi pi-check" severity="secondary" [outlined]="true" size="small" (onClick)="setStatus(contact, Status.Handled)" />
           }
           @if (contact.status !== Status.Closed) {
             <p-button label="סגירה" icon="pi pi-times-circle" severity="secondary" [text]="true" size="small" (onClick)="setStatus(contact, Status.Closed)" />

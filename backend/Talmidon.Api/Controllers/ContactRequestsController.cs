@@ -32,6 +32,19 @@ public class ContactRequestsController(TalmidonDbContext db) : ControllerBase
         return Ok(items);
     }
 
+    /// <summary>פנייה אחת. משמשת את מסך התלמידים כשמוסיפים תלמידה מתוך פנייה.</summary>
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ContactRequestDto>> GetById(Guid id)
+    {
+        var contact = await db.ContactRequests
+            .Where(c => c.Id == id)
+            .Select(c => new ContactRequestDto(
+                c.Id, c.FullName, c.Phone, c.Email, c.Subject, c.Message, (int)c.Status, c.CreatedAt))
+            .FirstOrDefaultAsync();
+
+        return contact is null ? NotFound() : Ok(contact);
+    }
+
     /// <summary>כמה פניות חדשות ממתינות — למחוון בלוח המחוונים ובתפריט.</summary>
     [HttpGet("new-count")]
     public async Task<ActionResult<int>> NewCount() =>
