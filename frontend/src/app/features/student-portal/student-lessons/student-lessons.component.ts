@@ -1,6 +1,7 @@
 
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { EventInput } from 'fullcalendar';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -35,6 +36,7 @@ export class StudentLessonsComponent implements OnInit {
   private readonly portalService = inject(StudentPortalService);
   private readonly fb = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
@@ -76,6 +78,9 @@ export class StudentLessonsComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    // הגעה מ"בקשת מועד אחר" שבמסך הבית, כמו במסך של ההורה. הטופס אינו תלוי
+    // בנתונים שנטענים, ולכן אפשר לפתוח אותו מיד.
+    if (this.route.snapshot.queryParamMap.get('request') === '1') this.openRequestDialog();
   }
 
   private load(): void {

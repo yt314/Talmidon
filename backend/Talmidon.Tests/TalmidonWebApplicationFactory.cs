@@ -53,17 +53,34 @@ public class TalmidonWebApplicationFactory : WebApplicationFactory<Program>, IAs
         });
 
         // אין שרת דואר בבדיקות, וכל הרשמה הייתה מייצרת עקבת מחסנית שלמה של
-        // "Connection refused". התוצאה זהה — לא נשלח דבר — והיומן נשאר קריא.
+        // "Connection refused". במקום לשלוח, נרשם — כך גם היומן נשאר קריא וגם
+        // אפשר לבדוק בפועל שהודעה יצאה למי שהיא מיועדת לה.
         builder.ConfigureTestServices(services =>
-            services.AddSingleton<IEmailSender, NoOpEmailSender>());
+            services.AddSingleton<IEmailSender>(SentEmails));
     }
 
-    /// <summary>שולח דואר שאינו שולח דבר. קיים רק כדי שהבדיקות לא ינסו להתחבר ל-SMTP.</summary>
-    private sealed class NoOpEmailSender : IEmailSender
+    /// <summary>הדואר שנשלח מתחילת הריצה. הבדיקות מסננות לפי הנמען, שהוא ייחודי לכל בדיקה.</summary>
+    public RecordingEmailSender SentEmails { get; } = new();
+
+    /// <summary>שולח דואר שרק רושם. קיים כדי שהבדיקות לא ינסו להתחבר ל-SMTP.</summary>
+    public sealed class RecordingEmailSender : IEmailSender
     {
-        public Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken ct = default) =>
-            Task.CompletedTask;
+        private readonly List<SentEmail> _sent = [];
+        private readonly Lock _gate = new();
+
+        public Task SendAsync(string toEmail, string subject, string htmlBody, CancellationToken ct = default)
+        {
+            lock (_gate) _sent.Add(new SentEmail(toEmail, subject, htmlBody));
+            return Task.CompletedTask;
+        }
+
+        public IReadOnlyList<SentEmail> To(string email)
+        {
+            lock (_gate) return _sent.Where(e => e.To == email).ToList();
+        }
     }
+
+    public record SentEmail(string To, string Subject, string HtmlBody);
 
     /// <summary>
     /// נקרא אוטומטית ע"י xUnit לפני כל הבדיקות באוסף. חייב לרוץ על DbContext עצמאי, לפני כל

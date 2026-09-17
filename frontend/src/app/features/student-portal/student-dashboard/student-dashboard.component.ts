@@ -1,17 +1,20 @@
 
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { StatCardComponent } from '../../../shared/ui/stat-card.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, LessonStatus } from '../../lessons/lessons.models';
+import { declinedPortalRequests, upcomingPortalLessons } from '../../lessons/portal-lessons.util';
 import { StudentLesson } from '../student-portal.models';
 import { StudentPortalService } from '../student-portal.service';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 
 @Component({
   selector: 'app-student-dashboard',
-  imports: [ CardModule, TagModule, PageHeaderComponent, StatCardComponent, IsraelDatePipe],
+  imports: [RouterLink, ButtonModule, CardModule, TagModule, PageHeaderComponent, StatCardComponent, IsraelDatePipe],
   templateUrl: './student-dashboard.component.html'
 })
 export class StudentDashboardComponent implements OnInit {
@@ -40,25 +43,15 @@ export class StudentDashboardComponent implements OnInit {
     });
   }
 
-  /**
-   * לא computed() בכוונה: תלוי בזמן הנוכחי, לא רק בסיגנל lessons — צריך להתעדכן בכל בדיקה, לא רק כשהשיעורים משתנים.
-   *
-   * בקשה שממתינה לאישור נכללת כאן, כמו אצל ההורה. תלמידה יכולה לבקש שיעור
-   * מהיומן שלה, ובלי זה המסך היה עונה לה מיד "אין שיעורים קרובים" על בקשה
-   * שהיא בדיוק שלחה. התגית לצד השורה מבדילה בין "מתוזמן" ל"ממתין לאישור".
-   */
+  /** לא computed() בכוונה: תלוי בזמן הנוכחי, לא רק בסיגנל lessons — צריך להתעדכן בכל בדיקה, לא רק כשהשיעורים משתנים. */
   protected upcomingLessons(): StudentLesson[] | null {
     const lessons = this.lessons();
-    if (!lessons) return null;
-    const now = new Date();
-    return lessons
-      .filter(
-        l =>
-          (l.status === LessonStatus.Scheduled || l.status === LessonStatus.Requested) &&
-          new Date(l.startTime) >= now
-      )
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-      .slice(0, 5);
+    return lessons ? upcomingPortalLessons(lessons) : null;
+  }
+
+  /** בקשות שהמורה דחתה ועוד לא עבר מועדן — אחרת הן פשוט נעלמות מהמסך בלי תשובה. */
+  protected declinedRequests(): StudentLesson[] {
+    return declinedPortalRequests(this.lessons() ?? []);
   }
 
   protected nextLesson(): StudentLesson | null {

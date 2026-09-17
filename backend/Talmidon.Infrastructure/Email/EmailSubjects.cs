@@ -43,6 +43,17 @@ public static class EmailSubjects
     public static string LessonCancelled(string studentName, DateTimeOffset start) =>
         $"השיעור של {Clean(studentName)} בוטל — {Date(start)}";
 
+    /// <summary>תשובת המורה לבקשת שיעור. נשלחת גם לתלמידה עצמה, כשיש לה חשבון.</summary>
+    public static string LessonRequestApproved(string studentName, DateTimeOffset start) =>
+        $"בקשת השיעור של {Clean(studentName)} אושרה — {Date(start)} בשעה {Time(start)}";
+
+    /// <summary>
+    /// "לא אושרה" ולא "נדחתה": השורה הזו נקראת גם ע"י תלמידה שביקשה בעצמה, והיא
+    /// על מועד — לא עליה.
+    /// </summary>
+    public static string LessonRequestDeclined(string studentName, DateTimeOffset start) =>
+        $"בקשת השיעור של {Clean(studentName)} לא אושרה — {Date(start)} בשעה {Time(start)}";
+
     /// <summary>תזכורת יכולה לכסות כמה ילדים; אז מונים במקום למנות.</summary>
     public static string LessonReminder(IReadOnlyList<(string StudentName, DateTimeOffset Start)> lessons)
     {

@@ -26,6 +26,29 @@
   }
 </div>
 
+@if (declinedRequests().length) {
+  <p-card styleClass="mt-4 declined-card">
+    <h3 class="mt-0 mb-2">בקשות שלא אושרו</h3>
+    <p class="text-color-secondary mt-0 mb-3">המועדים האלה לא התאימו למורה.</p>
+    <ul class="parent-list">
+      @for (lesson of declinedRequests(); track lesson.id) {
+        <li class="flex justify-content-between align-items-center py-2">
+          <span class="text-color-secondary">{{ lesson.startTime | ilDate: 'dd/MM HH:mm' }}</span>
+          <p-tag [value]="statusLabel(lesson.status)" [severity]="statusSeverity(lesson.status)" />
+        </li>
+      }
+    </ul>
+    <p-button
+      label="בקשת מועד אחר"
+      icon="pi pi-plus"
+      severity="secondary"
+      [outlined]="true"
+      styleClass="mt-3"
+      routerLink="/student/lessons"
+      [queryParams]="{ request: 1 }" />
+  </p-card>
+}
+
 <p-card styleClass="mt-4">
   <h3 class="mt-0 mb-3">היומן שלי</h3>
 
