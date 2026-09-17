@@ -582,7 +582,8 @@ public class LessonsController(
         l.Id, l.StudentId, studentName, l.StartTime, l.EndTime, l.Status, l.Origin,
         l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId);
 
-    private static string FormatDate(DateTimeOffset dt) => dt.ToString("dd/MM/yyyy HH:mm");
+    /// <summary>מועד שיעור בתוך גוף מייל. שעון ישראל, לא UTC — ראו EmailTime.</summary>
+    private static string FormatDate(DateTimeOffset dt) => EmailTime.DateAndTime(dt);
 
     private string BuildEmailHtml(string title, string message, string? actionUrl) =>
         EmailLayout.Render(new EmailMessage(

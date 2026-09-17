@@ -51,7 +51,7 @@ public class MonthlyPaymentReminderJob(
     {
         var total = charges.Sum(c => c.Amount);
         var lines = charges
-            .Select(c => $"{c.StudentName} — {c.StartTime:dd/MM/yyyy} — ₪{c.Amount}")
+            .Select(c => $"{c.StudentName} — {EmailTime.Date(c.StartTime)} — ₪{c.Amount}")
             .ToList();
         var html = EmailLayout.Render(new EmailMessage(
             "תזכורת תשלום חודשית",

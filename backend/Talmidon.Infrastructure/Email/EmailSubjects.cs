@@ -94,8 +94,9 @@ public static class EmailSubjects
 
     // ----- עזר -----
 
-    private static string Date(DateTimeOffset value) => value.ToString("dd/MM/yyyy");
-    private static string Time(DateTimeOffset value) => value.ToString("HH:mm");
+    // שעון ישראל, לא UTC — ראו EmailTime.
+    private static string Date(DateTimeOffset value) => EmailTime.Date(value);
+    private static string Time(DateTimeOffset value) => EmailTime.Time(value);
 
     /// <summary>סכום עגול נכתב בלי אגורות — "₪400" ולא "₪400.00".</summary>
     private static string Money(decimal amount) =>
