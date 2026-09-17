@@ -258,7 +258,7 @@ public class PaymentsController(
         Parent parent, decimal amount, DateOnly paidDate, List<Lesson> lessons)
     {
         var lines = lessons
-            .Select(l => $"{l.Student.FullName} — {l.StartTime:dd/MM/yyyy} — ₪{l.Amount}")
+            .Select(l => $"{l.Student.FullName} — {EmailTime.Date(l.StartTime)} — ₪{l.Amount}")
             .ToList();
         var html = EmailLayout.Render(new EmailMessage(
             "אישור קבלת תשלום",

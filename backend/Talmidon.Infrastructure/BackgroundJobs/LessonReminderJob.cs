@@ -67,7 +67,7 @@ public class LessonReminderJob(
             var ordered = items.OrderBy(i => i.StartTime).ToList();
             var subject = EmailSubjects.LessonReminder(ordered);
             var lines = ordered
-                .Select(i => $"{i.StudentName} — {i.StartTime:dd/MM/yyyy} בשעה {i.StartTime:HH:mm}")
+                .Select(i => $"{i.StudentName} — {EmailTime.LongDateAndTime(i.StartTime)}")
                 .ToList();
             var html = EmailLayout.Render(new EmailMessage(
                 "תזכורת לשיעורים הקרובים",

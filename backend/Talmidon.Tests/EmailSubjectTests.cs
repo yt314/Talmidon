@@ -10,7 +10,14 @@ namespace Talmidon.Tests;
 /// </summary>
 public class EmailSubjectTests
 {
+    /// <summary>
+    /// מופע ב-UTC, כפי שהוא נשמר ב-DB. בישראל זה 19:30 — שעון חורף, UTC+2 —
+    /// וזו השעה שצריכה להופיע במייל.
+    /// </summary>
     private static readonly DateTimeOffset Lesson = new(2026, 3, 12, 17, 30, 0, TimeSpan.Zero);
+
+    /// <summary>אותו הדבר בקיץ: UTC+3, כלומר 20:30 בישראל.</summary>
+    private static readonly DateTimeOffset SummerLesson = new(2026, 7, 8, 17, 30, 0, TimeSpan.Zero);
 
     [Fact]
     public void AContactRequestNamesWhoWroteAndAboutWhat()
@@ -61,8 +68,37 @@ public class EmailSubjectTests
     [Fact]
     public void AReminderForOneLessonGivesItsTime()
     {
-        Assert.Equal("תזכורת: שיעור של דנה ב-12/03/2026 בשעה 17:30",
+        Assert.Equal("תזכורת: שיעור של דנה ב-12/03/2026 בשעה 19:30",
             EmailSubjects.LessonReminder([("דנה", Lesson)]));
+    }
+
+    /// <summary>
+    /// השעה במייל היא שעון ישראל ולא UTC. בלי ההמרה שיעור ב-19:30 נכתב "בשעה
+    /// 17:30", ובקיץ הפער גדל לשלוש שעות — כלומר כל מייל שהמערכת שולחת הקדים את
+    /// עצמו.
+    /// </summary>
+    [Fact]
+    public void TheTimeIsIsraelTimeInWinter()
+    {
+        Assert.Equal("נקבע שיעור לדנה — 12/03/2026 בשעה 19:30", EmailSubjects.LessonAdded("דנה", Lesson));
+    }
+
+    [Fact]
+    public void TheTimeIsIsraelTimeInSummerToo()
+    {
+        Assert.Equal("נקבע שיעור לדנה — 08/07/2026 בשעה 20:30", EmailSubjects.LessonAdded("דנה", SummerLesson));
+    }
+
+    /// <summary>
+    /// חצות ישראלי הוא 21:00 או 22:00 ב-UTC של אותו יום, ולכן בלי המרה גם התאריך
+    /// זז — לא רק השעה.
+    /// </summary>
+    [Fact]
+    public void JustAfterMidnightTheDateIsTheIsraeliOne()
+    {
+        var justAfterMidnightInIsrael = new DateTimeOffset(2026, 7, 8, 21, 30, 0, TimeSpan.Zero);
+        Assert.Equal("נקבע שיעור לדנה — 09/07/2026 בשעה 00:30",
+            EmailSubjects.LessonAdded("דנה", justAfterMidnightInIsrael));
     }
 
     /// <summary>תזכורת אחת יכולה לכסות כמה ילדים — אז מונים, ולא מונים שמות בשורת נושא.</summary>
@@ -71,7 +107,7 @@ public class EmailSubjectTests
     {
         var subject = EmailSubjects.LessonReminder([("דנה", Lesson), ("איתי", Lesson.AddDays(1))]);
 
-        Assert.Equal("תזכורת: 2 שיעורים קרובים, הראשון ב-12/03/2026 בשעה 17:30", subject);
+        Assert.Equal("תזכורת: 2 שיעורים קרובים, הראשון ב-12/03/2026 בשעה 19:30", subject);
     }
 
     /// <summary>סכום עגול נכתב בלי אגורות — "₪400" ולא "₪400.00".</summary>
