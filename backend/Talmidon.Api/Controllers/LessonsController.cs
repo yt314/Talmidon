@@ -225,27 +225,43 @@ public class LessonsController(
     [HttpPost("{id:guid}/approve")]
     public async Task<IActionResult> ApproveRequest(Guid id)
     {
-        var lesson = await db.Lessons.FirstOrDefaultAsync(l => l.Id == id);
+        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
         if (lesson is null) return NotFound();
         if (lesson.Status != LessonStatus.Requested)
             return Conflict(new { message = "ניתן לאשר רק בקשת שיעור ממתינה." });
 
         lesson.Status = LessonStatus.Scheduled;
         await db.SaveChangesAsync();
+
+        var studentName = lesson.Student.FullName;
+        await NotifyFamilyAsync(lesson.StudentId,
+            EmailSubjects.LessonRequestApproved(studentName, lesson.StartTime),
+            $"בקשת השיעור של {studentName} לתאריך {FormatDate(lesson.StartTime)} אושרה, והשיעור נקבע ביומן.");
+
         return NoContent();
     }
 
+    /// <summary>
+    /// דחיית בקשה. עד לשינוי הזה היא הסתיימה כאן: השיעור ירד מהמסכים של המבקשת,
+    /// ומי שביקשה נשארה עם שקט — בלי לדעת אם נדחתה או שהבקשה בכלל לא נקלטה.
+    /// </summary>
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/decline")]
     public async Task<IActionResult> DeclineRequest(Guid id)
     {
-        var lesson = await db.Lessons.FirstOrDefaultAsync(l => l.Id == id);
+        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
         if (lesson is null) return NotFound();
         if (lesson.Status != LessonStatus.Requested)
             return Conflict(new { message = "ניתן לדחות רק בקשת שיעור ממתינה." });
 
         lesson.Status = LessonStatus.Declined;
         await db.SaveChangesAsync();
+
+        var studentName = lesson.Student.FullName;
+        await NotifyFamilyAsync(lesson.StudentId,
+            EmailSubjects.LessonRequestDeclined(studentName, lesson.StartTime),
+            $"המועד שהתבקש עבור {studentName} — {FormatDate(lesson.StartTime)} — אינו מתאים למורה. אפשר לבקש מועד אחר מהיומן.");
+
         return NoContent();
     }
 
@@ -532,6 +548,30 @@ public class LessonsController(
             try { await emailSender.SendAsync(email, subject, html); }
             catch (Exception ex) { logger.LogError(ex, "Failed to send lesson notification email."); }
         }
+    }
+
+    /// <summary>
+    /// שולח לכל מי שהתשובה נוגעת לה: ההורים והתלמידה עצמה.
+    ///
+    /// תלמידה יכולה לבקש שיעור בעצמה (<c>my-requests</c>), ומייל להורה אינו מגיע אליה.
+    /// </summary>
+    private async Task NotifyFamilyAsync(Guid studentId, string subject, string message)
+    {
+        await NotifyParentsAsync(studentId, subject, message);
+        await NotifyStudentAsync(studentId, subject, message);
+    }
+
+    /// <summary>שולח מייל לתלמידה. תלמידה צעירה עשויה לא להיות מקושרת לחשבון — ואז אין למי לשלוח.</summary>
+    private async Task NotifyStudentAsync(Guid studentId, string subject, string message)
+    {
+        var userId = await db.Students.Where(s => s.Id == studentId).Select(s => s.UserId).FirstOrDefaultAsync();
+        if (userId is null) return;
+
+        var user = await userManager.FindByIdAsync(userId);
+        if (user?.Email is null) return;
+
+        try { await emailSender.SendAsync(user.Email, subject, BuildEmailHtml(subject, message, links.StudentLessons)); }
+        catch (Exception ex) { logger.LogError(ex, "Failed to send student notification email."); }
     }
 
     /// <summary>שולח מייל למורה (בקשות שמגיעות מהורה).</summary>

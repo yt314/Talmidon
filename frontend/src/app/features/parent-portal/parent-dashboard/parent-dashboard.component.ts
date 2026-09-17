@@ -7,6 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { StatCardComponent } from '../../../shared/ui/stat-card.component';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';
 import { LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, Lesson, LessonStatus } from '../../lessons/lessons.models';
+import { declinedPortalRequests, upcomingPortalLessons } from '../../lessons/portal-lessons.util';
 import { OpenCharge } from '../../payments/payments.models';
 import { MyChild } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
@@ -51,12 +52,12 @@ export class ParentDashboardComponent implements OnInit {
   /** לא computed() בכוונה: תלוי בזמן הנוכחי, לא רק בסיגנל lessons — צריך להתעדכן בכל בדיקה, לא רק כשהשיעורים משתנים. */
   protected upcomingLessons(): Lesson[] | null {
     const lessons = this.lessons();
-    if (!lessons) return null;
-    const now = new Date();
-    return lessons
-      .filter(l => (l.status === LessonStatus.Scheduled || l.status === LessonStatus.Requested) && new Date(l.startTime) >= now)
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-      .slice(0, 5);
+    return lessons ? upcomingPortalLessons(lessons) : null;
+  }
+
+  /** בקשות שהמורה דחתה ועוד לא עבר מועדן — אחרת הן פשוט נעלמות מהמסך בלי תשובה. */
+  protected declinedRequests(): Lesson[] {
+    return declinedPortalRequests(this.lessons() ?? []);
   }
 
   protected nextLesson(): Lesson | null {

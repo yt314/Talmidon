@@ -25,6 +25,7 @@ public class AppLinks(IConfiguration configuration)
     public string? ParentMessages => Of("/parent/messages");
 
     // תלמידה
+    public string? StudentLessons => Of("/student/lessons");
     public string? StudentMessages => Of("/student/messages");
 
     // ניהול
