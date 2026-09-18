@@ -32,6 +32,7 @@ import { ResourcesService } from '../../resources/resources.service';
 import { ParentSummary, StudentDetail } from '../students.models';
 import { StudentsService } from '../students.service';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
+import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus.directive';
 
 @Component({
   selector: 'app-student-detail',
@@ -50,7 +51,7 @@ import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
     TextareaModule,
     TooltipModule,
     EmptyStateComponent,
-    ResourceListComponent, IsraelDatePipe],
+    ResourceListComponent, IsraelDatePipe, RestoreFocusOnCloseDirective],
   templateUrl: './student-detail.component.html'
 })
 export class StudentDetailComponent implements OnInit {

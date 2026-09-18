@@ -24,6 +24,7 @@ import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
 import { StudentListItem } from '../students.models';
 import { StudentsService } from '../students.service';
+import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus.directive';
 
 @Component({
   selector: 'app-students-list',
@@ -36,7 +37,7 @@ import { StudentsService } from '../students.service';
     SelectModule,
     TableModule,
     TabsModule,
-    TagModule, PageHeaderComponent, EmptyStateComponent],
+    TagModule, PageHeaderComponent, EmptyStateComponent, RestoreFocusOnCloseDirective],
   templateUrl: './students-list.component.html'
 })
 export class StudentsListComponent implements OnInit {

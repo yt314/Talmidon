@@ -19,6 +19,7 @@ import { LESSON_STATUS_CLASS, LESSON_STATUS_LABELS, LESSON_STATUS_SEVERITY, Less
 import { StudentLesson } from '../student-portal.models';
 import { StudentPortalService } from '../student-portal.service';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
+import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus.directive';
 
 @Component({
   selector: 'app-student-lessons',
@@ -29,7 +30,7 @@ import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
     TagModule,
     TextareaModule,
     LessonCalendarComponent,
-    PageHeaderComponent, IsraelDatePipe],
+    PageHeaderComponent, IsraelDatePipe, RestoreFocusOnCloseDirective],
   templateUrl: './student-lessons.component.html'
 })
 export class StudentLessonsComponent implements OnInit {

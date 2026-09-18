@@ -41,6 +41,7 @@ import { CalendarEventsService } from '../calendar-events.service';
 import { CalendarEventItem } from '../calendar-events.models';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 import { LessonAmountSuggestion, lessonDurationMinutes, suggestLessonAmountDetailed } from '../lesson-pricing.util';
+import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus.directive';
 
 @Component({
   selector: 'app-lessons-list',
@@ -57,7 +58,7 @@ import { LessonAmountSuggestion, lessonDurationMinutes, suggestLessonAmountDetai
     SelectModule,
     TagModule,
     TextareaModule,
-    LessonCalendarComponent, PageHeaderComponent, IsraelDatePipe],
+    LessonCalendarComponent, PageHeaderComponent, IsraelDatePipe, RestoreFocusOnCloseDirective],
   templateUrl: './lessons-list.component.html'
 })
 export class LessonsListComponent implements OnInit {

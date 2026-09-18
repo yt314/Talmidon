@@ -63,7 +63,7 @@
           @if (contact.status !== Status.Closed) {
             <p-button label="סגירה" icon="pi pi-times-circle" severity="secondary" [text]="true" size="small" (onClick)="setStatus(contact, Status.Closed)" />
           }
-          <p-button icon="pi pi-trash" severity="danger" [text]="true" size="small" pTooltip="מחיקה" tooltipPosition="top" (onClick)="confirmDelete(contact)" />
+          <p-button icon="pi pi-trash" severity="danger" [text]="true" size="small" [ariaLabel]="'מחיקת הפנייה של ' + contact.fullName" pTooltip="מחיקה" tooltipPosition="top" (onClick)="confirmDelete(contact)" />
         </div>
       </p-card>
     }

@@ -5,6 +5,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { StudentsService } from '../../features/students/students.service';
 import { getInitials, getAvatarColor } from '../avatar/avatar.util';
+import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.directive';
 
 interface QuickResult {
   label: string;
@@ -35,7 +36,7 @@ const SCREENS: { label: string; icon: string; path: string; keywords: string }[]
  */
 @Component({
   selector: 'app-quick-search',
-  imports: [DialogModule, InputTextModule, TooltipModule, RouterLink],
+  imports: [DialogModule, InputTextModule, TooltipModule, RouterLink, RestoreFocusOnCloseDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!--

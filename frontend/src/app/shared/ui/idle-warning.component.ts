@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { IdleLogoutService } from '../../core/auth/idle-logout.service';
+import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.directive';
 
 /**
  * אזהרה לפני התנתקות אוטומטית.
@@ -12,7 +13,7 @@ import { IdleLogoutService } from '../../core/auth/idle-logout.service';
 @Component({
   selector: 'app-idle-warning',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DialogModule, ButtonModule],
+  imports: [DialogModule, ButtonModule, RestoreFocusOnCloseDirective],
   template: `
     <p-dialog
       [visible]="idle.warning()"

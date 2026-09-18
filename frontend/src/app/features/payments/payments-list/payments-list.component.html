@@ -240,7 +240,7 @@
               <p-tag [value]="payment.confirmationSentAt ? 'נשלח' : 'לא נשלח'" [severity]="payment.confirmationSentAt ? 'success' : 'secondary'" />
             </td>
             <td>
-              <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="confirmDeletePayment(payment)" />
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="confirmDeletePayment(payment)" [ariaLabel]="'מחיקת התשלום של ' + payment.parentName + ' מ־' + (payment.paidDate | ilDate: 'dd/MM/yyyy')" />
             </td>
           </tr>
         </ng-template>
