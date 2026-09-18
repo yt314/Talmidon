@@ -16,6 +16,7 @@ import { ConversationComponent } from './conversation.component';
 import { MessageAuthor, ThreadDetail, ThreadSummary } from './messages.models';
 import { MessagesService } from './messages.service';
 import { ThreadListComponent } from './thread-list.component';
+import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.directive';
 
 /**
  * תיבת ההודעות של התלמידה ושל ההורה — אותו מסך לשניהם.
@@ -37,7 +38,7 @@ import { ThreadListComponent } from './thread-list.component';
     PageHeaderComponent,
     ThreadListComponent,
     ConversationComponent
-  ],
+  , RestoreFocusOnCloseDirective],
   templateUrl: './portal-messages.component.html',
   styleUrls: ['./messages.scss', './messages-screen.scss']
 })

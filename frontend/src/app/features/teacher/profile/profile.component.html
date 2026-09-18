@@ -216,10 +216,25 @@
           <div class="flex-1 flex flex-column gap-2">
             @for (win of windowsForDay(day); track $index) {
               <div class="flex align-items-center gap-2">
-                <input pInputText type="time" [(ngModel)]="win.startTime" [ngModelOptions]="{ standalone: true }" />
+                <input
+                  pInputText
+                  type="time"
+                  [(ngModel)]="win.startTime"
+                  [ngModelOptions]="{ standalone: true }"
+                  [attr.aria-label]="'שעת התחלה, חלון ' + ($index + 1) + ' ביום ' + dayNames[day]" />
                 <span class="text-color-secondary">עד</span>
-                <input pInputText type="time" [(ngModel)]="win.endTime" [ngModelOptions]="{ standalone: true }" />
-                <p-button icon="pi pi-times" severity="danger" [text]="true" (onClick)="removeWindow(win)" />
+                <input
+                  pInputText
+                  type="time"
+                  [(ngModel)]="win.endTime"
+                  [ngModelOptions]="{ standalone: true }"
+                  [attr.aria-label]="'שעת סיום, חלון ' + ($index + 1) + ' ביום ' + dayNames[day]" />
+                <p-button
+                  icon="pi pi-times"
+                  severity="danger"
+                  [text]="true"
+                  (onClick)="removeWindow(win)"
+                  [ariaLabel]="'הסרת חלון ' + ($index + 1) + ' ביום ' + dayNames[day]" />
               </div>
             } @empty {
               <span class="text-color-secondary text-sm pt-1">לא זמין</span>

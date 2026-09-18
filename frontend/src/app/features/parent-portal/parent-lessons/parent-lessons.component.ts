@@ -31,6 +31,7 @@ import {
 import { MyChild } from '../parent-portal.models';
 import { ParentPortalService } from '../parent-portal.service';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
+import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus.directive';
 
 @Component({
   selector: 'app-parent-lessons',
@@ -42,7 +43,7 @@ import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
     InputTextModule,
     SelectModule,
     TagModule,
-    LessonCalendarComponent, PageHeaderComponent, IsraelDatePipe],
+    LessonCalendarComponent, PageHeaderComponent, IsraelDatePipe, RestoreFocusOnCloseDirective],
   templateUrl: './parent-lessons.component.html'
 })
 export class ParentLessonsComponent implements OnInit {
