@@ -11,6 +11,14 @@
  * בעברית שהקורא סיפק לפי ההקשר.
  */
 export function extractErrorMessage(err: unknown, fallback: string): string {
+  // Status 0 means the request never reached the server: no connection, or the
+  // server is not answering. The distinction matters — a generic "it failed"
+  // leaves open whether the change was saved, while "no connection" answers
+  // that and says what to do about it.
+  if ((err as { status?: number } | undefined)?.status === 0) {
+    return 'אין חיבור לשרת. בדקי את החיבור לאינטרנט ונסי שוב.';
+  }
+
   const body = (err as { error?: unknown } | undefined)?.error;
 
   if (typeof body === 'string' && body.trim()) return body;

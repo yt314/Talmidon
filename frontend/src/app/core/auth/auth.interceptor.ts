@@ -37,6 +37,26 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
+/**
+ * What to tell the login screen when the session expired mid-work.
+ *
+ * `expired` so the screen can explain what happened. Without it the user was
+ * dropped onto a blank login form in the middle of marking a lesson, with no
+ * hint as to why.
+ *
+ * `returnUrl` so she lands back where she was. The route guard already does
+ * this when someone opens a protected URL without a session; this path — the
+ * only one that fires while she is working — did not.
+ */
+function expiredSessionParams(currentUrl: string): Record<string, string | number> {
+  const params: Record<string, string | number> = { expired: 1 };
+  // Returning to /login itself is not a destination
+  if (currentUrl.startsWith('/') && !currentUrl.startsWith('//') && !currentUrl.startsWith('/login')) {
+    params['returnUrl'] = currentUrl;
+  }
+  return params;
+}
+
 function withBearer(req: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
   return req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
 }
@@ -63,7 +83,7 @@ function handle401(req: HttpRequest<unknown>, next: HttpHandlerFn, auth: AuthSer
     catchError(error => {
       isRefreshing = false;
       auth.clearSession();
-      router.navigate(['/login']);
+      router.navigate(['/login'], { queryParams: expiredSessionParams(router.url) });
       return throwError(() => error);
     })
   );
