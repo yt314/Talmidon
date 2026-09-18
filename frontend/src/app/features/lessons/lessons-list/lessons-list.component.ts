@@ -10,6 +10,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
@@ -54,6 +55,7 @@ import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus
     DatePickerModule,
     DialogModule,
     InputNumberModule,
+    MessageModule,
     SelectButtonModule,
     SelectModule,
     TagModule,
@@ -173,6 +175,29 @@ export class LessonsListComponent implements OnInit {
 
   protected readonly showChangeRequestDialog = signal(false);
   protected readonly selectedChangeRequest = signal<ChangeRequest | null>(null);
+
+  /**
+   * A lesson already on the calendar that clashes with the open request.
+   *
+   * The double-booking check existed only where the teacher types a time
+   * herself. On these two screens the time was chosen by someone else — a
+   * parent or a student — which is exactly where she is least likely to have
+   * looked at her own calendar first, and where she used to get no warning at
+   * all.
+   */
+  protected readonly requestedLessonConflict = computed(() => {
+    const lesson = this.selectedLesson();
+    if (!lesson || lesson.status !== LessonStatus.Requested) return null;
+    return this.findConflict(new Date(lesson.startTime), new Date(lesson.endTime), lesson.id);
+  });
+
+  /** The same, for a parent's proposed new time on an existing lesson. */
+  protected readonly changeRequestConflict = computed(() => {
+    const request = this.selectedChangeRequest();
+    if (!request || request.type !== ChangeRequestType.Reschedule) return null;
+    if (!request.proposedStartTime || !request.proposedEndTime) return null;
+    return this.findConflict(new Date(request.proposedStartTime), new Date(request.proposedEndTime), request.lessonId);
+  });
 
   /**
    * הבקשות שממתינות לתשובה: בקשה לשיעור חדש, ובקשה לשינוי מועד או ביטול לשיעור
@@ -797,12 +822,17 @@ export class LessonsListComponent implements OnInit {
     });
   }
 
+  /** The clash itself, worded once and reused by the dialogs and the prompts. */
+  protected conflictText(conflict: Lesson): string {
+    const range = `${formatDate(conflict.startTime, 'HH:mm', this.locale)}–${formatDate(conflict.endTime, 'HH:mm', this.locale)}`;
+    return `כבר קיים שיעור עם ${conflict.studentName} בשעה ${range}`;
+  }
+
   /** מחזיר הודעת אזהרה לפני שמירה (התנגשות / מחוץ לשעות), או null אם הכל תקין. */
   private preSaveWarning(start: Date, end: Date, excludeLessonId?: string): string | null {
     const conflict = this.findConflict(start, end, excludeLessonId);
     if (conflict) {
-      const range = `${formatDate(conflict.startTime, 'HH:mm', this.locale)}–${formatDate(conflict.endTime, 'HH:mm', this.locale)}`;
-      return `כבר קיים שיעור עם ${conflict.studentName} בשעה ${range}. לקבוע בכל זאת?`;
+      return `${this.conflictText(conflict)}. לקבוע בכל זאת?`;
     }
     if (this.isOutsideAvailability(start, end)) {
       return 'השיעור נקבע מחוץ לשעות הזמינות שהגדרת. לקבוע בכל זאת?';
@@ -810,12 +840,12 @@ export class LessonsListComponent implements OnInit {
     return null;
   }
 
-  private confirmWarning(message: string, proceed: () => void): void {
+  private confirmWarning(message: string, proceed: () => void, acceptLabel = 'קבע בכל זאת'): void {
     this.confirmationService.confirm({
       header: 'שים לב',
       message,
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'קבע בכל זאת',
+      acceptLabel,
       rejectLabel: 'ביטול',
       accept: proceed
     });
@@ -1032,6 +1062,15 @@ export class LessonsListComponent implements OnInit {
   }
 
   approveRequest(lesson: Lesson): void {
+    const conflict = this.findConflict(new Date(lesson.startTime), new Date(lesson.endTime), lesson.id);
+    if (conflict) {
+      this.confirmWarning(`${this.conflictText(conflict)}. לאשר בכל זאת?`, () => this.doApproveRequest(lesson), 'אשר בכל זאת');
+      return;
+    }
+    this.doApproveRequest(lesson);
+  }
+
+  private doApproveRequest(lesson: Lesson): void {
     this.busyRequestId.set(lesson.id);
     this.lessonsService.approveRequest(lesson.id).subscribe({
       next: () => {
@@ -1062,6 +1101,22 @@ export class LessonsListComponent implements OnInit {
   }
 
   approveChangeRequest(request: ChangeRequest): void {
+    const conflict =
+      request.type === ChangeRequestType.Reschedule && request.proposedStartTime && request.proposedEndTime
+        ? this.findConflict(new Date(request.proposedStartTime), new Date(request.proposedEndTime), request.lessonId)
+        : null;
+    if (conflict) {
+      this.confirmWarning(
+        `${this.conflictText(conflict)}. לאשר בכל זאת?`,
+        () => this.doApproveChangeRequest(request),
+        'אשר בכל זאת'
+      );
+      return;
+    }
+    this.doApproveChangeRequest(request);
+  }
+
+  private doApproveChangeRequest(request: ChangeRequest): void {
     this.busyRequestId.set(request.id);
     this.lessonsService.approveChangeRequest(request.id).subscribe({
       next: () => {
