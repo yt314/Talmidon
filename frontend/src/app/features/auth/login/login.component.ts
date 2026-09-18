@@ -30,6 +30,8 @@ export class LoginComponent implements OnInit {
   protected readonly passwordChanged = signal(false);
   /** הגיעה לכאן אחרי התנתקות אוטומטית — מסך התחברות בלי הסבר נראה כמו תקלה. */
   protected readonly timedOut = signal(false);
+  /** ההפעלה פקעה באמצע עבודה — להבדיל מניתוק אוטומטי אחרי חוסר פעילות. */
+  protected readonly sessionExpired = signal(false);
   protected readonly unconfirmedEmail = signal<string | null>(null);
   protected readonly resending = signal(false);
   protected readonly resendDone = signal(false);
@@ -50,6 +52,9 @@ export class LoginComponent implements OnInit {
     }
     if (this.route.snapshot.queryParamMap.get('timeout') === '1') {
       this.timedOut.set(true);
+    }
+    if (this.route.snapshot.queryParamMap.get('expired') === '1') {
+      this.sessionExpired.set(true);
     }
   }
 
