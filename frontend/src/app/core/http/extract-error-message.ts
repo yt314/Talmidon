@@ -11,6 +11,13 @@
  * בעברית שהקורא סיפק לפי ההקשר.
  */
 export function extractErrorMessage(err: unknown, fallback: string): string {
+  // ‎status 0‎ — הבקשה לא הגיעה לשרת בכלל: אין חיבור, או שהשרת אינו עונה. ההבדל
+  // חשוב: "העדכון נכשל" משאיר פתוחה את השאלה אם השינוי נשמר, ו"אין חיבור" גם
+  // עונה עליה וגם אומר מה לעשות.
+  if ((err as { status?: number } | undefined)?.status === 0) {
+    return 'אין חיבור לשרת. בדקי את החיבור לאינטרנט ונסי שוב.';
+  }
+
   const body = (err as { error?: unknown } | undefined)?.error;
 
   if (typeof body === 'string' && body.trim()) return body;

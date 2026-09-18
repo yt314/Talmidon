@@ -37,6 +37,24 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
+/**
+ * מה לומר למסך ההתחברות כשההפעלה פקעה באמצע העבודה.
+ *
+ * ‎expired‎ — כדי שהמסך יסביר מה קרה. בלעדיו המורה נזרקה למסך התחברות ריק באמצע
+ * סימון שיעור, בלי שום סימן למה.
+ *
+ * ‎returnUrl‎ — כדי שתחזור לאן שהייתה. שומר המסלול כבר עושה את זה כשנכנסים לכתובת
+ * מוגנת בלי הפעלה; הנתיב הזה, שהוא היחיד שקורה תוך כדי עבודה, לא עשה.
+ */
+function expiredSessionParams(currentUrl: string): Record<string, string | number> {
+  const params: Record<string, string | number> = { expired: 1 };
+  // חזרה אל ‎/login‎ עצמו אינה יעד
+  if (currentUrl.startsWith('/') && !currentUrl.startsWith('//') && !currentUrl.startsWith('/login')) {
+    params['returnUrl'] = currentUrl;
+  }
+  return params;
+}
+
 function withBearer(req: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
   return req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
 }
@@ -63,7 +81,7 @@ function handle401(req: HttpRequest<unknown>, next: HttpHandlerFn, auth: AuthSer
     catchError(error => {
       isRefreshing = false;
       auth.clearSession();
-      router.navigate(['/login']);
+      router.navigate(['/login'], { queryParams: expiredSessionParams(router.url) });
       return throwError(() => error);
     })
   );
