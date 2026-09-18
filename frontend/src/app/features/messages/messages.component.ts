@@ -15,6 +15,7 @@ import { ConversationComponent } from './conversation.component';
 import { MessageAuthor, MessageRecipient, ThreadDetail, ThreadSummary } from './messages.models';
 import { MessagesService } from './messages.service';
 import { ThreadListComponent } from './thread-list.component';
+import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.directive';
 
 /** נמען עם התווית המוכנה — p-select מקבל שם שדה, לא פונקציה. */
 type RecipientOption = MessageRecipient & { label: string };
@@ -34,7 +35,7 @@ type RecipientOption = MessageRecipient & { label: string };
     PageHeaderComponent,
     ThreadListComponent,
     ConversationComponent
-  ],
+  , RestoreFocusOnCloseDirective],
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.scss', './messages-screen.scss']
 })

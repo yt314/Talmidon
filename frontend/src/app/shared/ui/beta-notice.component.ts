@@ -8,6 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { environment } from '../../../environments/environment';
 import { extractErrorMessage } from '../../core/http/extract-error-message';
+import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.directive';
 
 /**
  * תג "בהרצה" קבוע בפינה השמאלית התחתונה, ובלחיצה — טופס לשליחת רעיון או תקלה.
@@ -25,7 +26,7 @@ import { extractErrorMessage } from '../../core/http/extract-error-message';
  */
 @Component({
   selector: 'app-beta-notice',
-  imports: [FormsModule, ButtonModule, DialogModule, InputTextModule, TextareaModule],
+  imports: [FormsModule, ButtonModule, DialogModule, InputTextModule, TextareaModule, RestoreFocusOnCloseDirective],
   template: `
     <button
       type="button"

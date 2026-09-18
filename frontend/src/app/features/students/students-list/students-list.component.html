@@ -91,7 +91,7 @@
             <td>{{ parent.phone || '—' }}</td>
             <td>{{ parent.studentCount }}</td>
             <td>
-              <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditParentDialog(parent)" />
+              <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditParentDialog(parent)" [ariaLabel]="'עריכת הפרטים של ' + parent.fullName" />
             </td>
           </tr>
         </ng-template>

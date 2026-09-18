@@ -4,6 +4,7 @@ import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { buildWhatsappLink } from '../whatsapp/whatsapp.util';
+import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.directive';
 
 /**
  * שיתוף הכרטיס הציבורי. זו הדרך של המורה להביא תלמידים, וכל עוד הקישור היה
@@ -14,7 +15,7 @@ import { buildWhatsappLink } from '../whatsapp/whatsapp.util';
  */
 @Component({
   selector: 'app-share-profile',
-  imports: [ButtonModule, DialogModule, TooltipModule],
+  imports: [ButtonModule, DialogModule, TooltipModule, RestoreFocusOnCloseDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="share-bar">

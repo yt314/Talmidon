@@ -54,12 +54,12 @@
             <span>{{ parent.fullName }} · {{ parent.email }}</span>
             <div class="flex align-items-center gap-1">
               @if (hasWhatsapp(parent.phone)) {
-                <p-button icon="pi pi-whatsapp" severity="success" [text]="true" (onClick)="openWhatsapp(parent)" pTooltip="שלח וואטסאפ" tooltipPosition="top" />
+                <p-button icon="pi pi-whatsapp" severity="success" [text]="true" (onClick)="openWhatsapp(parent)" [ariaLabel]="'שליחת וואטסאפ אל ' + parent.fullName" pTooltip="שלח וואטסאפ" tooltipPosition="top" />
               }
               @if (hasEmail(parent.email)) {
-                <p-button icon="pi pi-envelope" severity="secondary" [text]="true" (onClick)="openParentEmail(parent)" pTooltip="שלח מייל" tooltipPosition="top" />
+                <p-button icon="pi pi-envelope" severity="secondary" [text]="true" (onClick)="openParentEmail(parent)" [ariaLabel]="'שליחת מייל אל ' + parent.fullName" pTooltip="שלח מייל" tooltipPosition="top" />
               }
-              <p-button icon="pi pi-times" severity="danger" [text]="true" (onClick)="unlinkParent(parent.id)" />
+              <p-button icon="pi pi-times" severity="danger" [text]="true" (onClick)="unlinkParent(parent.id)" [ariaLabel]="'ניתוק הקישור אל ' + parent.fullName" pTooltip="ניתוק הקישור" tooltipPosition="top" />
             </div>
           </li>
         }
@@ -109,8 +109,8 @@
             <div class="flex justify-content-between align-items-start gap-2">
               <p class="m-0 flex-1" style="white-space: pre-wrap">{{ note.content }}</p>
               <div class="flex gap-1">
-                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditNoteDialog(note)" />
-                <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="confirmDeleteNote(note)" />
+                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditNoteDialog(note)" [ariaLabel]="'עריכת ההערה מ־' + (note.createdAt | ilDate: 'dd/MM/yyyy HH:mm')" />
+                <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="confirmDeleteNote(note)" [ariaLabel]="'מחיקת ההערה מ־' + (note.createdAt | ilDate: 'dd/MM/yyyy HH:mm')" />
               </div>
             </div>
             <div class="flex gap-2 mt-2 align-items-center">
