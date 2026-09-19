@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Talmidon.Api.Contracts;
 using Talmidon.Domain.Enums;
+using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 
 namespace Talmidon.Tests;
@@ -49,7 +50,10 @@ public class LessonRequestAnswerTests(TalmidonWebApplicationFactory factory)
         (await family.Teacher.PostAsync($"/api/lessons/{lessonId}/decline", null)).EnsureSuccessStatusCode();
 
         var answer = Assert.Single(factory.SentEmails.To(family.StudentEmail), e => e.Subject.StartsWith(Declined));
-        Assert.Contains(start.ToString("dd/MM/yyyy"), answer.Subject);
+        // The subject is written in Israel time, so that is what to compare against.
+        // Using the UTC date passes for most of the day and fails after 21:00 UTC,
+        // when Israel is already on the next date.
+        Assert.Contains(EmailTime.Date(start), answer.Subject);
     }
 
     [Fact]
