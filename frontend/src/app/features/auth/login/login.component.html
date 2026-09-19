@@ -26,10 +26,16 @@
   @if (error()) {
     <p-message severity="error" [text]="error()!" styleClass="w-full mb-3" />
   }
-  @if (unconfirmedEmail()) {
-    @if (resendDone()) {
-      <p-message severity="success" text="אם הכתובת אינה מאומתת עדיין, נשלח אליה מייל אימות חדש." styleClass="w-full mb-3" />
-    } @else {
+  @if (resendDone()) {
+    <p-message severity="success" text="אם הכתובת אינה מאומתת עדיין, נשלח אליה מייל אימות חדש." styleClass="w-full mb-3" />
+  } @else {
+    @if (confirmFailed()) {
+      <p-message
+        severity="warn"
+        text="קישור האימות אינו תקף או שפג תוקפו. אפשר להזין כאן את כתובת המייל ולקבל קישור חדש."
+        styleClass="w-full mb-3" />
+    }
+    @if (confirmFailed() || unconfirmedEmail()) {
       <div class="mb-3 text-center">
         <p-button
           label="שלח מייל אימות מחדש"

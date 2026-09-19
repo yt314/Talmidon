@@ -27,6 +27,8 @@ export class LoginComponent implements OnInit {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly confirmed = signal(false);
+  /** Arrived from a confirmation link that is no longer valid. */
+  protected readonly confirmFailed = signal(false);
   protected readonly passwordChanged = signal(false);
   /** הגיעה לכאן אחרי התנתקות אוטומטית — מסך התחברות בלי הסבר נראה כמו תקלה. */
   protected readonly timedOut = signal(false);
@@ -46,6 +48,9 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     if (this.route.snapshot.queryParamMap.get('confirmed') === '1') {
       this.confirmed.set(true);
+    }
+    if (this.route.snapshot.queryParamMap.get('confirmed') === '0') {
+      this.confirmFailed.set(true);
     }
     if (this.route.snapshot.queryParamMap.get('passwordChanged') === '1') {
       this.passwordChanged.set(true);
@@ -94,8 +99,14 @@ export class LoginComponent implements OnInit {
   }
 
   resendConfirmation(): void {
-    const email = this.unconfirmedEmail();
-    if (!email) return;
+    // After a failed sign-in we know the address. After a dead confirmation
+    // link we do not, so the one she is typing into the form is the address.
+    const email = this.unconfirmedEmail() ?? this.form.controls.email.value?.trim();
+    if (!email || this.form.controls.email.invalid) {
+      this.form.controls.email.markAsTouched();
+      this.error.set('יש להזין את כתובת המייל כדי לשלוח קישור חדש.');
+      return;
+    }
     this.resending.set(true);
     this.auth.resendConfirmation(email).subscribe({
       next: () => {

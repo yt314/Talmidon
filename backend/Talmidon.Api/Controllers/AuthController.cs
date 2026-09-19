@@ -113,25 +113,37 @@ public class AuthController(
 
     /// <summary>אימות כתובת המייל (מהקישור במייל). מפנה חזרה לאפליקציית הלקוח.</summary>
     [AllowAnonymous]
+    /// <summary>
+    /// Opened by clicking the link in the confirmation email, so both outcomes
+    /// land in the app. A failure used to answer with a JSON body, which a
+    /// browser shows as a bare line of text on a white page with no way back —
+    /// at the very first step of using the product. The reasons are ordinary:
+    /// a link older than its lifetime, or one a mail client wrapped and cut.
+    /// The login screen takes it from here and offers to send a new one.
+    /// </summary>
     [HttpGet("confirm-email")]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string? userId, [FromQuery] string? token)
     {
         // מניעת דליפת הטוקן דרך Referer בעת ההפניה
         Response.Headers.Append("Referrer-Policy", "no-referrer");
 
         var clientUrl = configuration["App:ClientUrl"] ?? "/";
+        var failed = Redirect($"{clientUrl}/login?confirmed=0");
+
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
+            return failed;
+
         var user = await userManager.FindByIdAsync(userId);
-        if (user is null)
-            return BadRequest(new { message = "קישור אימות לא תקין." });
+        if (user is null) return failed;
 
         string decoded;
         try { decoded = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token)); }
-        catch { return BadRequest(new { message = "קישור אימות לא תקין." }); }
+        catch { return failed; }
 
         var result = await userManager.ConfirmEmailAsync(user, decoded);
         return result.Succeeded
             ? Redirect($"{clientUrl}/login?confirmed=1")
-            : BadRequest(new { message = "אימות נכשל או שפג תוקף הקישור." });
+            : failed;
     }
 
     /// <summary>קביעת סיסמה מקישור הזמנה (הורה/תלמיד שהמורה יצרה). מאמת גם את המייל.</summary>
