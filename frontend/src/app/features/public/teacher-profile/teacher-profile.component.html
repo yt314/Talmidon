@@ -120,11 +120,24 @@
 
         <p-card>
           <h3 class="mt-0 mb-1 text-base">פנייה למורה</h3>
-          <p class="mt-0 mb-3 text-sm text-color-secondary">משאירים פרטים והמורה חוזרת אליכם.</p>
-          <app-contact-form
-            [teacherId]="teacher()!.id"
-            [teacherName]="teacher()!.fullName"
-            [subjects]="teacher()!.subjects" />
+          @if (teacher()!.acceptingStudents) {
+            <p class="mt-0 mb-3 text-sm text-color-secondary">משאירים פרטים והמורה חוזרת אליכם.</p>
+            <app-contact-form
+              [teacherId]="teacher()!.id"
+              [teacherName]="teacher()!.fullName"
+              [subjects]="teacher()!.subjects" />
+          } @else {
+            <!-- The teacher was told that turning this off means parents do not
+                 contact her for nothing, so the form does not stay up promising
+                 a reply. Her published phone and email are still above, for
+                 whoever wants to try anyway. -->
+            <p class="mt-0 mb-0 text-sm text-color-secondary">
+              {{ teacher()!.fullName }} לא מקבלת תלמידות חדשות כרגע, ולכן טופס הפנייה סגור.
+              @if (hasContactDetails()) {
+                פרטי הקשר שלה מופיעים למעלה, אם תרצו לנסות בכל זאת.
+              }
+            </p>
+          }
         </p-card>
 
         <a routerLink="/" class="flex align-items-center gap-1 text-sm no-underline">
