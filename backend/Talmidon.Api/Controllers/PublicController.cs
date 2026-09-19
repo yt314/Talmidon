@@ -119,9 +119,15 @@ public class PublicController(
     {
         var teacher = await db.Teachers
             .Where(t => t.Id == id && t.IsPublic)
-            .Select(t => new { t.Id, t.FullName, t.UserId })
+            .Select(t => new { t.Id, t.FullName, t.UserId, t.AcceptingStudents })
             .FirstOrDefaultAsync();
         if (teacher is null) return NotFound();
+
+        // The card says so and the form is closed, but a page left open since
+        // before she switched it off would still post. The teacher was promised
+        // that turning this off stops the enquiries, so it has to hold here too.
+        if (!teacher.AcceptingStudents)
+            return Conflict(new { message = "המורה אינה מקבלת תלמידות חדשות כרגע, ולכן לא ניתן לשלוח אליה פנייה." });
 
         var contact = new ContactRequest
         {
