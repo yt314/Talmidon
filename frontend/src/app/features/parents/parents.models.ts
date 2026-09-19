@@ -7,6 +7,8 @@ export interface Parent {
   email: string;
   phone: string | null;
   studentCount: number;
+  /** She has set a password from the invitation. False means it is still outstanding. */
+  accountActivated: boolean;
 }
 
 export interface CreateParentRequest {

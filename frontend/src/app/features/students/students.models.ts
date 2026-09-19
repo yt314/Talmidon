@@ -9,6 +9,8 @@ export interface StudentListItem {
   parentCount: number;
   defaultPricePerLesson: number | null;
   defaultDurationMinutes: number | null;
+  /** Only meaningful with hasLogin: the invitation was accepted. */
+  accountActivated: boolean;
 }
 
 export interface ParentSummary {

@@ -34,7 +34,8 @@ public class StudentsController(
             .OrderBy(s => s.FullName)
             .Select(s => new StudentListItemDto(
                 s.Id, s.FullName, s.GradeLevel, s.IsActive, s.UserId != null, s.StudentParents.Count,
-                s.DefaultPricePerLesson, s.DefaultDurationMinutes))
+                s.DefaultPricePerLesson, s.DefaultDurationMinutes,
+                db.Users.Any(u => u.Id == s.UserId && u.EmailConfirmed)))
             .ToListAsync();
         return Ok(students);
     }
@@ -52,6 +53,29 @@ public class StudentsController(
                     sp.Parent.Id, sp.Parent.FullName, sp.Parent.Email, sp.Parent.Phone)).ToList()))
             .FirstOrDefaultAsync();
         return student is null ? NotFound() : Ok(student);
+    }
+
+    /// <summary>
+    /// Sends the invitation again, for a student who has her own sign-in. The
+    /// first one is sent once and its failure is only logged, so a student who
+    /// never received it had no way in and the teacher had no way to help.
+    /// </summary>
+    [Authorize(Roles = Roles.Teacher)]
+    [HttpPost("{id:guid}/resend-invitation")]
+    public async Task<IActionResult> ResendInvitation(Guid id)
+    {
+        var student = await db.Students.FirstOrDefaultAsync(s => s.Id == id);
+        if (student is null) return NotFound();
+        if (student.UserId is null)
+            return Conflict(new { message = "לתלמיד/ה אין כניסה משלו/ה, ולכן אין הזמנה לשלוח." });
+
+        var user = await userManager.FindByIdAsync(student.UserId);
+        if (user is null) return NotFound();
+        if (user.EmailConfirmed)
+            return Conflict(new { message = "התלמיד/ה כבר קבע/ה סיסמה ואין צורך בהזמנה חדשה." });
+
+        await provisioning.SendInvitationEmailAsync(user, student.FullName);
+        return NoContent();
     }
 
     [Authorize(Roles = Roles.Teacher)]

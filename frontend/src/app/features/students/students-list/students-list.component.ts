@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
@@ -37,7 +38,8 @@ import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus
     SelectModule,
     TableModule,
     TabsModule,
-    TagModule, PageHeaderComponent, EmptyStateComponent, RestoreFocusOnCloseDirective],
+    TagModule,
+    TooltipModule, PageHeaderComponent, EmptyStateComponent, RestoreFocusOnCloseDirective],
   templateUrl: './students-list.component.html'
 })
 export class StudentsListComponent implements OnInit {
@@ -64,6 +66,8 @@ export class StudentsListComponent implements OnInit {
   protected readonly fromContact = signal<ContactRequest | null>(null);
   /** true מרגע שטופס ההורה נפתח ועד שהמיקוד התיישב בו. ראו onParentNameFocused. */
   private readonly parentDialogSettling = signal(false);
+  /** Which invitation is being resent right now, so only that button spins. */
+  protected readonly resendingId = signal<string | null>(null);
   protected readonly savingStudent = signal(false);
   protected readonly savingParent = signal(false);
   protected readonly fieldError = fieldError;
@@ -198,6 +202,52 @@ export class StudentsListComponent implements OnInit {
    */
   protected onParentDialogHidden(): void {
     if (this.fromContact()) this.showStudentDialog.set(true);
+  }
+
+  /**
+   * The invitation goes out once when the account is created, and a send that
+   * fails is only logged. A parent who never got it — a failed send, a spam
+   * folder, a link that has expired — had no way in, and the teacher had no
+   * way to help her. This is that way.
+   */
+  resendParentInvitation(parent: Parent): void {
+    this.resendingId.set(parent.id);
+    this.parentsService.resendInvitation(parent.id).subscribe({
+      next: () => {
+        this.resendingId.set(null);
+        this.messageService.add({ severity: 'success', summary: 'ההזמנה נשלחה שוב', detail: parent.email });
+      },
+      error: err => {
+        this.resendingId.set(null);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'שגיאה',
+          detail: extractErrorMessage(err, 'שליחת ההזמנה נכשלה.')
+        });
+        this.loadParents();
+      }
+    });
+  }
+
+  /** The row opens the student card on click, so the button has to keep the click to itself. */
+  resendStudentInvitation(event: Event, student: StudentListItem): void {
+    event.stopPropagation();
+    this.resendingId.set(student.id);
+    this.studentsService.resendInvitation(student.id).subscribe({
+      next: () => {
+        this.resendingId.set(null);
+        this.messageService.add({ severity: 'success', summary: 'ההזמנה נשלחה שוב', detail: student.fullName });
+      },
+      error: err => {
+        this.resendingId.set(null);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'שגיאה',
+          detail: extractErrorMessage(err, 'שליחת ההזמנה נכשלה.')
+        });
+        this.loadStudents();
+      }
+    });
   }
 
   openEditParentDialog(parent: Parent): void {

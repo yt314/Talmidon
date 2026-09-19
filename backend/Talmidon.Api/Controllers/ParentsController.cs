@@ -32,7 +32,8 @@ public class ParentsController(
     {
         var parents = await db.Parents
             .OrderBy(p => p.FullName)
-            .Select(p => new ParentDto(p.Id, p.FullName, p.Gender, p.Email, p.Phone, p.StudentParents.Count))
+            .Select(p => new ParentDto(p.Id, p.FullName, p.Gender, p.Email, p.Phone, p.StudentParents.Count,
+                db.Users.Any(u => u.Id == p.UserId && u.EmailConfirmed)))
             .ToListAsync();
         return Ok(parents);
     }
@@ -43,7 +44,8 @@ public class ParentsController(
     {
         var parent = await db.Parents
             .Where(p => p.Id == id)
-            .Select(p => new ParentDto(p.Id, p.FullName, p.Gender, p.Email, p.Phone, p.StudentParents.Count))
+            .Select(p => new ParentDto(p.Id, p.FullName, p.Gender, p.Email, p.Phone, p.StudentParents.Count,
+                db.Users.Any(u => u.Id == p.UserId && u.EmailConfirmed)))
             .FirstOrDefaultAsync();
         return parent is null ? NotFound() : Ok(parent);
     }
@@ -77,8 +79,30 @@ public class ParentsController(
 
         await provisioning.SendInvitationEmailAsync(user, request.FullName);
 
-        var dto = new ParentDto(parent.Id, parent.FullName, parent.Gender, parent.Email, parent.Phone, 0);
+        var dto = new ParentDto(parent.Id, parent.FullName, parent.Gender, parent.Email, parent.Phone, 0, false);
         return CreatedAtAction(nameof(GetById), new { id = parent.Id }, dto);
+    }
+
+    /// <summary>
+    /// Sends the invitation again. The first one is sent once and its failure
+    /// is only logged, so a parent who never received it — a send that failed,
+    /// a spam folder, a link that expired — had no way back in and the teacher
+    /// had no way to help her.
+    /// </summary>
+    [Authorize(Roles = Roles.Teacher)]
+    [HttpPost("{id:guid}/resend-invitation")]
+    public async Task<IActionResult> ResendInvitation(Guid id)
+    {
+        var parent = await db.Parents.FirstOrDefaultAsync(p => p.Id == id);
+        if (parent is null) return NotFound();
+
+        var user = await userManager.FindByIdAsync(parent.UserId);
+        if (user is null) return NotFound();
+        if (user.EmailConfirmed)
+            return Conflict(new { message = "ההורה כבר קבע סיסמה ואין צורך בהזמנה חדשה." });
+
+        await provisioning.SendInvitationEmailAsync(user, parent.FullName);
+        return NoContent();
     }
 
     [Authorize(Roles = Roles.Teacher)]
