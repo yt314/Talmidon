@@ -10,6 +10,16 @@ namespace Talmidon.Tests;
 /// <summary>פעולות חוזרות לבדיקות: הרשמה+אימות ישיר (בעקיפת Mailpit), התחברות, ולקוח HTTP עם Bearer.</summary>
 public static class TestHelpers
 {
+    /// <summary>
+    /// מועד עתידי בשעת צהריים ב-UTC.
+    ///
+    /// בדיקות שהשוו תאריך שנוצר מ-UtcNow לתאריך שבמייל נשברו כל לילה: המיילים נכתבים
+    /// בשעון ישראל, ואחרי 21:00 UTC כבר מחר בישראל — כך שהמייל נשא תאריך אחר מהבדיקה.
+    /// בצהרי UTC שני השעונים על אותו תאריך, בכל עונה.
+    /// </summary>
+    public static DateTimeOffset MiddayUtcIn(int days) =>
+        new(DateTime.UtcNow.Date.AddDays(days).AddHours(12), TimeSpan.Zero);
+
     public static string UniqueEmail(string prefix) => $"{prefix}-{Guid.NewGuid():N}@example.com";
 
     /// <summary>נרשמת כמורה ומאמתת את המייל ישירות דרך UserManager (לא דרך קישור מייל אמיתי — Mailpit לא רץ בבדיקות).</summary>

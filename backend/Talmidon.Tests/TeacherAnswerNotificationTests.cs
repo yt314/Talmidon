@@ -37,7 +37,7 @@ public class TeacherAnswerNotificationTests(TalmidonWebApplicationFactory factor
     {
         var f = await CreateFamilyAsync("appChange", withStudentLogin: true);
         var lessonId = await CreateLessonAsync(f.Teacher, f.StudentId);
-        var newStart = DateTimeOffset.UtcNow.AddDays(6);
+        var newStart = TestHelpers.MiddayUtcIn(6);
         var requestId = await RequestRescheduleAsync(f.Parent, lessonId, newStart);
 
         (await f.Teacher.PostAsync($"/api/lessons/change-requests/{requestId}/approve", null)).EnsureSuccessStatusCode();

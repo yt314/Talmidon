@@ -43,7 +43,7 @@ public class LessonRequestAnswerTests(TalmidonWebApplicationFactory factory)
     public async Task Decline_EmailNamesTheDateThatWasRequested()
     {
         var family = await CreateFamilyAsync("declineDate");
-        var start = DateTimeOffset.UtcNow.AddDays(5);
+        var start = TestHelpers.MiddayUtcIn(5);
         var lessonId = await RequestLessonAsync(family.Student, start);
 
         (await family.Teacher.PostAsync($"/api/lessons/{lessonId}/decline", null)).EnsureSuccessStatusCode();
