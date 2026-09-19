@@ -79,6 +79,39 @@ public class AuthFlowTests(TalmidonWebApplicationFactory factory)
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
     }
 
+    /// <summary>
+    /// A link that no longer works — expired, or cut in half by a mail client —
+    /// has to land in the app like the working one does. Answering with a JSON
+    /// body leaves the browser showing a bare line of text on a white page,
+    /// with no way back and no way to ask for a new link.
+    /// </summary>
+    [Theory]
+    [InlineData("?userId={0}&token=bm90LWEtcmVhbC10b2tlbg")] // a token that is not hers
+    [InlineData("?userId={0}")]                              // the link lost its token
+    [InlineData("")]                                         // nothing survived at all
+    public async Task ConfirmEmail_WithABrokenLink_SendsHerToTheLoginScreen(string queryTemplate)
+    {
+        var client = factory.CreateClient();
+        var email = TestHelpers.UniqueEmail("deadlink");
+        const string password = "TestPass123";
+        var register = await client.PostAsJsonAsync("/api/auth/register",
+            new { email, password, fullName = "קישור מת", phone = (string?)null });
+        register.EnsureSuccessStatusCode();
+
+        string userId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            userId = (await userManager.FindByEmailAsync(email))!.Id;
+        }
+
+        using var noRedirectClient = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var response = await noRedirectClient.GetAsync("/api/auth/confirm-email" + string.Format(queryTemplate, userId));
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains("confirmed=0", response.Headers.Location?.ToString());
+    }
+
     [Fact]
     public async Task ForgotPassword_ThenNewPassword_LogsInAndOldPasswordFails()
     {
