@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Talmidon.Api.Contracts;
+using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 
 namespace Talmidon.Tests;
@@ -43,7 +44,8 @@ public class TeacherAnswerNotificationTests(TalmidonWebApplicationFactory factor
         (await f.Teacher.PostAsync($"/api/lessons/change-requests/{requestId}/approve", null)).EnsureSuccessStatusCode();
 
         var toParent = Assert.Single(factory.SentEmails.To(f.ParentEmail), e => e.Subject.Contains("עודכן"));
-        Assert.Contains(newStart.ToString("dd/MM/yyyy"), toParent.Subject);
+        // Israel time, like the subject itself — see LessonRequestAnswerTests.
+        Assert.Contains(EmailTime.Date(newStart), toParent.Subject);
         // היומן שהשתנה הוא של התלמידה, ולכן גם היא מקבלת
         Assert.Contains(factory.SentEmails.To(f.StudentEmail), e => e.Subject.Contains("עודכן"));
     }
