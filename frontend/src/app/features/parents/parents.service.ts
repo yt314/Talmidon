@@ -25,6 +25,11 @@ export class ParentsService {
     return this.http.delete<void>(`${this.api}/${id}`);
   }
 
+  /** Sends the invitation again to someone who never set a password. */
+  resendInvitation(id: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/${id}/resend-invitation`, {});
+  }
+
   myProfile(): Observable<MyParentProfile> {
     return this.http.get<MyParentProfile>(`${this.api}/me`);
   }

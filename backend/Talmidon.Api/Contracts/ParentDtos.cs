@@ -20,7 +20,14 @@ public record ParentDto(
     Gender? Gender,
     string Email,
     string? Phone,
-    int StudentCount);
+    int StudentCount,
+    /// <summary>
+    /// She has set a password from the invitation, which is also what verifies
+    /// her address. False means the invitation is still outstanding — it may
+    /// have failed to send, landed in spam, or expired, and none of that is
+    /// visible to the teacher otherwise.
+    /// </summary>
+    bool AccountActivated);
 
 /// <summary>תצוגת הורה על עצמו — לפנייה מותאמת בממשק (R-self).</summary>
 public record MyParentProfileDto(string FullName, Gender? Gender);

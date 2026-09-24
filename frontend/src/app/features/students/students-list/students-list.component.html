@@ -42,7 +42,25 @@
             <td>{{ student.gradeLevel || '—' }}</td>
             <td>{{ student.parentCount }}</td>
             <td>
-              <p-tag [value]="student.hasLogin ? 'יש' : 'אין'" [severity]="student.hasLogin ? 'success' : 'secondary'" />
+              @if (!student.hasLogin) {
+                <p-tag value="אין" severity="secondary" />
+              } @else if (student.accountActivated) {
+                <p-tag value="יש" severity="success" />
+              } @else {
+                <div class="flex align-items-center gap-1 flex-wrap">
+                  <p-tag value="ממתין/ה להפעלה" severity="warn" />
+                  <p-button
+                    icon="pi pi-envelope"
+                    severity="secondary"
+                    [text]="true"
+                    size="small"
+                    [loading]="resendingId() === student.id"
+                    [ariaLabel]="'שליחת ההזמנה מחדש אל ' + student.fullName"
+                    pTooltip="שליחת ההזמנה מחדש"
+                    tooltipPosition="top"
+                    (onClick)="resendStudentInvitation($event, student)" />
+                </div>
+              }
             </td>
             <td>
               <p-tag [value]="student.isActive ? 'פעיל' : 'לא פעיל'" [severity]="student.isActive ? 'success' : 'danger'" />
@@ -91,7 +109,22 @@
             <td>{{ parent.phone || '—' }}</td>
             <td>{{ parent.studentCount }}</td>
             <td>
-              <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditParentDialog(parent)" [ariaLabel]="'עריכת הפרטים של ' + parent.fullName" />
+              <div class="flex align-items-center gap-1 flex-wrap">
+                @if (!parent.accountActivated) {
+                  <p-tag value="ממתין/ה להפעלה" severity="warn" />
+                  <p-button
+                    icon="pi pi-envelope"
+                    severity="secondary"
+                    [text]="true"
+                    size="small"
+                    [loading]="resendingId() === parent.id"
+                    [ariaLabel]="'שליחת ההזמנה מחדש אל ' + parent.fullName"
+                    pTooltip="שליחת ההזמנה מחדש"
+                    tooltipPosition="top"
+                    (onClick)="resendParentInvitation(parent)" />
+                }
+                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditParentDialog(parent)" [ariaLabel]="'עריכת הפרטים של ' + parent.fullName" />
+              </div>
             </td>
           </tr>
         </ng-template>

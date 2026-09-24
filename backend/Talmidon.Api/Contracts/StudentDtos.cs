@@ -32,7 +32,9 @@ public record StudentListItemDto(
     bool HasLogin,
     int ParentCount,
     decimal? DefaultPricePerLesson,
-    int? DefaultDurationMinutes);
+    int? DefaultDurationMinutes,
+    /// <summary>Only meaningful when <see cref="HasLogin"/>: the invitation was accepted.</summary>
+    bool AccountActivated);
 
 public record StudentDetailDto(
     Guid Id,
