@@ -48,3 +48,8 @@ export interface AdminErrorDetail extends AdminError {
   detail: string | null;
   tenantId: string | null;
 }
+
+/** מספר התקלות שעוד לא טופלו — למספר שליד "תקלות" בתפריט. */
+export interface AdminErrorCount {
+  open: number;
+}

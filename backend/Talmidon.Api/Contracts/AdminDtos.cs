@@ -49,3 +49,6 @@ public record AdminErrorDetailDto(
     string? UserEmail,
     Guid? TenantId,
     bool IsHandled);
+
+/// <summary>מספר התקלות שעוד לא סומנו כטופלו — למספר שליד "תקלות" בתפריט הניהול.</summary>
+public record AdminErrorCountDto(int Open);

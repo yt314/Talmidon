@@ -141,6 +141,30 @@ public class ErrorLogTests(TalmidonWebApplicationFactory factory)
         Assert.True(found.IsHandled);
     }
 
+    /// <summary>
+    /// המספר שליד "תקלות" בתפריט הניהול. סימון תקלה כטופלה חייב להוריד אותו, אחרת
+    /// הוא רק גדל עד שמפסיקים להסתכל עליו — בדיוק מה שהוא נועד למנוע.
+    /// </summary>
+    [Fact]
+    public async Task HandlingAnErrorBringsTheOpenCountDown()
+    {
+        var admin = await TestHelpers.CreateAuthorizedAdminClientAsync(factory);
+        var before = await admin.GetFromJsonAsync<AdminErrorCountDto>("/api/admin/errors/open-count");
+
+        var response = await factory.CreateClient().GetAsync($"/api/test-only/throw/{Guid.NewGuid():N}");
+        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+
+        var after = await admin.GetFromJsonAsync<AdminErrorCountDto>("/api/admin/errors/open-count");
+        Assert.Equal(before!.Open + 1, after!.Open);
+
+        var row = Assert.Single(await admin.GetFromJsonAsync<List<AdminErrorDto>>(
+            $"/api/admin/errors?reference={body!.Reference}")!);
+        await admin.PostAsync($"/api/admin/errors/{row.Id}/handled?handled=true", null);
+
+        var handled = await admin.GetFromJsonAsync<AdminErrorCountDto>("/api/admin/errors/open-count");
+        Assert.Equal(before.Open, handled!.Open);
+    }
+
     /// <summary>היומן מכיל עקבות מחסנית של כל הדיירים — מורה אינה אמורה לראות אותו.</summary>
     [Fact]
     public async Task ATeacherCannotReadTheErrorLog()

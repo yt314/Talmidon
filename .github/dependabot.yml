@@ -46,3 +46,20 @@ updates:
       actions:
         patterns:
           - "*"
+
+  # Base images. These would not have caught the outage that prompted adding
+  # them — that was the contents of a tag changing underneath us, not the tag
+  # moving, and the fix for that was to install the missing package explicitly.
+  # What this does buy is seeing a new major of .NET, Node or Caddy arrive as a
+  # pull request rather than discovering it on a random redeploy.
+  - package-ecosystem: docker
+    directories:
+      - /backend/Talmidon.Api
+      - /frontend
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      docker:
+        patterns:
+          - "*"
