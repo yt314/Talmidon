@@ -6,6 +6,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { serverWakeInterceptor } from './core/http/server-wake.interceptor';
 import { HEBREW_TRANSLATION } from './core/i18n/primeng-hebrew';
 import { TalmidonPreset } from './core/theme/talmidon-preset';
 import { AppTitleStrategy } from './core/title/app-title.strategy';
@@ -15,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     // מעבר חלק בין מסכים במקום החלפה חדה; דפדפנים בלי התמיכה מתעלמים בשקט
     provideRouter(routes, withViewTransitions()),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, serverWakeInterceptor])),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
     MessageService,
     ConfirmationService,

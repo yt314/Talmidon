@@ -26,5 +26,6 @@ describe('App', () => {
 
     expect(compiled.querySelector('app-beta-notice')).toBeTruthy();
     expect(compiled.querySelector('app-idle-warning')).toBeTruthy();
+    expect(compiled.querySelector('app-server-wake-notice')).toBeTruthy();
   });
 });
