@@ -8,6 +8,7 @@ using Talmidon.Domain.Entities;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 using Talmidon.Infrastructure.Multitenancy;
@@ -32,7 +33,7 @@ public class MessagesController(
     UserManager<ApplicationUser> userManager,
     IEmailSender emailSender,
     AppLinks links,
-    ILogger<MessagesController> logger) : ControllerBase
+    IErrorLog errorLog) : ControllerBase
 {
     private const int PreviewLength = 200;
 
@@ -534,7 +535,7 @@ public class MessagesController(
             ActionUrl: links.TeacherMessages));
 
         try { await emailSender.SendAsync(user.Email, subject, html); }
-        catch (Exception ex) { logger.LogError(ex, "Failed to send teacher message email."); }
+        catch (Exception ex) { await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "messages/to-teacher" }); }
     }
 
     /// <summary>שולח מייל לצד השני כשהמורה כותבת. לתלמידה בלי חשבון-מייל פשוט אין למי לשלוח.</summary>
@@ -566,6 +567,6 @@ public class MessagesController(
             ActionUrl: thread.CounterpartRole == MessageAuthor.Parent ? links.ParentMessages : links.StudentMessages));
 
         try { await emailSender.SendAsync(email, title, html); }
-        catch (Exception ex) { logger.LogError(ex, "Failed to send message email to the counterpart."); }
+        catch (Exception ex) { await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "messages/to-counterpart" }); }
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 
@@ -19,7 +20,7 @@ public class FamilyNotifier(
     UserManager<ApplicationUser> userManager,
     IEmailSender emailSender,
     AppLinks links,
-    ILogger<FamilyNotifier> logger)
+    IErrorLog errorLog)
 {
     /// <summary>ההורים בלבד — תשובה לפנייה שלהם, או מידע שאינו משנה את היומן של התלמידה.</summary>
     public async Task NotifyParentsAsync(Guid studentId, string subject, string message, IReadOnlyList<string>? items = null)
@@ -65,6 +66,6 @@ public class FamilyNotifier(
     private async Task SendAsync(string email, string subject, string html, string audience)
     {
         try { await emailSender.SendAsync(email, subject, html); }
-        catch (Exception ex) { logger.LogError(ex, "Failed to send {Audience} notification email.", audience); }
+        catch (Exception ex) { await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = $"family-notifier/{audience}" }); }
     }
 }

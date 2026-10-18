@@ -7,6 +7,7 @@ using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.BackgroundJobs;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Multitenancy;
 
@@ -24,7 +25,7 @@ public class PaymentsController(
     IEmailSender emailSender,
     MonthlyPaymentReminderJob monthlyReminderJob,
     AppLinks links,
-    ILogger<PaymentsController> logger) : ControllerBase
+    IErrorLog errorLog) : ControllerBase
 {
     private Guid TenantId => currentTenant.TenantId
         ?? throw new InvalidOperationException("No tenant in the current context.");
@@ -275,7 +276,7 @@ public class PaymentsController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send payment confirmation email.");
+            await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "payments/receipt" });
             return false;
         }
     }
