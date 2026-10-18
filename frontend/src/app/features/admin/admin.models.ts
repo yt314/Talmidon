@@ -27,3 +27,24 @@ export interface AdminSiteFeedback {
   isHandled: boolean;
   createdAt: string;
 }
+
+/** שורה ביומן התקלות. בלי עקבת המחסנית — היא נטענת רק כשפותחים תקלה אחת. */
+export interface AdminError {
+  id: string;
+  reference: string;
+  occurredAt: string;
+  /** `request` (בקשה מהדפדפן) או `job` (משימת רקע). */
+  source: string;
+  kind: string;
+  message: string;
+  path: string | null;
+  method: string | null;
+  userEmail: string | null;
+  isHandled: boolean;
+}
+
+/** תקלה אחת, עם עקבת המחסנית המלאה. */
+export interface AdminErrorDetail extends AdminError {
+  detail: string | null;
+  tenantId: string | null;
+}

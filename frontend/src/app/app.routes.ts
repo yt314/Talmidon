@@ -203,6 +203,11 @@ export const routes: Routes = [
         path: 'feedback',
         title: 'הודעות מהאתר',
         loadComponent: () => import('./features/admin/admin-feedback/admin-feedback.component').then(m => m.AdminFeedbackComponent)
+      },
+      {
+        path: 'errors',
+        title: 'תקלות',
+        loadComponent: () => import('./features/admin/admin-errors/admin-errors.component').then(m => m.AdminErrorsComponent)
       }
     ]
   },

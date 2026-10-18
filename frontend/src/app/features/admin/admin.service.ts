@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AdminSiteFeedback, AdminSubjectSuggestion, AdminTeacher } from './admin.models';
+import { AdminError, AdminErrorDetail, AdminSiteFeedback, AdminSubjectSuggestion, AdminTeacher } from './admin.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -41,6 +41,24 @@ export class AdminService {
 
   markFeedbackHandled(id: string, handled: boolean): Observable<void> {
     return this.http.post<void>(`${this.api}/feedback/${id}/handled`, null, {
+      params: { handled }
+    });
+  }
+
+  /** `reference` הוא חיפוש לפי הקוד שמשתמשת מסרה — הוא גובר על סינון "שטופלו". */
+  listErrors(includeHandled: boolean, reference: string): Observable<AdminError[]> {
+    const params: Record<string, string | boolean> = reference.trim()
+      ? { reference: reference.trim() }
+      : { includeHandled };
+    return this.http.get<AdminError[]>(`${this.api}/errors`, { params });
+  }
+
+  getError(id: string): Observable<AdminErrorDetail> {
+    return this.http.get<AdminErrorDetail>(`${this.api}/errors/${id}`);
+  }
+
+  markErrorHandled(id: string, handled: boolean): Observable<void> {
+    return this.http.post<void>(`${this.api}/errors/${id}/handled`, null, {
       params: { handled }
     });
   }

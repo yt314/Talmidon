@@ -56,7 +56,14 @@ public class TalmidonWebApplicationFactory : WebApplicationFactory<Program>, IAs
         // "Connection refused". במקום לשלוח, נרשם — כך גם היומן נשאר קריא וגם
         // אפשר לבדוק בפועל שהודעה יצאה למי שהיא מיועדת לה.
         builder.ConfigureTestServices(services =>
-            services.AddSingleton<IEmailSender>(SentEmails));
+        {
+            services.AddSingleton<IEmailSender>(SentEmails);
+
+            // מוסיף את הבקרים שבפרויקט הבדיקות (ThrowingTestController) לאפליקציה
+            // שרצה כאן בלבד. בלעדיו אי אפשר לגרום לחריגה אמיתית לעבור את כל הצינור,
+            // ויומן התקלות היה נבדק רק מול מוק — כלומר לא נבדק.
+            services.AddControllers().AddApplicationPart(typeof(TalmidonWebApplicationFactory).Assembly);
+        });
     }
 
     /// <summary>הדואר שנשלח מתחילת הריצה. הבדיקות מסננות לפי הנמען, שהוא ייחודי לכל בדיקה.</summary>

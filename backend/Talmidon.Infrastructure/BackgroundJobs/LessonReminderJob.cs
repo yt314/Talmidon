@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Talmidon.Domain.Entities;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 
 namespace Talmidon.Infrastructure.BackgroundJobs;
@@ -12,12 +13,15 @@ namespace Talmidon.Infrastructure.BackgroundJobs;
 /// ומסמן כל שיעור כ"נשלחה תזכורת" כדי למנוע כפילות. סורק את כל הדיירים (אין הקשר דייר בעבודת רקע).
 /// </summary>
 public class LessonReminderJob(
-    TalmidonDbContext db, IEmailSender emailSender, AppLinks links, ILogger<LessonReminderJob> logger)
+    TalmidonDbContext db, IEmailSender emailSender, AppLinks links, IErrorLog errorLog, ILogger<LessonReminderJob> logger)
 {
     /// <summary>חלון התזכורת: שיעורים שמתחילים עד 24 שעות קדימה.</summary>
     private static readonly TimeSpan ReminderHorizon = TimeSpan.FromHours(24);
 
-    public async Task<int> RunForAllTenantsAsync()
+    public Task<int> RunForAllTenantsAsync() =>
+        errorLog.RecordFailuresAsync("lesson-reminders", () => RunCoreAsync());
+
+    private async Task<int> RunCoreAsync()
     {
         var now = DateTimeOffset.UtcNow;
         var horizon = now.Add(ReminderHorizon);
@@ -84,7 +88,8 @@ public class LessonReminderJob(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to send lesson reminder email.");
+                // תזכורת שלא יצאה היא תקלה שקטה לגמרי: אין מי שרואה אותה חוץ מהיומן.
+                await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "job", Path = "lesson-reminders/send" });
             }
         }
 

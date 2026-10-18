@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.BackgroundJobs;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 using Talmidon.Infrastructure.Multitenancy;
@@ -40,6 +41,9 @@ public static class DependencyInjection
                     CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning)));
 
         services.AddScoped<ICurrentTenant, NullCurrentTenant>();
+
+        // יומן תקלות: נקרא ממסך הניהול, כי יומן ספק האירוח אינו נגיש מתוך המוצר
+        services.AddScoped<IErrorLog, ErrorLog>();
 
         // הגדרות
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
@@ -110,6 +114,7 @@ public static class DependencyInjection
         services.AddScoped<LessonReminderJob>();
         services.AddScoped<LessonSeriesGenerator>();
         services.AddScoped<LessonSeriesGenerationJob>();
+        services.AddScoped<ErrorLogCleanupJob>();
         services.AddHangfire(config => config
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
