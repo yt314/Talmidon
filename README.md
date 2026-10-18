@@ -535,6 +535,17 @@ Two things address it:
   no longer a silent spinner: any request still unanswered after four seconds shows
   *"השרת מתעורר. זה יכול לקחת עד דקה."*
 
+The same job is the outage alarm. It retries for seven minutes and fails the run if
+the API never answers, because a failed scheduled run is what makes GitHub send an
+email. A single blocked request never trips it: an alarm that cries wolf is worth
+less than no alarm at all. This exists because the API was once down for fifteen
+minutes and the only reason anyone noticed was that someone happened to have the
+hosting dashboard open.
+
+> For that email to arrive, GitHub notifications for Actions have to be on. The
+> setting that gives the alert without the noise of every CI run is
+> **Settings → Notifications → Actions → Only notify for failed workflows**.
+
 **Free database plans keep very little history.**
 [`.github/workflows/backup.yml`](.github/workflows/backup.yml) takes a weekly
 `pg_dump`, encrypts it on the runner and keeps it as a workflow artifact for 90 days.

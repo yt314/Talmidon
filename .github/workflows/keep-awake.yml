@@ -15,6 +15,14 @@
 # The target is /api/health, which does not touch the database. Neon's free plan
 # suspends the database on its own and meters compute hours, so a ping that ran
 # a query would quietly keep that awake too and bill for the privilege.
+#
+# This is also the outage alarm. The API was once down for fifteen minutes and
+# the only reason anyone noticed was that someone happened to have the hosting
+# dashboard open. So the job keeps retrying for seven minutes, and fails if the
+# API never answers in that whole window — a failed scheduled run is what makes
+# GitHub send an email. A single blocked request never does: the point is to be
+# believed when it does go off, and an alarm that cries wolf every few days is
+# worth less than no alarm at all.
 name: Keep the API awake
 
 on:
@@ -45,24 +53,31 @@ jobs:
           set -u
           echo "Pinging $HEALTH_URL"
 
-          # A cold start can take the better part of a minute, and that is the
-          # case this job exists for — so the timeout is generous and a slow
-          # answer counts as success. Three tries cover a boot that overruns it.
-          for attempt in 1 2 3; do
+          # Seven minutes, comfortably inside the ten-minute schedule so two runs
+          # never overlap. A cold start takes the better part of a minute and is
+          # the case this job exists for, so a slow answer still counts as awake.
+          deadline=$(( $(date +%s) + 420 ))
+          attempt=0
+
+          while :; do
+            attempt=$(( attempt + 1 ))
             code=$(curl --silent --show-error --location \
-                        --max-time 90 --output /dev/null --write-out '%{http_code}' \
+                        --max-time 60 --output /dev/null --write-out '%{http_code}' \
                         "$HEALTH_URL" || echo "000")
 
             if [ "$code" = "200" ]; then
-              echo "Awake (HTTP $code) on attempt $attempt."
+              if [ "$attempt" -gt 1 ]; then
+                echo "Awake (HTTP $code) on attempt $attempt."
+              fi
               exit 0
             fi
 
             echo "Attempt $attempt got HTTP $code."
-            [ "$attempt" -lt 3 ] && sleep 20
+            [ "$(date +%s)" -ge "$deadline" ] && break
+            sleep 20
           done
 
-          # Do not fail the workflow. The API being down is worth knowing, but a
-          # red cross every ten minutes trains everyone to ignore the whole
-          # Actions tab — the same trap as a test suite that is always red.
-          echo "::warning::The API did not answer $HEALTH_URL after three attempts."
+          # Seven minutes of silence is not a blip. Failing here is the alert:
+          # GitHub emails the repository owner when a scheduled run fails.
+          echo "::error::The API has not answered $HEALTH_URL for seven minutes ($attempt attempts). It is very likely down."
+          exit 1

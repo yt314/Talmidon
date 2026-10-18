@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
 using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 
 namespace Talmidon.Api.Controllers;
@@ -24,7 +25,7 @@ public class SiteFeedbackController(
     IEmailSender emailSender,
     IConfiguration configuration,
     AppLinks links,
-    ILogger<SiteFeedbackController> logger) : ControllerBase
+    IErrorLog errorLog) : ControllerBase
 {
     [HttpPost]
     [AllowAnonymous]
@@ -69,7 +70,8 @@ public class SiteFeedbackController(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Site feedback {FeedbackId} was saved but the notification email failed.", feedback.Id);
+            // ההודעה עצמה כבר נשמרה במסד, ולכן היא לא אבדה — רק ההתראה עליה.
+            await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "site-feedback/notification" });
         }
     }
 }

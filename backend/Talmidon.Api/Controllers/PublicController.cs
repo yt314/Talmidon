@@ -6,6 +6,7 @@ using Talmidon.Api.Contracts;
 using Talmidon.Domain.Entities;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 
@@ -19,7 +20,7 @@ public class PublicController(
     TalmidonDbContext db,
     IEmailSender emailSender,
     AppLinks links,
-    ILogger<PublicController> logger) : ControllerBase
+    IErrorLog errorLog) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PublicTeacherSummaryDto>>> List(
@@ -187,6 +188,7 @@ public class PublicController(
 
         var subject = EmailSubjects.ContactRequest(contact.FullName, contact.Subject);
         try { await emailSender.SendAsync(email, subject, body); }
-        catch (Exception ex) { logger.LogError(ex, "Failed to send contact request email."); }
+        // פנייה של תלמידה מתעניינת ששקעה בדרך למורה היא בדיוק מה שאסור לאבד בשקט.
+        catch (Exception ex) { await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "public/contact-request" }); }
     }
 }

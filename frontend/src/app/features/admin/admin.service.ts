@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AdminError, AdminErrorDetail, AdminSiteFeedback, AdminSubjectSuggestion, AdminTeacher } from './admin.models';
+import { AdminError, AdminErrorCount, AdminErrorDetail, AdminSiteFeedback, AdminSubjectSuggestion, AdminTeacher } from './admin.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -51,6 +51,10 @@ export class AdminService {
       ? { reference: reference.trim() }
       : { includeHandled };
     return this.http.get<AdminError[]>(`${this.api}/errors`, { params });
+  }
+
+  openErrorCount(): Observable<AdminErrorCount> {
+    return this.http.get<AdminErrorCount>(`${this.api}/errors/open-count`);
   }
 
   getError(id: string): Observable<AdminErrorDetail> {

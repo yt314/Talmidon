@@ -9,6 +9,7 @@ using Talmidon.Domain.Entities;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 using Talmidon.Infrastructure.Multitenancy;
@@ -29,7 +30,7 @@ public class LessonsController(
     IEmailSender emailSender,
     AppLinks links,
     FamilyNotifier familyNotifier,
-    ILogger<LessonsController> logger) : ControllerBase
+    IErrorLog errorLog) : ControllerBase
 {
     private Guid TenantId => currentTenant.TenantId
         ?? throw new InvalidOperationException("No tenant in the current context.");
@@ -615,6 +616,6 @@ public class LessonsController(
         if (user?.Email is null) return;
 
         try { await emailSender.SendAsync(user.Email, subject, BuildEmailHtml(subject, message, links.TeacherLessons)); }
-        catch (Exception ex) { logger.LogError(ex, "Failed to send teacher notification email."); }
+        catch (Exception ex) { await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "lessons/teacher-notification" }); }
     }
 }

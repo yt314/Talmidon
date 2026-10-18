@@ -10,6 +10,7 @@ using Talmidon.Api.Contracts;
 using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 using Talmidon.Infrastructure.Identity;
 
@@ -25,6 +26,7 @@ public class AuthController(
     ITokenService tokenService,
     IEmailSender emailSender,
     IConfiguration configuration,
+    IErrorLog errorLog,
     ILogger<AuthController> logger) : ControllerBase
 {
     // תגובה גנרית זהה — מונעת חשיפה אם המייל כבר קיים (user enumeration)
@@ -349,7 +351,8 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send confirmation email.");
+            // מייל אימות שלא יצא פירושו מורה שנרשמה ואינה יכולה להיכנס, בלי שאיש יודע.
+            await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "auth/confirmation" });
         }
     }
 
@@ -378,7 +381,8 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send password reset email.");
+            // ואיפוס סיסמה שלא יצא פירושו משתמשת נעולה מחוץ לחשבון שלה.
+            await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "auth/password-reset" });
         }
     }
 }

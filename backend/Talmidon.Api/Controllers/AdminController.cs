@@ -245,6 +245,17 @@ public class AdminController(TalmidonDbContext db, UserManager<ApplicationUser> 
         return Ok(rows);
     }
 
+    /// <summary>
+    /// כמה תקלות פתוחות יש. קיים כדי שמסך הניהול יוכל להציג מספר ליד "תקלות"
+    /// בלי לטעון את הרשימה כולה בכל מסך.
+    ///
+    /// הסיבה שזה קיים בכלל: יומן שצריך להיכנס אליו כדי לדעת שיש בו משהו נקרא
+    /// פעם אחת ואז אף פעם. מספר שמופיע מעצמו הוא ההבדל בין יומן לבין התראה.
+    /// </summary>
+    [HttpGet("errors/open-count")]
+    public async Task<ActionResult<AdminErrorCountDto>> OpenErrorCount() =>
+        Ok(new AdminErrorCountDto(await db.ErrorLog.CountAsync(e => !e.IsHandled)));
+
     /// <summary>תקלה אחת עם עקבת המחסנית — נטענת רק כשפותחים אותה.</summary>
     [HttpGet("errors/{id:guid}")]
     public async Task<ActionResult<AdminErrorDetailDto>> GetError(Guid id)
