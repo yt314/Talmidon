@@ -1,0 +1,104 @@
+# A weekly copy of the database, encrypted, kept as a workflow artifact.
+#
+# Why this exists: everything a teacher has entered — her students, their
+# parents' phone numbers, every lesson and every payment — lives in one place
+# and nowhere else. Free database plans keep very little history. Losing a year
+# of a teacher's records is the kind of failure no feature makes up for.
+#
+# Why the encryption is not optional: this repository is PUBLIC, and artifacts
+# of a public repository's workflow runs can be downloaded by anyone. An
+# unencrypted dump here would publish every student's name, every parent's
+# phone number and every password hash to the open internet. The dump is
+# encrypted on the runner, before it is ever uploaded.
+#
+# Setup — two repository secrets (Settings → Secrets and variables → Actions):
+#   BACKUP_DATABASE_URL  Neon connection string. Use the DIRECT endpoint, not
+#                        the pooled one: pg_dump cannot run through a pooler.
+#   BACKUP_PASSPHRASE    A long random passphrase.
+#
+#   KEEP THE PASSPHRASE SOMEWHERE ELSE TOO — a password manager, not only here.
+#   GitHub secrets cannot be read back once saved, and a backup nobody can
+#   decrypt is not a backup.
+#
+# To restore:
+#   gpg --decrypt talmidon-YYYY-MM-DD.sql.gpg > talmidon.sql
+#   psql "$DATABASE_URL" -f talmidon.sql
+name: Weekly database backup
+
+on:
+  schedule:
+    # Sunday, 02:17 UTC. Off the hour on purpose: schedules on the hour are the
+    # busiest and get delayed the most.
+    - cron: "17 2 * * 0"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that the secrets are set
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -u
+          missing=""
+          [ -z "${DATABASE_URL}" ] && missing="$missing BACKUP_DATABASE_URL"
+          [ -z "${PASSPHRASE}" ] && missing="$missing BACKUP_PASSPHRASE"
+
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing — see the comments at the top of .github/workflows/backup.yml."
+            exit 1
+          fi
+
+      - name: Dump the database
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+
+          # pg_dump from the matching major version, pinned, rather than
+          # whatever the runner image happens to ship: an older client refuses
+          # to dump a newer server, and the runner image moves on its own.
+          # The connection string is read from the environment inside the
+          # container (note the single quotes) rather than placed on a command
+          # line, where every process on the machine could read it.
+          docker run --rm --env DATABASE_URL postgres:17 \
+            sh -c 'pg_dump --no-owner --no-privileges --format=plain "$DATABASE_URL"' > talmidon.sql
+
+          echo "Dump size: $(du -h talmidon.sql | cut -f1)"
+
+          # An empty or truncated dump that uploads happily is worse than a
+          # failure, because it looks like a backup until the day it is needed.
+          if [ ! -s talmidon.sql ] || ! grep -q "PostgreSQL database dump complete" talmidon.sql; then
+            echo "::error::The dump is empty or incomplete — not uploading it."
+            exit 1
+          fi
+
+      - name: Encrypt
+        env:
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+
+          # The passphrase arrives on stdin, never as an argument: arguments are
+          # visible to every process on the machine.
+          printf '%s' "$PASSPHRASE" | gpg --batch --yes --quiet \
+            --symmetric --cipher-algo AES256 \
+            --passphrase-fd 0 \
+            --output "talmidon-$(date -u +%Y-%m-%d).sql.gpg" \
+            talmidon.sql
+
+          shred --remove talmidon.sql
+          ls -lh talmidon-*.sql.gpg
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: talmidon-backup-${{ github.run_id }}
+          path: talmidon-*.sql.gpg
+          retention-days: 90
+          if-no-files-found: error

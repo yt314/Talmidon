@@ -508,6 +508,61 @@ docker compose -f docker-compose.prod.yml up -d --build
 This rebuilds only the images whose source changed and restarts those containers; Postgres data
 persists in the `talmidon_pgdata` named volume regardless.
 
+## Running it on free plans
+
+The hosted deployment (Vercel + Render + Neon) runs entirely on free plans. Two of
+their limits are worth knowing about, because both are handled in the repository
+rather than by paying.
+
+**The API falls asleep.** A free Render web service spins down after a few minutes
+without traffic, and the next request waits for it to boot. The person who pays that
+cost is the worst possible one — a prospective student opening the public library or
+the enquiry form, with no reason to believe the site is alive.
+
+Two things address it:
+
+- [`.github/workflows/keep-awake.yml`](.github/workflows/keep-awake.yml) pings
+  `/api/health` every ten minutes, but only between 04:00 and 21:00 UTC (roughly
+  waking hours in Israel). Not around the clock on purpose: free plans cap monthly
+  running hours, and exhausting that would take the site down altogether, which is
+  far worse than one slow request at 4am. Set a repository *variable* named
+  `API_HEALTH_URL` to point it somewhere else.
+- `/api/health` touches no database. Neon's free plan suspends the database by
+  itself and meters compute hours, so a ping that ran a query would keep that awake
+  too and spend the allowance on nothing. `HealthEndpointTests` fails if a database
+  dependency is ever added to that controller.
+- Whatever cold start is left — at night, or when GitHub's scheduler runs late — is
+  no longer a silent spinner: any request still unanswered after four seconds shows
+  *"השרת מתעורר. זה יכול לקחת עד דקה."*
+
+**Free database plans keep very little history.**
+[`.github/workflows/backup.yml`](.github/workflows/backup.yml) takes a weekly
+`pg_dump`, encrypts it on the runner and keeps it as a workflow artifact for 90 days.
+
+> **The encryption is not optional here.** This repository is public, and artifacts
+> of a public repository can be downloaded by anyone. An unencrypted dump would
+> publish every student's name, every parent's phone number and every password hash
+> to the open internet.
+
+It needs two repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+| --- | --- |
+| `BACKUP_DATABASE_URL` | Neon connection string — the **direct** endpoint, not the pooled one. `pg_dump` cannot run through a pooler. |
+| `BACKUP_PASSPHRASE` | A long random passphrase. |
+
+**Keep the passphrase somewhere else as well** — a password manager, not only in
+GitHub. Secrets cannot be read back after they are saved, and a backup nobody can
+decrypt is not a backup. To restore:
+
+```bash
+gpg --decrypt talmidon-YYYY-MM-DD.sql.gpg > talmidon.sql
+psql "$DATABASE_URL" -f talmidon.sql
+```
+
+One more thing to know about both workflows: GitHub disables scheduled workflows in a
+repository that has had no activity for 60 days, and re-enabling them is manual.
+
 ## Documentation
 
 See [docs/](docs/) for the original requirements specification, database schema design,
