@@ -19,6 +19,20 @@ RUN dotnet publish Talmidon.Api/Talmidon.Api.csproj -c Release -o /app --no-rest
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+
+# Npgsql טוען את ספריית ה-GSSAPI של Kerberos בזמן התחברות, ו-Microsoft הסירה אותה
+# מתמונות ה-runtime של .NET כדי לצמצם שטח תקיפה. התוצאה היא נפילה בעלייה:
+#
+#   Cannot load library libgssapi_krb5.so.2
+#   Error: libgssapi_krb5.so.2: cannot open shared object file
+#
+# התגית 10.0 נעה, ולכן זה התפוצץ בפריסה אקראית — בלי ששום דבר בקוד השתנה; פשוט
+# נבנתה תמונת בסיס חדשה שבה החבילה כבר לא קיימת. התקנה מפורשת כאן היא מה שהופך
+# את זה לבלתי תלוי במה שהתמונה במעלה הזרם מחליטה לכלול החודש.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 # התמונה הזו היא תמונת הייצור. בלי הגדרה מפורשת, סביבה שנקבעת במקום אחר קובעת
 # התנהגות רגישה — לוח הבקרה של Hangfire ומסמכי ה-API נחשפים ללא הזדהות במצב פיתוח.
 ENV ASPNETCORE_ENVIRONMENT=Production
