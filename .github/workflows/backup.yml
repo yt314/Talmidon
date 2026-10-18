@@ -60,13 +60,16 @@ jobs:
         run: |
           set -euo pipefail
 
-          # pg_dump from the matching major version, pinned, rather than
-          # whatever the runner image happens to ship: an older client refuses
-          # to dump a newer server, and the runner image moves on its own.
+          # The client major version must be >= the server's: pg_dump refuses
+          # outright to dump a server newer than itself, and the runner image
+          # ships whatever it ships and moves on its own. Hence a pinned image,
+          # and 18 because that is what the Neon project runs. If this ever
+          # fails with "server version mismatch" again, the database has been
+          # moved to a newer major — raise this tag to match.
           # The connection string is read from the environment inside the
           # container (note the single quotes) rather than placed on a command
           # line, where every process on the machine could read it.
-          docker run --rm --env DATABASE_URL postgres:17 \
+          docker run --rm --env DATABASE_URL postgres:18 \
             sh -c 'pg_dump --no-owner --no-privileges --format=plain "$DATABASE_URL"' > talmidon.sql
 
           echo "Dump size: $(du -h talmidon.sql | cut -f1)"
