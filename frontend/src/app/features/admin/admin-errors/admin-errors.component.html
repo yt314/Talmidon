@@ -1,0 +1,128 @@
+<app-page-header
+  icon="pi-exclamation-triangle"
+  title="תקלות"
+  subtitle="שגיאות שהשרת רשם. חיפוש לפי הקוד שהמשתמשת ראתה על המסך."
+/>
+
+<div class="flex align-items-center gap-3 mb-3 flex-wrap">
+  <div class="flex align-items-center gap-2">
+    <input
+      pInputText
+      type="search"
+      inputmode="latin"
+      placeholder="קוד תקלה, למשל ABC-234"
+      style="max-width: 14rem"
+      [(ngModel)]="search"
+      (keyup.enter)="load()"
+    />
+    <p-button icon="pi pi-search" severity="secondary" [outlined]="true" (onClick)="load()" />
+    @if (search) {
+      <p-button label="ניקוי" severity="secondary" [text]="true" (onClick)="clearSearch()" />
+    }
+  </div>
+
+  @if (!search) {
+    <div class="flex align-items-center gap-2">
+      <p-toggleswitch inputId="e-handled" [(ngModel)]="includeHandled" (ngModelChange)="load()" />
+      <label for="e-handled" class="m-0">הצגת תקלות שכבר טופלו</label>
+    </div>
+  }
+</div>
+
+@if (!loading() && rows().length === 0) {
+  <app-empty-state
+    icon="pi-check-circle"
+    title="{{ search ? 'לא נמצאה תקלה עם הקוד הזה' : 'אין תקלות פתוחות' }}"
+    hint="{{ search ? 'בדקי את הקוד, או חפשי גם בתקלות שטופלו.' : 'שגיאה בשרת תופיע כאן עם הקוד שהמשתמשת רואה על המסך.' }}"
+  />
+} @else {
+  <div class="flex flex-column gap-3">
+    @for (row of rows(); track row.id) {
+      <p-card>
+        <div class="flex justify-content-between align-items-start gap-3 flex-wrap">
+          <div class="flex-1" style="min-width: 16rem">
+            <div class="flex align-items-center gap-2 flex-wrap mb-2">
+              <span class="font-bold" style="font-family: monospace; letter-spacing: 0.05em">{{ row.reference }}</span>
+              <p-tag
+                [value]="row.source === 'job' ? 'משימת רקע' : 'בקשה'"
+                [severity]="row.source === 'job' ? 'warn' : 'info'"
+              />
+              @if (row.isHandled) {
+                <p-tag value="טופל" severity="success" />
+              }
+            </div>
+
+            <p class="mt-0 mb-2">{{ row.message }}</p>
+
+            <div class="flex gap-2 flex-wrap text-sm" style="color: var(--p-text-muted-color)">
+              <span>{{ row.occurredAt | ilDate: 'dd/MM/yyyy HH:mm' }}</span>
+              <span>· {{ row.kind }}</span>
+              @if (row.path) {
+                <span style="direction: ltr; unicode-bidi: embed">· {{ row.method }} {{ row.path }}</span>
+              }
+              @if (row.userEmail) {
+                <span>· {{ row.userEmail }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="flex align-items-center gap-2">
+            <p-button
+              [label]="openId() === row.id ? 'סגירה' : 'פרטים'"
+              [icon]="openId() === row.id ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+              severity="secondary"
+              [text]="true"
+              size="small"
+              (onClick)="toggle(row)"
+            />
+            @if (row.isHandled) {
+              <p-button
+                label="החזרה לפתוחות"
+                severity="secondary"
+                [text]="true"
+                size="small"
+                (onClick)="setHandled(row, false)"
+              />
+            } @else {
+              <p-button label="סימון כטופל" icon="pi pi-check" size="small" (onClick)="setHandled(row, true)" />
+            }
+          </div>
+        </div>
+
+        @if (openId() === row.id) {
+          <div class="mt-3 pt-3" style="border-top: 1px solid var(--p-content-border-color)">
+            @if (openDetail(); as detail) {
+              <div class="flex justify-content-end mb-2">
+                <p-button
+                  label="העתקת הפרטים"
+                  icon="pi pi-copy"
+                  severity="secondary"
+                  [text]="true"
+                  size="small"
+                  (onClick)="copy(detail)"
+                />
+              </div>
+              <pre
+                class="m-0 p-3 text-sm"
+                style="
+                  direction: ltr;
+                  text-align: left;
+                  white-space: pre-wrap;
+                  word-break: break-word;
+                  max-height: 24rem;
+                  overflow: auto;
+                  background: var(--p-content-background);
+                  border: 1px solid var(--p-content-border-color);
+                  border-radius: var(--p-content-border-radius);
+                "
+                >{{ detail.detail || 'לא נשמרה עקבת מחסנית.' }}</pre
+              >
+            } @else {
+              <p class="m-0 text-sm" style="color: var(--p-text-muted-color)">טוען…</p>
+            }
+          </div>
+        }
+      </p-card>
+    }
+  </div>
+}

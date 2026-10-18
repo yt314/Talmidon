@@ -7,6 +7,7 @@ using Talmidon.Domain;
 using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Identity;
 
 namespace Talmidon.Api.Controllers;
@@ -207,6 +208,62 @@ public class AdminController(TalmidonDbContext db, UserManager<ApplicationUser> 
         if (feedback is null) return NotFound();
 
         feedback.IsHandled = handled;
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // ===== יומן התקלות =====
+
+    /// <summary>
+    /// התקלות שנרשמו בשרת, מהחדשה לישנה. פותח על מה שעוד לא טופל — אותו היגיון כמו
+    /// בהודעות מהאתר: רשימה שרק מצטברת נקראת פעם אחת ואז אף פעם.
+    ///
+    /// <paramref name="reference"/> הוא המסלול ההפוך: משתמשת מוסרת את הקוד שראתה על
+    /// המסך, והוא מוביל ישירות לשורה — בלי קשר לתאריך או לסימון טיפול.
+    /// </summary>
+    [HttpGet("errors")]
+    public async Task<ActionResult<IEnumerable<AdminErrorDto>>> ListErrors(
+        [FromQuery] bool includeHandled = false,
+        [FromQuery] string? reference = null)
+    {
+        var query = db.ErrorLog.AsQueryable();
+
+        var wanted = ErrorReference.Normalize(reference);
+        if (wanted.Length > 0)
+            query = query.Where(e => e.Reference == wanted);
+        else if (!includeHandled)
+            query = query.Where(e => !e.IsHandled);
+
+        var rows = await query
+            .OrderByDescending(e => e.OccurredAt)
+            .Take(100)
+            .Select(e => new AdminErrorDto(
+                e.Id, e.Reference, e.OccurredAt, e.Source, e.Kind, e.Message,
+                e.Path, e.Method, e.UserEmail, e.IsHandled))
+            .ToListAsync();
+
+        return Ok(rows);
+    }
+
+    /// <summary>תקלה אחת עם עקבת המחסנית — נטענת רק כשפותחים אותה.</summary>
+    [HttpGet("errors/{id:guid}")]
+    public async Task<ActionResult<AdminErrorDetailDto>> GetError(Guid id)
+    {
+        var entry = await db.ErrorLog.FirstOrDefaultAsync(e => e.Id == id);
+        if (entry is null) return NotFound();
+
+        return Ok(new AdminErrorDetailDto(
+            entry.Id, entry.Reference, entry.OccurredAt, entry.Source, entry.Kind, entry.Message,
+            entry.Detail, entry.Path, entry.Method, entry.UserEmail, entry.TenantId, entry.IsHandled));
+    }
+
+    [HttpPost("errors/{id:guid}/handled")]
+    public async Task<IActionResult> MarkErrorHandled(Guid id, [FromQuery] bool handled = true)
+    {
+        var entry = await db.ErrorLog.FirstOrDefaultAsync(e => e.Id == id);
+        if (entry is null) return NotFound();
+
+        entry.IsHandled = handled;
         await db.SaveChangesAsync();
         return NoContent();
     }

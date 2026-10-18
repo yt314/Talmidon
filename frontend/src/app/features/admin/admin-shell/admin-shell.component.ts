@@ -22,7 +22,8 @@ export class AdminShellComponent {
 
   protected readonly menuItems: MenuItem[] = [{ label: 'מורות', icon: 'pi pi-users', routerLink: '/admin/teachers' },
     { label: 'תחומי לימוד', icon: 'pi pi-tags', routerLink: '/admin/subjects' },
-    { label: 'הודעות מהאתר', icon: 'pi pi-comments', routerLink: '/admin/feedback' }];
+    { label: 'הודעות מהאתר', icon: 'pi pi-comments', routerLink: '/admin/feedback' },
+    { label: 'תקלות', icon: 'pi pi-exclamation-triangle', routerLink: '/admin/errors' }];
 
   logout(): void {
     this.auth.logout();

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Email;
 
 namespace Talmidon.Infrastructure.BackgroundJobs;
@@ -11,10 +12,11 @@ namespace Talmidon.Infrastructure.BackgroundJobs;
 /// האוטומטי החודשי (Hangfire, כל הדיירים) וגם את הכפתור הידני של המורה (דייר נוכחי בלבד).
 /// </summary>
 public class MonthlyPaymentReminderJob(
-    TalmidonDbContext db, IEmailSender emailSender, AppLinks links, ILogger<MonthlyPaymentReminderJob> logger)
+    TalmidonDbContext db, IEmailSender emailSender, AppLinks links, IErrorLog errorLog, ILogger<MonthlyPaymentReminderJob> logger)
 {
     /// <summary>נקרא ע"י הריצה החודשית האוטומטית — אין הקשר דייר (HTTP) בעבודת רקע, לכן מתעלמים מה-Global Query Filter וסורקים את כל הדיירים.</summary>
-    public Task<int> RunForAllTenantsAsync() => RunAsync(ignoreTenantFilter: true);
+    public Task<int> RunForAllTenantsAsync() =>
+        errorLog.RecordFailuresAsync("monthly-payment-reminders", () => RunAsync(ignoreTenantFilter: true));
 
     /// <summary>נקרא ע"י כפתור "שלח עכשיו" של מורה מחוברת — מכבד את ה-Global Query Filter ומוגבל לדייר הנוכחי בלבד.</summary>
     public Task<int> RunForCurrentTenantAsync() => RunAsync(ignoreTenantFilter: false);
@@ -68,7 +70,8 @@ public class MonthlyPaymentReminderJob(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send monthly payment reminder email.");
+            // תזכורת שלא יצאה היא תקלה שקטה לגמרי: אין מי שרואה אותה חוץ מהיומן.
+            await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "job", Path = "payment-reminders/send" });
             return false;
         }
     }

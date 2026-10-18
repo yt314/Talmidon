@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Talmidon.Domain.Common;
 using Talmidon.Infrastructure.Data;
+using Talmidon.Infrastructure.Diagnostics;
 using Talmidon.Infrastructure.Scheduling;
 
 namespace Talmidon.Infrastructure.BackgroundJobs;
@@ -13,11 +14,14 @@ namespace Talmidon.Infrastructure.BackgroundJobs;
 /// את כל הדיירים בבת אחת — כמו ב-MonthlyPaymentReminderJob.
 /// </summary>
 public class LessonSeriesGenerationJob(
-    TalmidonDbContext db, LessonSeriesGenerator generator, ILogger<LessonSeriesGenerationJob> logger)
+    TalmidonDbContext db, LessonSeriesGenerator generator, IErrorLog errorLog, ILogger<LessonSeriesGenerationJob> logger)
 {
     private const int HorizonWeeks = 8;
 
-    public async Task<int> RunForAllTenantsAsync()
+    public Task<int> RunForAllTenantsAsync() =>
+        errorLog.RecordFailuresAsync("lesson-series-generation", () => RunCoreAsync());
+
+    private async Task<int> RunCoreAsync()
     {
         var horizon = AppTimeZone.Today.AddDays(7 * HorizonWeeks);
 

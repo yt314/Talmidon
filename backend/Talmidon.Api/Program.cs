@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Talmidon.Api.Diagnostics;
 using Talmidon.Api.Multitenancy;
 using Talmidon.Infrastructure;
 using Talmidon.Infrastructure.Auth;
@@ -152,6 +153,12 @@ else
 // שנוספות כותרות ה-CORS, והדפדפן אינו עוקב אחרי הפניה ב-preflight — הבקשה נכשלת
 // עם "No 'Access-Control-Allow-Origin' header" שנראה כאילו המקור אינו מורשה.
 app.UseCors(CorsPolicy);
+
+// מיד אחרי CORS ולפני כל השאר: חריגה שתיתפס כאן תחזור ללקוח כתשובת JSON עם קוד
+// תקלה, והכותרות שמתירות לדפדפן לקרוא אותה כבר נקבעו. אחרת היא מגיעה כ-500 ריק
+// שנראה בצד הלקוח בדיוק כמו שרת מת.
+app.UseErrorLog();
+
 app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.UseAuthentication();
@@ -176,6 +183,12 @@ RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
 RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
     "lesson-series-generation",
     job => job.RunForAllTenantsAsync(),
+    Cron.Daily(),
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
+RecurringJob.AddOrUpdate<ErrorLogCleanupJob>(
+    "error-log-cleanup",
+    job => job.RunAsync(),
     Cron.Daily(),
     new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
 

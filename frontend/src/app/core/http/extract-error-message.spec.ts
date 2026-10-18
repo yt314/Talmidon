@@ -39,4 +39,24 @@ describe('extractErrorMessage', () => {
     expect(extractErrorMessage({ status: 500, error: { title: 'An error occurred' } }, FALLBACK)).toBe(FALLBACK);
     expect(extractErrorMessage(undefined, FALLBACK)).toBe(FALLBACK);
   });
+
+  /**
+   * קוד התקלה הוא מה שהופך "הפעולה נכשלה" למשהו שאפשר למסור, ובצד השני למצוא לפיו
+   * שורה עם עקבת מחסנית. לכן הוא מצורף כאן, פעם אחת, ולא בכל מסך בנפרד.
+   */
+  it('מצרף את קוד התקלה להודעת השרת', () => {
+    const body = { message: 'אירעה תקלה בשרת.', reference: 'ABC-234' };
+    expect(extractErrorMessage({ status: 500, error: body }, FALLBACK))
+      .toBe('אירעה תקלה בשרת. (קוד תקלה: ABC-234)');
+  });
+
+  it('מצרף את הקוד גם כשההודעה עצמה היא ברירת המחדל', () => {
+    expect(extractErrorMessage({ status: 500, error: { reference: 'ABC-234' } }, FALLBACK))
+      .toBe(`${FALLBACK} (קוד תקלה: ABC-234)`);
+  });
+
+  it('לא מוסיף כלום כשאין קוד', () => {
+    expect(extractErrorMessage({ status: 409, error: { message: 'השיעור כבר הושלם.' } }, FALLBACK))
+      .toBe('השיעור כבר הושלם.');
+  });
 });
