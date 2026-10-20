@@ -1,0 +1,130 @@
+<p-dialog header="הוספת שיעור" [(visible)]="visible" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <div class="field">
+      <label for="l-student">תלמיד *</label>
+      <p-select
+        inputId="l-student"
+        [options]="students()"
+        optionLabel="fullName"
+        optionValue="id"
+        formControlName="studentId"
+        placeholder="בחר תלמיד"
+        styleClass="w-full"
+        [invalid]="isInvalid(form.controls.studentId)" />
+      @if (fieldError(form.controls.studentId); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
+      <label for="l-date">תאריך *</label>
+      <p-datepicker
+        inputId="l-date"
+        formControlName="date"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(form.controls.date)" />
+      @if (fieldError(form.controls.date); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="flex gap-3">
+      <div class="field flex-1">
+        <label for="l-start">שעת התחלה *</label>
+        <p-datepicker
+          #lStart
+          inputId="l-start"
+          formControlName="startTime"
+          [timeOnly]="true"
+          hourFormat="24"
+          [appendTo]="'body'"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [invalid]="isInvalid(form.controls.startTime)">
+          <ng-template pTemplate="footer">
+            <div class="flex justify-content-end p-2 pt-0">
+              <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="lStart.toggle()" />
+            </div>
+          </ng-template>
+        </p-datepicker>
+        @if (fieldError(form.controls.startTime); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
+      </div>
+      <div class="field flex-1">
+        <label for="l-end">שעת סיום *</label>
+        <p-datepicker
+          #lEnd
+          inputId="l-end"
+          formControlName="endTime"
+          [timeOnly]="true"
+          hourFormat="24"
+          [appendTo]="'body'"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [invalid]="isInvalid(form.controls.endTime)">
+          <ng-template pTemplate="footer">
+            <div class="flex justify-content-end p-2 pt-0">
+              <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="lEnd.toggle()" />
+            </div>
+          </ng-template>
+        </p-datepicker>
+        @if (fieldError(form.controls.endTime); as msg) {
+          <small class="text-red-500 block mt-1">{{ msg }}</small>
+        }
+      </div>
+    </div>
+    @if (form.errors?.['dateRange'] && form.controls.endTime.touched) {
+      <small class="text-red-500 block mt-1">שעת הסיום חייבת להיות אחרי שעת ההתחלה</small>
+    }
+
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="l-recurring" formControlName="recurring" [binary]="true" />
+      <label for="l-recurring" class="m-0">🔁 חזור כל שבוע</label>
+    </div>
+
+    @if (form.controls.recurring.value) {
+      <div class="field">
+        <label>עד מתי</label>
+        <p-selectbutton [options]="endConditionOptions" optionLabel="label" optionValue="value" formControlName="endCondition" styleClass="w-full" />
+      </div>
+
+      @switch (form.controls.endCondition.value) {
+        @case (LessonSeriesEndCondition.Count) {
+          <div class="field">
+            <label for="l-occurrenceCount">מספר שיעורים *</label>
+            <p-inputnumber
+              inputId="l-occurrenceCount"
+              formControlName="occurrenceCount"
+              [min]="1"
+              styleClass="w-full"
+              inputStyleClass="w-full" />
+          </div>
+        }
+        @case (LessonSeriesEndCondition.EndDate) {
+          <div class="field">
+            <label for="l-endDate">תאריך סיום *</label>
+            <p-datepicker
+              inputId="l-endDate"
+              formControlName="endDate"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [appendTo]="'body'"
+              styleClass="w-full"
+              inputStyleClass="w-full" />
+          </div>
+        }
+        @case (LessonSeriesEndCondition.Indefinite) {
+          <p class="text-sm text-color-secondary mt-0">השיעורים ימשיכו להיווצר כל שבוע עד שתבטלי את הסדרה.</p>
+        }
+      }
+    }
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="visible.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>

@@ -1,0 +1,137 @@
+<p-dialog
+  [header]="editingId() ? 'עריכת אירוע' : 'אירוע חדש'"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '440px' }"
+>
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <div class="field">
+      <label for="e-title">כותרת *</label>
+      <input
+        pInputText
+        id="e-title"
+        formControlName="title"
+        class="w-full"
+        placeholder="פגישה, חופשה, יום חסום…"
+        [invalid]="isInvalid(form.controls.title)"
+      />
+      @if (fieldError(form.controls.title); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="e-allday" formControlName="isAllDay" [binary]="true" />
+      <label for="e-allday" class="m-0">יום שלם</label>
+    </div>
+
+    <div class="field">
+      <label for="e-date">{{ form.controls.isAllDay.value ? 'מתאריך *' : 'תאריך *' }}</label>
+      <p-datepicker
+        inputId="e-date"
+        formControlName="date"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [appendTo]="'body'"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+        [invalid]="isInvalid(form.controls.date)"
+      />
+      @if (fieldError(form.controls.date); as msg) {
+        <small class="text-red-500 block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    @if (form.controls.isAllDay.value) {
+      <div class="field">
+        <label for="e-enddate">עד תאריך</label>
+        <p-datepicker
+          inputId="e-enddate"
+          formControlName="endDate"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [appendTo]="'body'"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+        />
+        <small class="block mt-1" style="color: var(--p-text-muted-color)">
+          אפשר להשאיר ריק לאירוע של יום אחד.
+        </small>
+      </div>
+    } @else {
+      <div class="flex gap-3">
+        <div class="field flex-1">
+          <label for="e-start">שעת התחלה *</label>
+          <p-datepicker
+            #eStart
+            inputId="e-start"
+            formControlName="startTime"
+            [timeOnly]="true"
+            hourFormat="24"
+            [appendTo]="'body'"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+          >
+            <ng-template pTemplate="footer">
+              <div class="flex justify-content-end p-2 pt-0">
+                <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="eStart.toggle()" />
+              </div>
+            </ng-template>
+          </p-datepicker>
+        </div>
+        <div class="field flex-1">
+          <label for="e-end">שעת סיום *</label>
+          <p-datepicker
+            #eEnd
+            inputId="e-end"
+            formControlName="endTime"
+            [timeOnly]="true"
+            hourFormat="24"
+            [appendTo]="'body'"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+          >
+            <ng-template pTemplate="footer">
+              <div class="flex justify-content-end p-2 pt-0">
+                <p-button label="אישור שעה" icon="pi pi-check" size="small" (onClick)="eEnd.toggle()" />
+              </div>
+            </ng-template>
+          </p-datepicker>
+        </div>
+      </div>
+      @if (form.errors?.['dateRange']) {
+        <small class="text-red-500 block mb-3">שעת הסיום חייבת להיות אחרי שעת ההתחלה.</small>
+      }
+    }
+
+    <div class="field">
+      <label for="e-notes">הערה</label>
+      <textarea pTextarea id="e-notes" formControlName="notes" rows="2" class="w-full"></textarea>
+    </div>
+
+    <div class="flex justify-content-between align-items-center gap-2 mt-3">
+      @if (editingId()) {
+        <p-button
+          label="מחיקה"
+          icon="pi pi-trash"
+          severity="danger"
+          [text]="true"
+          type="button"
+          (onClick)="remove()"
+        />
+      } @else {
+        <span></span>
+      }
+      <div class="flex gap-2">
+        <p-button
+          label="ביטול"
+          severity="secondary"
+          [text]="true"
+          type="button"
+          (onClick)="visible.set(false)"
+        />
+        <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
+      </div>
+    </div>
+  </form>
+</p-dialog>
