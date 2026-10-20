@@ -32,7 +32,7 @@ public class LessonRequestService(
         if (request.EndTime <= request.StartTime) return ServiceError.Invalid(InvalidTimesMessage);
 
         var parent = await family.ParentAsync(userId);
-        if (parent is null || !await family.IsChildOfAsync(parent, request.StudentId)) return ServiceError.Forbidden;
+        if (parent is null || !await family.IsChildOfAsync(parent.Id, request.StudentId)) return ServiceError.Forbidden;
 
         var student = await db.Students.FirstAsync(s => s.Id == request.StudentId);
         var lesson = lessons.NewLesson(student, request.StartTime, request.EndTime, LessonStatus.Requested, LessonOrigin.Parent);
@@ -71,7 +71,7 @@ public class LessonRequestService(
 
         var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == lessonId);
         if (lesson is null) return ServiceError.NotFound();
-        if (!await family.IsChildOfAsync(parent, lesson.StudentId)) return ServiceError.Forbidden;
+        if (!await family.IsChildOfAsync(parent.Id, lesson.StudentId)) return ServiceError.Forbidden;
 
         var conflict = await ChangeRequestConflictAsync(lesson);
         if (conflict is not null) return conflict;

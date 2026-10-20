@@ -17,6 +17,6 @@ public class FamilyMembers(TalmidonDbContext db)
     public IQueryable<Guid> ChildIdsOf(Parent parent) =>
         db.StudentParents.Where(sp => sp.ParentId == parent.Id).Select(sp => sp.StudentId);
 
-    public Task<bool> IsChildOfAsync(Parent parent, Guid studentId) =>
-        db.StudentParents.AnyAsync(sp => sp.ParentId == parent.Id && sp.StudentId == studentId);
+    public Task<bool> IsChildOfAsync(Guid parentId, Guid studentId) =>
+        db.StudentParents.AnyAsync(sp => sp.ParentId == parentId && sp.StudentId == studentId);
 }

@@ -40,8 +40,14 @@ public class TeacherNotifier(
         });
     }
 
+    /// <summary>מייל למורה על בקשה ביומן.</summary>
+    public Task EmailAsync(string subject, string message) =>
+        SendEmailAsync(subject,
+            new EmailMessage(subject, Intro: message, ActionLabel: "לצפייה ביומן", ActionUrl: links.TeacherLessons),
+            "lessons/teacher-notification");
+
     /// <summary>שולח מייל למורה. כישלון שליחה נרשם ביומן התקלות ואינו מפיל את הבקשה.</summary>
-    public async Task EmailAsync(string subject, string message)
+    public async Task SendEmailAsync(string subject, EmailMessage content, string errorPath)
     {
         var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == TenantId);
         if (teacher is null) return;
@@ -49,10 +55,7 @@ public class TeacherNotifier(
         var user = await userManager.FindByIdAsync(teacher.UserId);
         if (user?.Email is null) return;
 
-        var html = EmailLayout.Render(new EmailMessage(
-            subject, Intro: message, ActionLabel: "לצפייה ביומן", ActionUrl: links.TeacherLessons));
-
-        try { await emailSender.SendAsync(user.Email, subject, html); }
-        catch (Exception ex) { await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "lessons/teacher-notification" }); }
+        try { await emailSender.SendAsync(user.Email, subject, EmailLayout.Render(content)); }
+        catch (Exception ex) { await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = errorPath }); }
     }
 }
