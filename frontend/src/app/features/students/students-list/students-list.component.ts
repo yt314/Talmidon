@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -30,6 +30,7 @@ import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus
 @Component({
   selector: 'app-students-list',
   imports: [ReactiveFormsModule,
+    RouterLink,
     ButtonModule,
     DatePickerModule,
     DialogModule,

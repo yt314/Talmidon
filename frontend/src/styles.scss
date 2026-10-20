@@ -47,6 +47,16 @@ a:hover {
   text-decoration: underline;
 }
 
+/* הודעת שגיאה מתחת לשדה — טוקן ולא red-500 של PrimeFlex, שנותן רק 3.8:1 על לבן */
+.field-error {
+  color: var(--p-talmidon-danger-text);
+}
+
+/* דיאלוגים מוגדרים ברוחב קבוע בפיקסלים; בטלפון הם לא יגלשו מהמסך */
+.p-dialog {
+  max-width: calc(100vw - 1.5rem);
+}
+
 /* פס גלילה דק ומותאם לערכה — כולל במצב כהה */
 * {
   scrollbar-width: thin;
@@ -266,7 +276,6 @@ a:hover {
 }
 .library-hero p {
   font-size: clamp(1rem, 2.2vw, 1.15rem);
-  opacity: 0.92;
   margin: 0 auto 1.75rem;
   max-width: 46ch;
 }
@@ -295,7 +304,6 @@ a:hover {
 }
 .hero-stat-label {
   font-size: 0.85rem;
-  opacity: 0.85;
 }
 
 .teachers-grid {
@@ -756,6 +764,11 @@ a.stat-card:hover {
 
 /* --------------------------------------------------------------- טבלאות ---- */
 
+/* שם בשורה לחיצה — קישור אמיתי לגישה במקלדת, אבל נראה כמו שאר הטקסט בשורה */
+.row-link {
+  color: inherit;
+}
+
 /* טבלאות בפריסתן הרגילה נדחסות למחיקות על מסך צר — עדיף גלילה אופקית מודעת
    על פני עמודות שנשברות מילה-באמצע-מילה. */
 .p-datatable-table-container {
@@ -1104,12 +1117,18 @@ full-calendar th {
 .notif-item {
   display: flex;
   gap: 0.6rem;
+  width: 100%;
   padding: 0.6rem 0.4rem;
+  border: 0;
   border-radius: var(--p-border-radius-sm);
   cursor: pointer;
   border-bottom: 1px solid var(--p-content-border-color);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
 }
-.notif-item:last-child {
+.notif-list > li:last-child .notif-item {
   border-bottom: none;
 }
 .notif-item:hover {

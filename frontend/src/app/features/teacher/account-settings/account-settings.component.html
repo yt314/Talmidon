@@ -24,7 +24,7 @@
         autocomplete="current-password"
         [invalid]="isInvalid(form.controls.currentPassword)" />
       @if (fieldError(form.controls.currentPassword); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 
@@ -43,7 +43,7 @@
         autocomplete="new-password"
         [invalid]="isInvalid(form.controls.newPassword)" />
       @if (fieldError(form.controls.newPassword); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 
@@ -59,7 +59,7 @@
         autocomplete="new-password"
         [invalid]="isInvalid(form.controls.confirmNewPassword)" />
       @if (fieldError(form.controls.confirmNewPassword); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 

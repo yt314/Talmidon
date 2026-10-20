@@ -34,6 +34,7 @@
         pInputText
         type="text"
         placeholder="חיפוש לפי שם, עיר או שכונה"
+        aria-label="חיפוש מורה לפי שם, עיר או שכונה"
         class="flex-1"
         style="min-width: 220px"
         [ngModel]="search()"
@@ -44,6 +45,7 @@
         [ngModel]="selectedSubject()"
         (ngModelChange)="selectedSubject.set($event)"
         placeholder="כל התחומים"
+        ariaLabel="סינון לפי תחום"
         [showClear]="true"
         style="min-width: 170px"
       />
@@ -53,6 +55,7 @@
           [ngModel]="selectedCity()"
           (ngModelChange)="selectedCity.set($event)"
           placeholder="כל הערים"
+          ariaLabel="סינון לפי עיר"
           [showClear]="true"
           style="min-width: 170px"
         />

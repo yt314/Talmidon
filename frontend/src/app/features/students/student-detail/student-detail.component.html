@@ -155,7 +155,7 @@
       <label for="e-fullName">שם מלא *</label>
       <input pInputText id="e-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(editForm.controls.fullName)" />
       @if (fieldError(editForm.controls.fullName); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -170,14 +170,14 @@
         styleClass="w-full"
         [invalid]="isInvalid(editForm.controls.gender)" />
       @if (fieldError(editForm.controls.gender); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
       <label for="e-gradeLevel">כיתה</label>
       <input pInputText id="e-gradeLevel" formControlName="gradeLevel" class="w-full" [invalid]="isInvalid(editForm.controls.gradeLevel)" />
       @if (fieldError(editForm.controls.gradeLevel); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -200,7 +200,7 @@
         class="w-full"
         [invalid]="isInvalid(editForm.controls.generalInfo)" />
       @if (fieldError(editForm.controls.generalInfo); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="flex gap-3">
@@ -216,7 +216,7 @@
           inputStyleClass="w-full"
           [invalid]="isInvalid(editForm.controls.defaultPricePerLesson)" />
         @if (fieldError(editForm.controls.defaultPricePerLesson); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
       <div class="field flex-1">
@@ -232,7 +232,7 @@
           inputStyleClass="w-full"
           [invalid]="isInvalid(editForm.controls.defaultDurationMinutes)" />
         @if (fieldError(editForm.controls.defaultDurationMinutes); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
     </div>
@@ -262,7 +262,7 @@
         class="w-full"
         [invalid]="isInvalid(noteForm.controls.content)"></textarea>
       @if (fieldError(noteForm.controls.content); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field flex align-items-center gap-2">
@@ -292,7 +292,7 @@
       <label for="r-title">כותרת *</label>
       <input pInputText id="r-title" formControlName="title" class="w-full" [invalid]="isInvalid(resourceForm.controls.title)" />
       @if (fieldError(resourceForm.controls.title); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -306,7 +306,7 @@
         placeholder="https://..."
         [invalid]="isInvalid(resourceForm.controls.url)" />
       @if (fieldError(resourceForm.controls.url); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -319,7 +319,7 @@
         class="w-full"
         [invalid]="isInvalid(resourceForm.controls.description)"></textarea>
       @if (fieldError(resourceForm.controls.description); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 

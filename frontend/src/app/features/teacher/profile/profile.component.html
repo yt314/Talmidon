@@ -42,7 +42,7 @@
         </div>
         <p class="photo-editor-hint">בלי תמונה יוצגו ראשי התיבות שלך. התמונה נחתכת לריבוע אוטומטית.</p>
         @if (photoError(); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
     </div>
@@ -63,7 +63,7 @@
           <label for="t-city">עיר</label>
           <input pInputText id="t-city" formControlName="city" class="w-full" [invalid]="isInvalid(form.controls.city)" />
           @if (fieldError(form.controls.city); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
 
@@ -71,7 +71,7 @@
           <label for="t-neighborhood">שכונה</label>
           <input pInputText id="t-neighborhood" formControlName="neighborhood" class="w-full" [invalid]="isInvalid(form.controls.neighborhood)" />
           @if (fieldError(form.controls.neighborhood); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
       </div>
@@ -81,7 +81,7 @@
           <label for="t-phone">טלפון</label>
           <input pInputText id="t-phone" formControlName="phone" class="w-full" [invalid]="isInvalid(form.controls.phone)" />
           @if (fieldError(form.controls.phone); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
 
@@ -89,7 +89,7 @@
           <label for="t-contact-email">מייל ליצירת קשר</label>
           <input pInputText id="t-contact-email" type="email" formControlName="contactEmail" class="w-full" [invalid]="isInvalid(form.controls.contactEmail)" />
           @if (fieldError(form.controls.contactEmail); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
       </div>
@@ -101,7 +101,7 @@
         <label for="t-bio">תקציר (מוצג בספרייה הציבורית)</label>
         <textarea pTextarea id="t-bio" formControlName="bio" rows="3" class="w-full" [invalid]="isInvalid(form.controls.bio)"></textarea>
         @if (fieldError(form.controls.bio); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
 
@@ -117,7 +117,7 @@
             inputStyleClass="w-full"
             [invalid]="isInvalid(form.controls.defaultPricePerLesson)" />
           @if (fieldError(form.controls.defaultPricePerLesson); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
         <div class="field">
@@ -152,7 +152,7 @@
             inputStyleClass="w-full"
             [invalid]="isInvalid(form.controls.defaultDurationMinutes)" />
           @if (fieldError(form.controls.defaultDurationMinutes); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
       </div>
@@ -162,7 +162,7 @@
         <label for="t-rules">כללי ביטול ותשלום</label>
         <textarea pTextarea id="t-rules" formControlName="rulesText" rows="3" class="w-full" [invalid]="isInvalid(form.controls.rulesText)"></textarea>
         @if (fieldError(form.controls.rulesText); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
 
@@ -196,7 +196,7 @@
       [suggestions]="allSuggestions()" />
 
     @if (subjectsError(); as msg) {
-      <small class="text-red-500 block mt-1">{{ msg }}</small>
+      <small role="alert" class="field-error block mt-1">{{ msg }}</small>
     }
     @if (subjectsSaved()) {
       <small class="block mt-2 text-color-secondary"><i class="pi pi-check text-xs"></i> התחומים נשמרו</small>

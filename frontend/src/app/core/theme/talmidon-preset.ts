@@ -83,12 +83,12 @@ export const TalmidonPreset = definePreset(Aura, {
           900: '{stone.900}',
           950: '{stone.950}'
         },
-        // teal.500 חלש מדי על רקע לבן; 600 עומד בניגודיות AA לטקסט לבן
+        // טקסט לבן על teal.600 נותן רק 3.7:1; ‏700 עומד ב-AA ‏(5.5:1) גם לטקסט רגיל
         primary: {
-          color: '{primary.600}',
+          color: '{primary.700}',
           contrastColor: '#ffffff',
-          hoverColor: '{primary.700}',
-          activeColor: '{primary.800}'
+          hoverColor: '{primary.800}',
+          activeColor: '{primary.900}'
         },
         text: {
           color: '{surface.800}',
@@ -123,8 +123,9 @@ export const TalmidonPreset = definePreset(Aura, {
         text: {
           color: '{surface.100}',
           hoverColor: '{surface.0}',
-          mutedColor: '{surface.400}',
-          hoverMutedColor: '{surface.300}'
+          // surface.400 נותן פחות מ-4:1 על כרטיס כהה; 300 עומד ב-AA גם על surface.800
+          mutedColor: '{surface.300}',
+          hoverMutedColor: '{surface.200}'
         }
       }
     }
@@ -149,9 +150,10 @@ export const TalmidonPreset = definePreset(Aura, {
           // רקע העמוד — גוון חם עדין שמפריד בין הדף לכרטיסים הלבנים
           appBackground: '{surface.100}',
           // רצועת הפתיחה הציבורית
-          heroFrom: '{primary.700}',
-          heroVia: '{primary.500}',
-          heroTo: '{cyan.500}',
+          // קצוות כהים מספיק כדי שטקסט לבן יעמוד ב-AA לכל רוחב הגרדיאנט
+          heroFrom: '{primary.800}',
+          heroVia: '{primary.700}',
+          heroTo: '{cyan.800}',
           heroText: '#ffffff',
           // כותרת "זכוכית" נדבקת
           glassBackground: 'color-mix(in srgb, #ffffff 78%, transparent)',
@@ -168,6 +170,7 @@ export const TalmidonPreset = definePreset(Aura, {
           warnText: '{amber.800}',
           infoSoft: '{blue.100}',
           infoText: '{blue.800}',
+          dangerText: '{red.700}',
           gridLine: 'color-mix(in srgb, {surface.900} 6%, transparent)'
         }
       },
@@ -191,6 +194,7 @@ export const TalmidonPreset = definePreset(Aura, {
           warnText: '{amber.300}',
           infoSoft: 'color-mix(in srgb, {blue.400}, transparent 84%)',
           infoText: '{blue.300}',
+          dangerText: '{red.300}',
           gridLine: 'color-mix(in srgb, {surface.0} 7%, transparent)',
           // הצללים של המצב הבהיר נעלמים על רקע כהה — כאן הם עמוקים יותר
           shadowSm: '0 1px 2px rgba(0, 0, 0, 0.4)',

@@ -166,7 +166,7 @@
               <span class="font-bold text-xl">{{ selectedTotal() | number: '1.0-2' }} ₪</span>
             </div>
             @if (noSelectionError()) {
-              <small class="text-red-500 block mb-3">יש לבחור לפחות שיעור אחד</small>
+              <small role="alert" class="field-error block mb-3">יש לבחור לפחות שיעור אחד</small>
             }
             <div class="field">
               <label for="p-paidDate">תאריך תשלום *</label>
@@ -180,7 +180,7 @@
                 inputStyleClass="w-full"
                 [invalid]="isInvalid(paymentForm.controls.paidDate)" />
               @if (fieldError(paymentForm.controls.paidDate); as msg) {
-                <small class="text-red-500 block mt-1">{{ msg }}</small>
+                <small role="alert" class="field-error block mt-1">{{ msg }}</small>
               }
             </div>
             <div class="field">
@@ -193,14 +193,14 @@
                 placeholder="מזומן / העברה / ביט..."
                 [invalid]="isInvalid(paymentForm.controls.method)" />
               @if (fieldError(paymentForm.controls.method); as msg) {
-                <small class="text-red-500 block mt-1">{{ msg }}</small>
+                <small role="alert" class="field-error block mt-1">{{ msg }}</small>
               }
             </div>
             <div class="field">
               <label for="p-note">הערה (אופציונלי)</label>
               <input pInputText id="p-note" formControlName="note" class="w-full" [invalid]="isInvalid(paymentForm.controls.note)" />
               @if (fieldError(paymentForm.controls.note); as msg) {
-                <small class="text-red-500 block mt-1">{{ msg }}</small>
+                <small role="alert" class="field-error block mt-1">{{ msg }}</small>
               }
             </div>
             <p-button label="סמן כשולם ושלח אישור להורה" icon="pi pi-check" type="submit" [loading]="saving()" />

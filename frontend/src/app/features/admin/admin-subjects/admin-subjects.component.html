@@ -10,7 +10,7 @@
       type="text"
       class="flex-1"
       style="min-width: 220px"
-      placeholder="תחום חדש להצעה"
+      placeholder="תחום חדש להצעה" aria-label="תחום חדש להצעה"
       [ngModel]="newName()"
       (ngModelChange)="newName.set($event)"
       (keydown.enter)="add()" />
@@ -23,7 +23,7 @@
       type="text"
       class="flex-1"
       style="min-width: 200px"
-      placeholder="סינון הרשימה"
+      placeholder="סינון הרשימה" aria-label="סינון רשימת התחומים"
       [ngModel]="search()"
       (ngModelChange)="search.set($event)" />
     <p-selectbutton

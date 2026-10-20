@@ -25,13 +25,15 @@
     } @else {
       <ul class="notif-list">
         @for (n of notifications(); track n.id) {
-          <li class="notif-item" [class.notif-unread]="!n.isRead" (click)="open(n)">
-            <i [class]="icon(n.type)"></i>
-            <div class="flex-1">
-              <div class="font-medium">{{ n.title }}</div>
-              <div class="text-sm text-color-secondary">{{ n.message }}</div>
-              <div class="text-xs text-color-secondary mt-1">{{ n.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}</div>
-            </div>
+          <li>
+            <button type="button" class="notif-item" [class.notif-unread]="!n.isRead" (click)="open(n)">
+              <i [class]="icon(n.type)"></i>
+              <span class="flex-1">
+                <span class="block font-medium">{{ n.title }}</span>
+                <span class="block text-sm text-color-secondary">{{ n.message }}</span>
+                <span class="block text-xs text-color-secondary mt-1">{{ n.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}</span>
+              </span>
+            </button>
           </li>
         }
       </ul>

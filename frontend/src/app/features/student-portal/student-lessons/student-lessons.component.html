@@ -42,7 +42,7 @@
         [invalid]="isInvalid(requestForm.controls.startTime)"
       />
       @if (fieldError(requestForm.controls.startTime); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 
@@ -61,12 +61,12 @@
         [invalid]="isInvalid(requestForm.controls.endTime)"
       />
       @if (fieldError(requestForm.controls.endTime); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 
     @if (requestForm.errors?.['endBeforeStart']) {
-      <small class="text-red-500 block mb-3">שעת הסיום חייבת להיות אחרי שעת ההתחלה.</small>
+      <small role="alert" class="field-error block mb-3">שעת הסיום חייבת להיות אחרי שעת ההתחלה.</small>
     }
 
     <div class="field">
