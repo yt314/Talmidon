@@ -28,3 +28,8 @@ postgresqlneondb_ownernpg_APZDMk9yT.txt
 *.swp
 .DS_Store
 Thumbs.db
+
+# Impeccable: per-developer overrides and live-mode runtime state
+.impeccable/config.local.json
+.impeccable/live/*
+!.impeccable/live/config.json
