@@ -19,6 +19,9 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="SendGrid" Version="9.29.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
+    <!-- לא בשימוש ישיר: MimeKit (דרך MailKit) מושך את 10.0.0, שיש לה פרצות ידועות
+         (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7). ההפניה כאן מעלה אותה לגרסה מתוקנת. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <PropertyGroup>
