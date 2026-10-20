@@ -16,6 +16,8 @@ using Talmidon.Infrastructure.BackgroundJobs;
 using Talmidon.Infrastructure.Data;
 using Talmidon.Infrastructure.Identity;
 using Talmidon.Api.Services;
+using Talmidon.Api.Services.Lessons;
+using Talmidon.Api.Services.Messages;
 using Talmidon.Infrastructure.Multitenancy;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +34,20 @@ builder.Services.AddScoped<ICurrentTenant, HttpContextCurrentTenant>();
 
 // הודעות למשפחה של תלמיד/ה — משותף לבקרי השיעורים והסדרות
 builder.Services.AddScoped<FamilyNotifier>();
+builder.Services.AddScoped<TeacherNotifier>();
+builder.Services.AddScoped<FamilyMembers>();
+
+// היומן: קריאות, פעולות המורה, ובקשות מהמשפחה
+builder.Services.AddScoped<LessonQueries>();
+builder.Services.AddScoped<LessonService>();
+builder.Services.AddScoped<LessonRequestService>();
+
+// שיחות בין המורה למשפחה
+builder.Services.AddScoped<MessageThreads>();
+builder.Services.AddScoped<MessageNotifier>();
+builder.Services.AddScoped<MessageQueries>();
+builder.Services.AddScoped<TeacherMessageService>();
+builder.Services.AddScoped<FamilyMessageService>();
 
 // אימות JWT
 var jwt = builder.Configuration.GetSection("Jwt");
