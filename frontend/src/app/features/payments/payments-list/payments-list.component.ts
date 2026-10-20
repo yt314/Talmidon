@@ -21,6 +21,7 @@ import { ParentsService } from '../../parents/parents.service';
 import { OpenCharge, OpenChargeSummary, Payment } from '../payments.models';
 import { PaymentsService } from '../payments.service';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
+import { toDateOnly } from '../../../shared/dates/date-only.util';
 
 @Component({
   selector: 'app-payments-list',
@@ -167,7 +168,7 @@ export class PaymentsListComponent implements OnInit {
       .create({
         parentId,
         lessonIds,
-        paidDate: this.toDateOnly(raw.paidDate),
+        paidDate: toDateOnly(raw.paidDate),
         method: raw.method || null,
         note: raw.note || null
       })
@@ -236,10 +237,4 @@ export class PaymentsListComponent implements OnInit {
     });
   }
 
-  private toDateOnly(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
 }
