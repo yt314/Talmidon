@@ -15,33 +15,33 @@
 } @else {
   <p-card class="block" [style]="{ 'max-width': '640px' }">
     <div class="photo-editor mb-4">
-      <app-avatar [name]="profile()!.fullName" [photoUrl]="photoUrl()" size="lg" />
+      <app-avatar [name]="profile()!.fullName" [photoUrl]="photo.url()" size="lg" />
       <div>
         <h3 class="mt-0 mb-2">{{ profile()!.fullName }}</h3>
         <div class="flex gap-2 flex-wrap">
           <!-- קלט הקובץ מוסתר וכפתור מפעיל אותו, כדי לשמור על מראה אחיד עם שאר הכפתורים -->
-          <input #photoInput type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+          <input #photoInput type="file" accept="image/*" hidden (change)="photo.upload($event)" />
           <p-button
-            [label]="photoUrl() ? 'החלפת תמונה' : 'העלאת תמונה'"
+            [label]="photo.url() ? 'החלפת תמונה' : 'העלאת תמונה'"
             icon="pi pi-camera"
             severity="secondary"
             [outlined]="true"
             size="small"
-            [loading]="photoBusy()"
+            [loading]="photo.busy()"
             (onClick)="photoInput.click()" />
-          @if (photoUrl()) {
+          @if (photo.url()) {
             <p-button
               label="הסרה"
               icon="pi pi-trash"
               severity="danger"
               [text]="true"
               size="small"
-              [disabled]="photoBusy()"
-              (onClick)="removePhoto()" />
+              [disabled]="photo.busy()"
+              (onClick)="photo.remove()" />
           }
         </div>
         <p class="photo-editor-hint">בלי תמונה יוצגו ראשי התיבות שלך. התמונה נחתכת לריבוע אוטומטית.</p>
-        @if (photoError(); as msg) {
+        @if (photo.error(); as msg) {
           <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>

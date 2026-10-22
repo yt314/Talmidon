@@ -13,13 +13,12 @@ import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { SubjectPickerComponent } from '../../../shared/ui/subject-picker.component';
-import { cropToSquareJpeg } from '../../../shared/avatar/image-resize.util';
 import { ShareProfileComponent } from '../../../shared/ui/share-profile.component';
-import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { TeacherProfile } from './profile.models';
 import { TeacherProfileService } from './profile.service';
 import { ProfileSetupService } from '../profile-setup/profile-setup.service';
 import { AvailabilityEditorComponent } from '../availability-editor/availability-editor.component';
+import { TeacherPhoto } from '../photo/teacher-photo';
 
 @Component({
   selector: 'app-teacher-profile-settings',
@@ -53,10 +52,8 @@ export class TeacherProfileSettingsComponent implements OnInit {
   protected readonly allSuggestions = signal<string[]>([]);
   protected readonly subjectsError = signal<string | null>(null);
   protected readonly subjectsSaved = signal(false);
-  private readonly teacherId = signal('');
-  protected readonly photoUrl = signal<string | null>(null);
-  protected readonly photoBusy = signal(false);
-  protected readonly photoError = signal<string | null>(null);
+  protected readonly photo = new TeacherPhoto(this.profileService, () =>
+    this.messageService.add({ severity: 'success', summary: 'התמונה עודכנה' }));
   /** null עד שהפרופיל נטען — מונע הבהוב של באנר "הפרופיל חסר". */
   protected readonly profileComplete = signal<boolean | null>(null);
   protected readonly fieldError = fieldError;
@@ -119,58 +116,6 @@ export class TeacherProfileSettingsComponent implements OnInit {
       });
   }
 
-  // ===== תמונת פרופיל =====
-
-  /**
-   * התמונה נחתכת לריבוע ומוקטנת בדפדפן לפני ההעלאה, כדי שהשרת לא יצטרך ספריית
-   * עיבוד תמונה ושמה שנשמר יהיה כבר בגודל התצוגה.
-   */
-  async onPhotoSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    // מאפסים מיד כדי שבחירה חוזרת של אותו קובץ תפעיל את האירוע שוב
-    input.value = '';
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      this.photoError.set('יש לבחור קובץ תמונה.');
-      return;
-    }
-
-    this.photoError.set(null);
-    this.photoBusy.set(true);
-    try {
-      const square = await cropToSquareJpeg(file);
-      this.profileService.uploadPhoto(square).subscribe({
-        next: result => {
-          this.photoBusy.set(false);
-          this.photoUrl.set(teacherPhotoUrl(this.teacherId(), result.photoVersion));
-          this.messageService.add({ severity: 'success', summary: 'התמונה עודכנה' });
-        },
-        error: err => {
-          this.photoBusy.set(false);
-          this.photoError.set(extractErrorMessage(err, 'העלאת התמונה נכשלה.'));
-        }
-      });
-    } catch {
-      this.photoBusy.set(false);
-      this.photoError.set('לא הצלחנו לקרוא את הקובץ. נסי תמונה אחרת.');
-    }
-  }
-
-  removePhoto(): void {
-    this.photoBusy.set(true);
-    this.profileService.deletePhoto().subscribe({
-      next: () => {
-        this.photoBusy.set(false);
-        this.photoUrl.set(null);
-      },
-      error: err => {
-        this.photoBusy.set(false);
-        this.photoError.set(extractErrorMessage(err, 'מחיקת התמונה נכשלה.'));
-      }
-    });
-  }
 
   /** שולף מחדש את מצב השלמות מהשרת, שהוא מקור האמת היחיד לכלל הזה. */
   private refreshCompleteness(): void {
@@ -222,8 +167,7 @@ export class TeacherProfileSettingsComponent implements OnInit {
       next: profile => {
         this.profile.set(profile);
         this.subjectNames.set(profile.subjects.map(s => s.name));
-        this.teacherId.set(profile.id);
-        this.photoUrl.set(teacherPhotoUrl(profile.id, profile.photoVersion));
+        this.photo.show(profile.id, profile.photoVersion);
         this.setCompleteness(profile.isProfileComplete);
         this.form.reset({
           phone: profile.phone ?? '',

@@ -74,8 +74,8 @@ describe('TeacherProfileSettingsComponent', () => {
 
   it('קובץ שאינו תמונה נדחה לפני ההעלאה', async () => {
     const input = { files: [new File(['x'], 'doc.pdf', { type: 'application/pdf' })], value: 'doc.pdf' };
-    await component.onPhotoSelected({ target: input } as unknown as Event);
-    expect(component['photoError']()).toBe('יש לבחור קובץ תמונה.');
+    await component['photo'].upload({ target: input } as unknown as Event);
+    expect(component['photo'].error()).toBe('יש לבחור קובץ תמונה.');
     expect(input.value).toBe('');
   });
 });
