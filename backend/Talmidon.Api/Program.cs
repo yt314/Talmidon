@@ -21,6 +21,7 @@ using Talmidon.Api.Services.Lessons;
 using Talmidon.Api.Services.Messages;
 using Talmidon.Api.Services.Parents;
 using Talmidon.Api.Services.Payments;
+using Talmidon.Api.Services.Public;
 using Talmidon.Api.Services.Students;
 using Talmidon.Api.Services.Teachers;
 using Talmidon.Infrastructure.Multitenancy;
@@ -63,6 +64,10 @@ builder.Services.AddScoped<StudentQueries>();
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<ParentService>();
 builder.Services.AddScoped<NoteService>();
+
+// הספרייה הציבורית והפניות ממנה
+builder.Services.AddScoped<PublicLibrary>();
+builder.Services.AddScoped<ContactRequestIntake>();
 
 // ניהול: חשבונות מורות והצעות תחומי לימוד
 builder.Services.AddScoped<TeacherAccounts>();
