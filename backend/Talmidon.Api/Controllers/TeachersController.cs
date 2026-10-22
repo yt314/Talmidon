@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
+using Talmidon.Api.Services;
 using Talmidon.Domain;
 using Talmidon.Domain.Entities;
 using Talmidon.Infrastructure.Auth;
@@ -143,30 +144,8 @@ public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTena
     /// כך שהרשימה גדלה מעצמה עם השימוש. אינה רשימה סגורה — אפשר להקליד כל תחום.
     /// </summary>
     [HttpGet("subject-suggestions")]
-    public async Task<ActionResult<IEnumerable<string>>> SubjectSuggestions()
-    {
-        var inUse = await db.TeacherSubjects
-            .Select(s => s.Name)
-            .Distinct()
-            .ToListAsync();
-
-        var curated = await db.SubjectSuggestions.ToListAsync();
-        var hidden = curated
-            .Where(x => x.IsHidden)
-            .Select(x => x.Name)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var all = SubjectCatalog.Common
-            .Concat(inUse)
-            .Concat(curated.Where(x => !x.IsHidden).Select(x => x.Name))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            // מה שהמנהל הסתיר יורד גם אם מורה כלשהי כבר הזינה אותו
-            .Where(n => !hidden.Contains(n))
-            .OrderBy(n => n, StringComparer.CurrentCulture)
-            .ToList();
-
-        return Ok(all);
-    }
+    public async Task<ActionResult<IEnumerable<string>>> SubjectSuggestions([FromServices] SubjectSuggestions suggestions) =>
+        Ok(await suggestions.ForTeachersAsync());
 
     // ===== תמונת פרופיל =====
 

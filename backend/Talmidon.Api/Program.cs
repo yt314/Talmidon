@@ -59,6 +59,10 @@ builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StudentQueries>();
 builder.Services.AddScoped<StudentService>();
 
+// ניהול: חשבונות מורות והצעות תחומי לימוד
+builder.Services.AddScoped<TeacherAccounts>();
+builder.Services.AddScoped<SubjectSuggestions>();
+
 // שיחות בין המורה למשפחה
 builder.Services.AddScoped<MessageThreads>();
 builder.Services.AddScoped<MessageNotifier>();
