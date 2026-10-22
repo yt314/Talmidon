@@ -120,6 +120,78 @@ public class PaymentsTests(TalmidonWebApplicationFactory factory)
     }
 
     [Fact]
+    public async Task Create_ForSeveralLessons_ChargesTheirSum_AndEmailsTheParentAReceipt()
+    {
+        var teacher = await TestHelpers.CreateAuthorizedTeacherClientAsync(factory, "paySumT");
+        var (parentClient, parentId, studentId) = await CreateParentWithChildReturningIdsAsync(teacher, "paySum");
+        var first = await CreateCompletedPayableLessonAsync(teacher, studentId, amount: 100);
+        var second = await CreateCompletedPayableLessonAsync(teacher, studentId, amount: 150);
+        var parentEmail = (await teacher.GetFromJsonAsync<List<ParentWithEmailDto>>("/api/parents"))!.First(p => p.Id == parentId).Email;
+
+        var payment = await PayAsync(teacher, parentId, first, second);
+
+        Assert.Equal(250, payment.Amount);
+        Assert.Equal(2, payment.LessonCount);
+        Assert.NotNull(payment.ConfirmationSentAt);
+        var receipt = Assert.Single(factory.SentEmails.To(parentEmail), e => e.HtmlBody.Contains("אישור קבלת תשלום"));
+        Assert.Contains("250", receipt.HtmlBody);
+
+        var detail = await teacher.GetFromJsonAsync<PaymentDetailDto>($"/api/payments/{payment.Id}");
+        Assert.Equal(new[] { first, second }.Order(), detail!.Lessons.Select(l => l.LessonId).Order());
+
+        var mine = await parentClient.GetFromJsonAsync<List<PaymentDto>>("/api/payments/mine");
+        Assert.Contains(mine!, p => p.Id == payment.Id && p.Amount == 250);
+    }
+
+    [Fact]
+    public async Task Create_WithTheSameLessonListedTwice_ChargesItOnce()
+    {
+        var teacher = await TestHelpers.CreateAuthorizedTeacherClientAsync(factory, "payDupT");
+        var (_, parentId, studentId) = await CreateParentWithChildReturningIdsAsync(teacher, "payDup");
+        var lessonId = await CreateCompletedPayableLessonAsync(teacher, studentId, amount: 120);
+
+        var payment = await PayAsync(teacher, parentId, lessonId, lessonId);
+
+        Assert.Equal(120, payment.Amount);
+        Assert.Equal(1, payment.LessonCount);
+    }
+
+    [Fact]
+    public async Task Create_WithAnUnknownLesson_ReturnsNotFound_AndChargesNothing()
+    {
+        var teacher = await TestHelpers.CreateAuthorizedTeacherClientAsync(factory, "payUnknownT");
+        var (_, parentId, studentId) = await CreateParentWithChildReturningIdsAsync(teacher, "payUnknown");
+        var lessonId = await CreateCompletedPayableLessonAsync(teacher, studentId, amount: 90);
+
+        var response = await teacher.PostAsJsonAsync("/api/payments", new
+        {
+            parentId,
+            lessonIds = new[] { lessonId, Guid.NewGuid() },
+            paidDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            method = (string?)null,
+            note = (string?)null
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var charges = await teacher.GetFromJsonAsync<List<OpenChargeDto>>($"/api/payments/open-charges?studentId={studentId}");
+        Assert.Contains(charges!, c => c.LessonId == lessonId);
+    }
+
+    private static async Task<PaymentDto> PayAsync(HttpClient teacher, Guid parentId, params Guid[] lessonIds)
+    {
+        var response = await teacher.PostAsJsonAsync("/api/payments", new
+        {
+            parentId,
+            lessonIds,
+            paidDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            method = (string?)null,
+            note = (string?)null
+        });
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<PaymentDto>())!;
+    }
+
+    [Fact]
     public async Task MyOpenCharges_OnlyReturnsTheRequestingParentsOwnChildren()
     {
         var teacher = await TestHelpers.CreateAuthorizedTeacherClientAsync(factory, "payScopeT");
@@ -231,4 +303,7 @@ public class PaymentsTests(TalmidonWebApplicationFactory factory)
     private record LessonDto(Guid Id);
     private record OpenChargeDto(Guid LessonId, Guid StudentId, string StudentName, DateTimeOffset LessonStartTime, decimal Amount);
     private record PaymentDto(Guid Id, Guid ParentId, string ParentName, decimal Amount, DateOnly PaidDate, string? Method, string? Note, int LessonCount, DateTimeOffset? ConfirmationSentAt);
+    private record ParentWithEmailDto(Guid Id, string Email);
+    private record PaymentDetailDto(Guid Id, List<PaymentLessonDto> Lessons);
+    private record PaymentLessonDto(Guid LessonId);
 }
