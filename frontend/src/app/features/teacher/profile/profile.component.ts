@@ -14,12 +14,12 @@ import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { SubjectPickerComponent } from '../../../shared/ui/subject-picker.component';
 import { cropToSquareJpeg } from '../../../shared/avatar/image-resize.util';
-import { HEBREW_DAY_NAMES } from '../../../core/i18n/primeng-hebrew';
 import { ShareProfileComponent } from '../../../shared/ui/share-profile.component';
 import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
-import { AvailabilityWindow, TeacherProfile } from './profile.models';
+import { TeacherProfile } from './profile.models';
 import { TeacherProfileService } from './profile.service';
 import { ProfileSetupService } from '../profile-setup/profile-setup.service';
+import { AvailabilityEditorComponent } from '../availability-editor/availability-editor.component';
 
 @Component({
   selector: 'app-teacher-profile-settings',
@@ -36,7 +36,7 @@ import { ProfileSetupService } from '../profile-setup/profile-setup.service';
     PageHeaderComponent,
     AvatarComponent,
     SubjectPickerComponent
-  , ShareProfileComponent],
+  , ShareProfileComponent, AvailabilityEditorComponent],
   templateUrl: './profile.component.html'
 })
 export class TeacherProfileSettingsComponent implements OnInit {
@@ -78,45 +78,9 @@ export class TeacherProfileSettingsComponent implements OnInit {
     acceptingStudents: [true]
   });
 
-  protected readonly dayNames = HEBREW_DAY_NAMES;
-  protected readonly days = [0, 1, 2, 3, 4, 5, 6];
-  protected readonly availability = signal<AvailabilityWindow[]>([]);
-  protected readonly savingAvailability = signal(false);
-
   ngOnInit(): void {
     this.profileService.subjectSuggestions().subscribe(names => this.allSuggestions.set(names));
     this.load();
-    this.profileService.getAvailability().subscribe(windows => this.availability.set(windows));
-  }
-
-  windowsForDay(day: number): AvailabilityWindow[] {
-    return this.availability().filter(w => w.dayOfWeek === day);
-  }
-
-  addWindow(day: number): void {
-    this.availability.set([...this.availability(), { dayOfWeek: day, startTime: '09:00', endTime: '10:00' }]);
-  }
-
-  removeWindow(win: AvailabilityWindow): void {
-    this.availability.set(this.availability().filter(w => w !== win));
-  }
-
-  saveAvailability(): void {
-    if (this.availability().some(w => w.endTime <= w.startTime)) {
-      this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: 'בכל חלון, שעת הסיום חייבת להיות אחרי שעת ההתחלה.' });
-      return;
-    }
-    this.savingAvailability.set(true);
-    this.profileService.updateAvailability(this.availability()).subscribe({
-      next: () => {
-        this.savingAvailability.set(false);
-        this.messageService.add({ severity: 'success', summary: 'שעות הזמינות נשמרו' });
-      },
-      error: err => {
-        this.savingAvailability.set(false);
-        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'השמירה נכשלה.') });
-      }
-    });
   }
 
   save(): void {
