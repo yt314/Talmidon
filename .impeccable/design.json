@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T00:00:00Z",
+  "title": "Design System: תלמידון (Talmidon)",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Study-Room Teal", "canonical": "var(--p-primary-color)", "tonalRamp": ["#042f2e", "#134e4a", "#115e59", "#0f766e", "#0d9488", "#2dd4bf", "#99f6e4", "#f0fdfa"] },
+      "hero-deep": { "role": "primary", "displayName": "Deep Lagoon", "canonical": "var(--p-talmidon-hero-from)" },
+      "hero-cyan": { "role": "primary", "displayName": "Harbor Cyan", "canonical": "var(--p-talmidon-hero-to)" },
+      "accent": { "role": "secondary", "displayName": "Lesson-Bell Amber", "canonical": "var(--p-talmidon-accent)", "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fcd34d", "#fffbeb"] },
+      "paper": { "role": "neutral", "displayName": "Warm Paper", "canonical": "var(--p-talmidon-app-background)", "tonalRamp": ["#0c0a09", "#292524", "#44403c", "#57534e", "#78716c", "#d6d3d1", "#e7e5e4", "#fafaf9"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "var(--p-text-color)" },
+      "ink-muted": { "role": "neutral", "displayName": "Faded Ink", "canonical": "var(--p-text-muted-color)" },
+      "night": { "role": "neutral", "displayName": "Night Study", "tonalRamp": ["#0f151b", "#171f27", "#202a34", "#2c3743", "#3c4a58", "#6e7e8e", "#c6cfd9", "#f4f6f8"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Public hero headline only." },
+      "headline": { "displayName": "Headline", "purpose": "In-app page-header titles." },
+      "title": { "displayName": "Title", "purpose": "Card and dialog titles." },
+      "metric": { "displayName": "Metric", "purpose": "Stat-card and hero numbers, tabular figures." },
+      "body": { "displayName": "Body", "purpose": "Running text." },
+      "label": { "displayName": "Label", "purpose": "Field labels, stat labels, hints." }
+    },
+    "shadows": [
+      { "name": "shadow-sm", "value": "0 1px 2px rgba(15, 23, 30, 0.06), 0 1px 3px rgba(15, 23, 30, 0.05)", "purpose": "Cards and tiles at rest." },
+      { "name": "shadow-md", "value": "0 4px 12px -2px rgba(15, 23, 30, 0.08), 0 2px 6px -2px rgba(15, 23, 30, 0.06)", "purpose": "Stat-card hover lift." },
+      { "name": "shadow-lg", "value": "0 12px 28px -8px rgba(15, 23, 30, 0.16), 0 6px 12px -6px rgba(15, 23, 30, 0.08)", "purpose": "Tutor-card hover, hero search bar." },
+      { "name": "shadow-xl", "value": "0 28px 56px -16px rgba(15, 23, 30, 0.22), 0 10px 20px -10px rgba(15, 23, 30, 0.1)", "purpose": "Dialogs and the auth card." }
+    ],
+    "motion": [
+      { "name": "rise", "value": "0.4s cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Fade-and-rise entry for screen content, staggered via --rise-delay." },
+      { "name": "state", "value": "0.18s ease", "purpose": "Hover/focus state transitions (PrimeNG transitionDuration)." },
+      { "name": "theme", "value": "0.25s ease", "purpose": "Background/color crossfade when switching light/dark." }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "420px" },
+      { "name": "sm", "value": "600px" },
+      { "name": "md", "value": "640px" },
+      { "name": "content", "value": "1140px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action: teal fill, white 600 label, 10px corners.",
+      "html": "<button class=\"ds-btn-primary\">שמירה</button>",
+      "css": ".ds-btn-primary { background: var(--p-primary-color, #0f766e); color: var(--p-primary-contrast-color, #fff); border: none; border-radius: 10px; padding: 0.625rem 1.1rem; font: 600 1rem Heebo, system-ui, sans-serif; cursor: pointer; transition: background 0.18s ease; } .ds-btn-primary:hover { background: var(--p-primary-hover-color, #115e59); } .ds-btn-primary:focus-visible { outline: 2px solid var(--p-primary-color, #0f766e); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labeled field with roomy padding and a danger-text error line.",
+      "html": "<label class=\"ds-field\" dir=\"rtl\"><span class=\"ds-field-label\">שם התלמיד</span><input class=\"ds-input\" placeholder=\"לדוגמה: נועה כהן\"></label>",
+      "css": ".ds-field { display: block; font-family: Heebo, system-ui, sans-serif; } .ds-field-label { display: block; margin-bottom: 0.4rem; font-weight: 500; color: var(--p-text-color, #292524); } .ds-input { width: 100%; box-sizing: border-box; padding: 0.625rem 0.875rem; border: 1px solid var(--p-form-field-border-color, #d6d3d1); border-radius: 10px; background: var(--p-form-field-background, #fff); color: var(--p-text-color, #292524); font: inherit; transition: border-color 0.18s ease; } .ds-input:hover { border-color: var(--p-form-field-hover-border-color, #a8a29e); } .ds-input:focus-visible { outline: 2px solid var(--p-primary-color, #0f766e); outline-offset: 2px; }"
+    },
+    {
+      "name": "Stat Card",
+      "kind": "card",
+      "refersTo": "stat-card",
+      "description": "Signature metric tile: 3px tone bar, tinted icon well, tabular number.",
+      "html": "<a class=\"ds-stat\" dir=\"rtl\" href=\"#\"><span class=\"ds-stat-icon\">₪</span><span class=\"ds-stat-label\">יתרה פתוחה</span><span class=\"ds-stat-value\">1,240</span></a>",
+      "css": ".ds-stat { --tone: var(--p-talmidon-accent, #f59e0b); position: relative; display: block; overflow: hidden; padding: 1.25rem 1.25rem 1.1rem; border-radius: 18px; background: var(--p-content-background, #fff); border: 1px solid var(--p-content-border-color, #e7e5e4); box-shadow: var(--p-talmidon-shadow-sm, 0 1px 2px rgba(15,23,30,.06)); color: var(--p-text-color, #292524); text-decoration: none; font-family: Heebo, system-ui, sans-serif; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; } .ds-stat::before { content: ''; position: absolute; inset-inline: 0; top: 0; height: 3px; background: var(--tone); } .ds-stat:hover { transform: translateY(-3px); box-shadow: var(--p-talmidon-shadow-md, 0 4px 12px -2px rgba(15,23,30,.08)); border-color: color-mix(in srgb, var(--tone) 45%, transparent); } .ds-stat:focus-visible { outline: 2px solid var(--p-primary-color, #0f766e); outline-offset: 2px; } .ds-stat-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; margin-bottom: .85rem; border-radius: 10px; background: color-mix(in srgb, var(--tone) 14%, transparent); color: var(--tone); } .ds-stat-label { display: block; font-size: .9rem; color: var(--p-text-muted-color, #78716c); } .ds-stat-value { display: block; font-size: 2rem; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Tutor Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Public library card: avatar circle, lifts with a teal-tinted border on hover.",
+      "html": "<article class=\"ds-tutor\" dir=\"rtl\"><span class=\"ds-avatar\">ר</span><h3 class=\"ds-tutor-name\">רחל לוי</h3><p class=\"ds-tutor-meta\">מתמטיקה · ירושלים</p></article>",
+      "css": ".ds-tutor { padding: 1.5rem; border-radius: 18px; background: var(--p-content-background, #fff); border: 1px solid transparent; box-shadow: var(--p-talmidon-shadow-sm, 0 1px 2px rgba(15,23,30,.06)); font-family: Heebo, system-ui, sans-serif; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; } .ds-tutor:hover { transform: translateY(-4px); box-shadow: var(--p-talmidon-shadow-lg, 0 12px 28px -8px rgba(15,23,30,.16)); border-color: color-mix(in srgb, var(--p-primary-color, #0f766e) 35%, transparent); } .ds-avatar { display: inline-flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; border-radius: 50%; font-weight: 700; font-size: 1.1rem; color: #fff; background: var(--p-primary-color, #0f766e); box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-primary-color, #0f766e) 18%, transparent); } .ds-tutor-name { margin: .75rem 0 .25rem; font-size: 1.125rem; font-weight: 600; color: var(--p-text-color, #292524); } .ds-tutor-meta { margin: 0; color: var(--p-text-muted-color, #78716c); }"
+    },
+    {
+      "name": "Status Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Rounded 600-weight tag on a soft status tint.",
+      "html": "<span class=\"ds-tag\">ממתין לתשלום</span>",
+      "css": ".ds-tag { display: inline-block; padding: .2rem .65rem; border-radius: 18px; font: 600 .8rem Heebo, system-ui, sans-serif; background: var(--p-talmidon-warn-soft, #fef3c7); color: var(--p-talmidon-warn-text, #92400e); }"
+    },
+    {
+      "name": "Glass Top Bar",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Sticky frosted bar with the teal brand mark and wordmark.",
+      "html": "<nav class=\"ds-bar\" dir=\"rtl\"><a class=\"ds-brand\" href=\"#\"><span class=\"ds-brand-mark\">ת</span>תלמידון</a><a class=\"ds-bar-link\" href=\"#\">יומן</a></nav>",
+      "css": ".ds-bar { display: flex; align-items: center; gap: 1.5rem; padding: .85rem 1.5rem; background: var(--p-talmidon-glass-background, rgba(255,255,255,.78)); backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--p-talmidon-glass-border, #e7e5e4); font-family: Heebo, system-ui, sans-serif; } .ds-brand { display: inline-flex; align-items: center; gap: .6rem; font-weight: 800; font-size: 1.1rem; color: var(--p-text-color, #292524); text-decoration: none; white-space: nowrap; } .ds-brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 2.1rem; height: 2.1rem; border-radius: 10px; background: linear-gradient(135deg, var(--p-primary-500, #14b8a6), var(--p-primary-700, #0f766e)); color: #fff; } .ds-bar-link { padding: .4rem .75rem; border-radius: 10px; color: var(--p-text-color, #292524); text-decoration: none; transition: background .18s ease; } .ds-bar-link:hover { background: color-mix(in srgb, var(--p-primary-color, #0f766e) 10%, transparent); } .ds-bar-link:focus-visible { outline: 2px solid var(--p-primary-color, #0f766e); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Sunlit Study Room",
+    "overview": "Talmidon feels like a well-lit room where a lesson happens: warm stone-toned paper on the table, teal ink for what matters, a touch of amber for what needs attention. It is a Hebrew, right-to-left product first. Layout, icon direction and logical properties (inset-inline, margin-inline-start) assume RTL and are never a mirrored afterthought.\n\nThe room changes with who is in it. The public library and the landing pages, where a family is still deciding, get the sunlight: a deep teal-to-cyan hero gradient, soft glow behind the auth card, cards that lift on hover, staggered rise-in motion. The tutor's working screens (calendar, students, billing, notes) are the desk: the same palette and shapes, but quieter, denser and built for scanning. Each component is tuned to its place rather than to one global mood.\n\nDark mode is a designed second room, not an inversion: a deep blue-charcoal surface scale replaces the warm stone, primary brightens to teal 400, and shadows deepen so cards still separate from the page.",
+    "keyCharacteristics": [
+      "Warm paper surfaces (stone) under a cool teal brand color.",
+      "One secondary accent (amber) reserved for money and reminders.",
+      "Generously rounded corners (10–18px) and soft, layered shadows.",
+      "Heebo throughout; heavy 800 weight for headlines and numbers.",
+      "Expressive on public surfaces, restrained on working surfaces.",
+      "Light and dark both first-class, switched by the `.app-dark` class."
+    ],
+    "rules": [
+      { "name": "The No-Hex Rule", "body": "No component or stylesheet hardcodes a color. Every color is a `--p-*` or `--p-talmidon-*` token so dark mode works without a second stylesheet.", "section": "colors" },
+      { "name": "The Amber Means Money Rule", "body": "Amber marks things that are owed, pending or waiting for action. It is never decoration.", "section": "colors" },
+      { "name": "The Tint, Don't Paint Rule", "body": "Status and category color appears as a 12–18% `color-mix` tint behind an icon or badge, or a 3px bar on a card edge. Whole cards are never filled with a status color.", "section": "colors" },
+      { "name": "The Weight Carries Hierarchy Rule", "body": "Change weight before changing size. Headings and numbers sit at 800, titles at 600, labels at 500.", "section": "typography" },
+      { "name": "The One Row Rule", "body": "The top bar stays on one line. Items compress or collapse to icons; they never wrap into a second row that looks intentional.", "section": "layout" },
+      { "name": "The Lift on Intent Rule", "body": "Clickable cards rise 3–4px with one shadow step up and a primary-tinted border on hover. Non-clickable cards never move.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do read every color from a `--p-*` or `--p-talmidon-*` token, and add new tokens to `talmidon-preset.ts` under both light and dark.",
+      "Do write layout with logical properties (`inset-inline`, `margin-inline-start`) so RTL is native.",
+      "Do keep white text only on teal 700 or darker; use dark text on teal 400 in dark mode.",
+      "Do use tabular figures for every number that can change (money, counts, stats).",
+      "Do respect `prefers-reduced-motion`. Motion is the 0.4s `talmidon-rise` ease-out (`cubic-bezier(0.22, 1, 0.36, 1)`) with staggered delays, and 0.18s state transitions.",
+      "Do let public surfaces be warmer and more animated than the tutor's working screens."
+    ],
+    "donts": [
+      "Don't hardcode hex values in components or `styles.scss`.",
+      "Don't use amber for decoration; it signals money or a pending action.",
+      "Don't fill whole cards with status color; tint an icon well, badge or edge bar instead.",
+      "Don't use PrimeFlex `red-500` for error text (3.8:1 on white).",
+      "Don't let the top bar wrap to two rows or push the page wider than the phone screen.",
+      "Don't fabricate social proof (counts, ratings, testimonials) in hero stats or cards."
+    ]
+  }
+}
