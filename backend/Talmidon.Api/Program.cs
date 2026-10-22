@@ -62,6 +62,7 @@ builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<StudentQueries>();
 builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<ParentService>();
+builder.Services.AddScoped<NoteService>();
 
 // ניהול: חשבונות מורות והצעות תחומי לימוד
 builder.Services.AddScoped<TeacherAccounts>();

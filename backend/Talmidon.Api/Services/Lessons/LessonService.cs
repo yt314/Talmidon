@@ -193,17 +193,16 @@ public class LessonService(TalmidonDbContext db, ICurrentTenant currentTenant, F
     {
         if (string.IsNullOrWhiteSpace(request.NoteContent)) return;
 
-        // ברירת מחדל שנאכפת בשרת: הערה גלויה לתלמיד תמיד גלויה גם להורה
-        db.Notes.Add(new Note
+        var note = new Note
         {
             Id = Guid.NewGuid(),
             TenantId = TenantId,
             StudentId = lesson.StudentId,
             LessonId = lesson.Id,
             Content = request.NoteContent,
-            VisibleToStudent = request.NoteVisibleToStudent,
-            VisibleToParent = request.NoteVisibleToParent || request.NoteVisibleToStudent,
             CreatedAt = DateTimeOffset.UtcNow
-        });
+        };
+        note.SetVisibility(request.NoteVisibleToStudent, request.NoteVisibleToParent);
+        db.Notes.Add(note);
     }
 }
