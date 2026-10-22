@@ -16,23 +16,20 @@ import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
-import { httpUrlValidator } from '../../../core/forms/validators';
 import { GENDER_OPTIONS, Gender } from '../../../core/models/gender';
 import { getAvatarColor, getInitials } from '../../../shared/avatar/avatar.util';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state.component';
 import { buildMailtoLink, hasEmail } from '../../../shared/mail/mailto.util';
 import { buildWhatsappLink, hasWhatsapp } from '../../../shared/whatsapp/whatsapp.util';
-import { Note } from '../../notes/notes.models';
-import { NotesService } from '../../notes/notes.service';
 import { Parent } from '../../parents/parents.models';
 import { ParentsService } from '../../parents/parents.service';
-import { ResourceListComponent } from '../../resources/resource-list.component';
-import { StudentResource } from '../../resources/resources.models';
-import { ResourcesService } from '../../resources/resources.service';
 import { ParentSummary, StudentDetail } from '../students.models';
 import { StudentsService } from '../students.service';
 import { IsraelDatePipe } from '../../../core/i18n/israel-date.pipe';
 import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus.directive';
+import { StudentNotesCardComponent } from '../student-notes-card/student-notes-card.component';
+import { StudentResourcesCardComponent } from '../student-resources-card/student-resources-card.component';
+import { toDateOnly } from '../../../shared/dates/date-only.util';
 
 @Component({
   selector: 'app-student-detail',
@@ -51,7 +48,7 @@ import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus
     TextareaModule,
     TooltipModule,
     EmptyStateComponent,
-    ResourceListComponent, IsraelDatePipe, RestoreFocusOnCloseDirective],
+    IsraelDatePipe, RestoreFocusOnCloseDirective, StudentNotesCardComponent, StudentResourcesCardComponent],
   templateUrl: './student-detail.component.html'
 })
 export class StudentDetailComponent implements OnInit {
@@ -60,15 +57,13 @@ export class StudentDetailComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly studentsService = inject(StudentsService);
   private readonly parentsService = inject(ParentsService);
-  private readonly notesService = inject(NotesService);
-  private readonly resourcesService = inject(ResourcesService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
 
   protected readonly initials = getInitials;
   protected readonly avatarColor = getAvatarColor;
 
-  private readonly studentId = this.route.snapshot.paramMap.get('id')!;
+  protected readonly studentId = this.route.snapshot.paramMap.get('id')!;
 
   protected readonly loading = signal(true);
   protected readonly student = signal<StudentDetail | null>(null);
@@ -77,16 +72,6 @@ export class StudentDetailComponent implements OnInit {
   protected readonly saving = signal(false);
   protected readonly linkingParentId = signal<string | null>(null);
   protected readonly selectedParentToLink = signal<string | null>(null);
-
-  protected readonly notes = signal<Note[]>([]);
-  protected readonly notesLoading = signal(true);
-  protected readonly showNoteDialog = signal(false);
-  protected readonly savingNote = signal(false);
-  protected readonly editingNoteId = signal<string | null>(null);
-  protected readonly resources = signal<StudentResource[]>([]);
-  protected readonly resourcesLoading = signal(true);
-  protected readonly showResourceDialog = signal(false);
-  protected readonly savingResource = signal(false);
 
   protected readonly fieldError = fieldError;
   protected readonly isInvalid = isInvalid;
@@ -108,30 +93,8 @@ export class StudentDetailComponent implements OnInit {
     isActive: [true]
   });
 
-  protected readonly resourceForm = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(200)]],
-    url: ['', [Validators.required, Validators.maxLength(2000), httpUrlValidator]],
-    description: ['', [Validators.maxLength(1000)]]
-  });
-
-  /**
-   * הערה שגלויה לתלמידה גלויה תמיד גם להורה (נאכף בשרת). מסמנים גם את התיבה
-   * השנייה, כדי שמצב התיבות יהיה מה שיישמר בפועל ולא הבטחה שלא תתקיים.
-   */
-  protected onVisibleToStudentChange(checked: boolean): void {
-    if (checked) this.noteForm.controls.visibleToParent.setValue(true);
-  }
-
-  protected readonly noteForm = this.fb.nonNullable.group({
-    content: ['', [Validators.required, Validators.maxLength(4000)]],
-    visibleToStudent: [false],
-    visibleToParent: [false]
-  });
-
   ngOnInit(): void {
     this.load();
-    this.loadNotes();
-    this.loadResources();
     this.parentsService.list().subscribe(parents => this.allParents.set(parents));
   }
 
@@ -163,7 +126,7 @@ export class StudentDetailComponent implements OnInit {
         fullName: raw.fullName,
         gender: raw.gender,
         gradeLevel: raw.gradeLevel || null,
-        birthDate: raw.birthDate ? this.toDateOnly(raw.birthDate) : null,
+        birthDate: raw.birthDate ? toDateOnly(raw.birthDate) : null,
         generalInfo: raw.generalInfo || null,
         defaultPricePerLesson: raw.defaultPricePerLesson,
         defaultDurationMinutes: raw.defaultDurationMinutes,
@@ -237,148 +200,6 @@ export class StudentDetailComponent implements OnInit {
     });
   }
 
-  openAddNoteDialog(): void {
-    this.editingNoteId.set(null);
-    this.noteForm.reset({ content: '', visibleToStudent: false, visibleToParent: false });
-    this.showNoteDialog.set(true);
-  }
-
-  openEditNoteDialog(note: Note): void {
-    this.editingNoteId.set(note.id);
-    this.noteForm.reset({
-      content: note.content,
-      visibleToStudent: note.visibleToStudent,
-      visibleToParent: note.visibleToParent
-    });
-    this.showNoteDialog.set(true);
-  }
-
-  saveNote(): void {
-    if (this.noteForm.invalid) {
-      this.noteForm.markAllAsTouched();
-      return;
-    }
-    this.savingNote.set(true);
-    const raw = this.noteForm.getRawValue();
-    const noteId = this.editingNoteId();
-    const onSuccess = (): void => {
-      this.savingNote.set(false);
-      this.showNoteDialog.set(false);
-      this.messageService.add({ severity: 'success', summary: 'ההערה נשמרה' });
-      this.loadNotes();
-    };
-    const onError = (err: unknown): void => {
-      this.savingNote.set(false);
-      this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'שמירת ההערה נכשלה.') });
-    };
-
-    if (noteId) {
-      this.notesService.update(noteId, raw).subscribe({ next: onSuccess, error: onError });
-    } else {
-      this.notesService.create({ studentId: this.studentId, ...raw }).subscribe({ next: onSuccess, error: onError });
-    }
-  }
-
-  confirmDeleteNote(note: Note): void {
-    this.confirmationService.confirm({
-      message: 'למחוק את ההערה? הפעולה אינה הפיכה.',
-      header: 'אישור מחיקה',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'מחק',
-      rejectLabel: 'ביטול',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.deleteNote(note.id)
-    });
-  }
-
-  private deleteNote(noteId: string): void {
-    this.notesService.delete(noteId).subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'success', summary: 'ההערה נמחקה' });
-        this.loadNotes();
-      },
-      error: err =>
-        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'המחיקה נכשלה.') })
-    });
-  }
-
-  openAddResourceDialog(): void {
-    this.resourceForm.reset({ title: '', url: '', description: '' });
-    this.showResourceDialog.set(true);
-  }
-
-  saveResource(): void {
-    if (this.resourceForm.invalid) {
-      this.resourceForm.markAllAsTouched();
-      return;
-    }
-    this.savingResource.set(true);
-    const raw = this.resourceForm.getRawValue();
-    this.resourcesService
-      .create(this.studentId, {
-        title: raw.title,
-        url: raw.url.trim(),
-        description: raw.description || null
-      })
-      .subscribe({
-        next: () => {
-          this.savingResource.set(false);
-          this.showResourceDialog.set(false);
-          this.messageService.add({ severity: 'success', summary: 'החומר נוסף' });
-          this.loadResources();
-        },
-        error: err => {
-          this.savingResource.set(false);
-          this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'הוספת החומר נכשלה.') });
-        }
-      });
-  }
-
-  confirmDeleteResource(resource: StudentResource): void {
-    this.confirmationService.confirm({
-      message: `למחוק את "${resource.title}"? הפעולה אינה הפיכה.`,
-      header: 'אישור מחיקה',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'מחק',
-      rejectLabel: 'ביטול',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.deleteResource(resource.id)
-    });
-  }
-
-  private deleteResource(resourceId: string): void {
-    this.resourcesService.delete(this.studentId, resourceId).subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'success', summary: 'החומר נמחק' });
-        this.loadResources();
-      },
-      error: err =>
-        this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'המחיקה נכשלה.') })
-    });
-  }
-
-  private loadResources(): void {
-    this.resourcesLoading.set(true);
-    this.resourcesService.listForStudent(this.studentId).subscribe({
-      next: resources => {
-        this.resources.set(resources);
-        this.resourcesLoading.set(false);
-      },
-      error: () => this.resourcesLoading.set(false)
-    });
-  }
-
-  private loadNotes(): void {
-    this.notesLoading.set(true);
-    this.notesService.listForStudent(this.studentId).subscribe({
-      next: notes => {
-        this.notes.set(notes);
-        this.notesLoading.set(false);
-      },
-      error: () => this.notesLoading.set(false)
-    });
-  }
-
   private linkParent(parentId: string): void {
     this.linkingParentId.set(parentId);
     this.studentsService.linkParent(this.studentId, parentId).subscribe({
@@ -418,10 +239,4 @@ export class StudentDetailComponent implements OnInit {
     });
   }
 
-  private toDateOnly(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
 }

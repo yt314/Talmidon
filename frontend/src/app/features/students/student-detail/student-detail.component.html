@@ -86,67 +86,9 @@
     }
   </p-card>
 
-  <p-card class="block mt-4">
-    <div class="flex justify-content-between align-items-center mb-3">
-      <h3 class="m-0">הערות פדגוגיות</h3>
-      <p-button label="הוסף הערה" icon="pi pi-plus" size="small" (onClick)="openAddNoteDialog()" />
-    </div>
+  <app-student-notes-card [studentId]="studentId" />
 
-    @if (notesLoading()) {
-      <div class="skeleton skeleton-line"></div>
-      <div class="skeleton skeleton-line"></div>
-    } @else if (notes().length === 0) {
-      <app-empty-state
-        icon="pi-file-edit"
-        title="אין הערות עדיין"
-        hint="תיעוד קצר אחרי כל שיעור הופך את המעקב לתמונה שלמה לאורך זמן.">
-        <p-button label="הוסף הערה ראשונה" icon="pi pi-plus" (onClick)="openAddNoteDialog()" />
-      </app-empty-state>
-    } @else {
-      <ul class="parent-list">
-        @for (note of notes(); track note.id) {
-          <li class="py-3 note-item">
-            <div class="flex justify-content-between align-items-start gap-2">
-              <p class="m-0 flex-1" style="white-space: pre-wrap">{{ note.content }}</p>
-              <div class="flex gap-1">
-                <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEditNoteDialog(note)" [ariaLabel]="'עריכת ההערה מ־' + (note.createdAt | ilDate: 'dd/MM/yyyy HH:mm')" />
-                <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="confirmDeleteNote(note)" [ariaLabel]="'מחיקת ההערה מ־' + (note.createdAt | ilDate: 'dd/MM/yyyy HH:mm')" />
-              </div>
-            </div>
-            <div class="flex gap-2 mt-2 align-items-center">
-              <p-tag [value]="note.visibleToStudent ? 'גלוי לתלמיד' : 'מוסתר מתלמיד'" [severity]="note.visibleToStudent ? 'success' : 'secondary'" />
-              <p-tag [value]="note.visibleToParent ? 'גלוי להורה' : 'מוסתר מהורה'" [severity]="note.visibleToParent ? 'success' : 'secondary'" />
-              <span class="text-sm text-color-secondary">{{ note.createdAt | ilDate: 'dd/MM/yyyy HH:mm' }}</span>
-            </div>
-          </li>
-        }
-      </ul>
-    }
-  </p-card>
-
-  <p-card class="block mt-4">
-    <div class="flex justify-content-between align-items-center mb-3">
-      <h3 class="m-0">חומרי לימוד</h3>
-      <p-button label="הוסף חומר" icon="pi pi-plus" size="small" (onClick)="openAddResourceDialog()" />
-    </div>
-    <p class="text-sm text-color-secondary mt-0 mb-3">
-      כל חומר שתוסיפי כאן גלוי לתלמיד/ה ולהוריו בפורטל שלהם.
-    </p>
-
-    @if (resourcesLoading()) {
-      <div class="skeleton skeleton-line"></div>
-      <div class="skeleton skeleton-line"></div>
-    } @else if (resources().length === 0) {
-      <app-empty-state
-        icon="pi-folder-open"
-        title="אין חומרי לימוד עדיין"
-        hint="קישור לדף תרגול, מסמך או קובץ — כל מה שיעזור לתלמיד/ה בין השיעורים.">
-        <p-button label="הוסף חומר ראשון" icon="pi pi-plus" (onClick)="openAddResourceDialog()" />
-      </app-empty-state>
-    } @else {
-      <app-resource-list [resources]="resources()" [deletable]="true" (remove)="confirmDeleteResource($event)" />
-    }
-  </p-card>
+  <app-student-resources-card [studentId]="studentId" />
 }
 
 <p-dialog header="עריכת תלמיד" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '480px' }">
@@ -246,86 +188,6 @@
     <div class="flex justify-content-end gap-2 mt-4">
       <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showEditDialog.set(false)" type="button" />
       <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
-    </div>
-  </form>
-</p-dialog>
-
-<p-dialog [header]="editingNoteId() ? 'עריכת הערה' : 'הוספת הערה'" [(visible)]="showNoteDialog" [modal]="true" [style]="{ width: '480px' }">
-  <form [formGroup]="noteForm" (ngSubmit)="saveNote()">
-    <div class="field">
-      <label for="n-content">תוכן ההערה *</label>
-      <textarea
-        pTextarea
-        id="n-content"
-        formControlName="content"
-        rows="4"
-        class="w-full"
-        [invalid]="isInvalid(noteForm.controls.content)"></textarea>
-      @if (fieldError(noteForm.controls.content); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
-      }
-    </div>
-    <div class="field flex align-items-center gap-2">
-      <p-checkbox
-        inputId="n-visibleToStudent"
-        formControlName="visibleToStudent"
-        [binary]="true"
-        (onChange)="onVisibleToStudentChange($event.checked)" />
-      <label for="n-visibleToStudent" class="m-0">גלוי לתלמיד</label>
-    </div>
-    <div class="field flex align-items-center gap-2">
-      <p-checkbox inputId="n-visibleToParent" formControlName="visibleToParent" [binary]="true" />
-      <label for="n-visibleToParent" class="m-0">גלוי להורה</label>
-    </div>
-    <p class="text-sm text-color-secondary mt-0">הערה שמסומנת "גלוי לתלמיד" גלויה אוטומטית גם להורה.</p>
-
-    <div class="flex justify-content-end gap-2 mt-4">
-      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showNoteDialog.set(false)" type="button" />
-      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingNote()" />
-    </div>
-  </form>
-</p-dialog>
-
-<p-dialog header="הוספת חומר לימוד" [(visible)]="showResourceDialog" [modal]="true" [style]="{ width: '480px' }">
-  <form [formGroup]="resourceForm" (ngSubmit)="saveResource()">
-    <div class="field">
-      <label for="r-title">כותרת *</label>
-      <input pInputText id="r-title" formControlName="title" class="w-full" [invalid]="isInvalid(resourceForm.controls.title)" />
-      @if (fieldError(resourceForm.controls.title); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
-      }
-    </div>
-    <div class="field">
-      <label for="r-url">קישור *</label>
-      <input
-        pInputText
-        id="r-url"
-        formControlName="url"
-        class="w-full"
-        dir="ltr"
-        placeholder="https://..."
-        [invalid]="isInvalid(resourceForm.controls.url)" />
-      @if (fieldError(resourceForm.controls.url); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
-      }
-    </div>
-    <div class="field">
-      <label for="r-description">תיאור</label>
-      <textarea
-        pTextarea
-        id="r-description"
-        formControlName="description"
-        rows="3"
-        class="w-full"
-        [invalid]="isInvalid(resourceForm.controls.description)"></textarea>
-      @if (fieldError(resourceForm.controls.description); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
-      }
-    </div>
-
-    <div class="flex justify-content-end gap-2 mt-4">
-      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showResourceDialog.set(false)" type="button" />
-      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="savingResource()" />
     </div>
   </form>
 </p-dialog>
