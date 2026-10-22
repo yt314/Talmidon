@@ -1,122 +1,25 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
-using Talmidon.Domain.Enums;
+using Talmidon.Api.Services;
 using Talmidon.Infrastructure.Auth;
-using Talmidon.Infrastructure.Data;
 
 namespace Talmidon.Api.Controllers;
 
-/// <summary>דוחות למורה. מסונן אוטומטית לדייר הנוכחי ע"י ה-Global Query Filter.</summary>
+/// <summary>דוחות חודשיים למורה — ראו <see cref="ReportService"/>.</summary>
 [ApiController]
 [Authorize(Roles = Roles.Teacher)]
 [Route("api/reports")]
-public class ReportsController(TalmidonDbContext db) : ControllerBase
+public class ReportsController(ReportService reports) : ControllerBase
 {
-    /// <summary>דוח הכנסות חודשי: שיעורים שהתקיימו, סכום שחויב, שולם ופתוח, ופילוח לפי תלמיד.</summary>
     [HttpGet("income")]
-    public async Task<ActionResult<IncomeReportDto>> Income([FromQuery] int? year, [FromQuery] int? month)
-    {
-        var now = DateTimeOffset.UtcNow;
-        var y = year ?? now.Year;
-        var m = month ?? now.Month;
-        if (m is < 1 or > 12) return BadRequest(new { message = "חודש לא תקין." });
+    public async Task<ActionResult<IncomeReportDto>> Income([FromQuery] int? year, [FromQuery] int? month) =>
+        OkOr(await reports.IncomeAsync(year, month));
 
-        var start = new DateTimeOffset(new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc), TimeSpan.Zero);
-        var end = start.AddMonths(1);
-
-        var rows = await db.Lessons
-            .Where(l => l.Status == LessonStatus.Completed && l.StartTime >= start && l.StartTime < end)
-            .Select(l => new
-            {
-                l.StudentId,
-                StudentName = l.Student.FullName,
-                l.PaymentRequired,
-                l.Amount,
-                IsPaid = l.PaymentId != null
-            })
-            .ToListAsync();
-
-        var byStudent = rows
-            .GroupBy(r => new { r.StudentId, r.StudentName })
-            .Select(g => new StudentIncomeDto(
-                g.Key.StudentId,
-                g.Key.StudentName,
-                g.Count(),
-                g.Where(r => r.PaymentRequired).Sum(r => r.Amount),
-                g.Where(r => r.PaymentRequired && r.IsPaid).Sum(r => r.Amount)))
-            .OrderByDescending(s => s.Charged)
-            .ThenBy(s => s.StudentName)
-            .ToList();
-
-        var totalCharged = byStudent.Sum(s => s.Charged);
-        var totalPaid = byStudent.Sum(s => s.Paid);
-
-        return Ok(new IncomeReportDto(
-            y, m, rows.Count, totalCharged, totalPaid, totalCharged - totalPaid, byStudent));
-    }
-
-    /// <summary>
-    /// דוח נוכחות חודשי: כמה שיעורים התקיימו, בוטלו ולא הגיע, כמה שעות לימוד בפועל,
-    /// ופילוח לפי תלמיד לפי שיעור ההחמצות.
-    ///
-    /// הנתונים האלה נשמרו מאז ומעולם ולא הוצגו בשום מקום — מורה לא יכלה לדעת מי מבטל
-    /// הרבה או כמה שעות עבדה החודש.
-    /// </summary>
     [HttpGet("attendance")]
-    public async Task<ActionResult<AttendanceReportDto>> Attendance([FromQuery] int? year, [FromQuery] int? month)
-    {
-        var now = DateTimeOffset.UtcNow;
-        var y = year ?? now.Year;
-        var m = month ?? now.Month;
-        if (m is < 1 or > 12) return BadRequest(new { message = "חודש לא תקין." });
+    public async Task<ActionResult<AttendanceReportDto>> Attendance([FromQuery] int? year, [FromQuery] int? month) =>
+        OkOr(await reports.AttendanceAsync(year, month));
 
-        var start = new DateTimeOffset(new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc), TimeSpan.Zero);
-        var end = start.AddMonths(1);
-
-        var statuses = new[] { LessonStatus.Completed, LessonStatus.Cancelled, LessonStatus.NoShow };
-        var rows = await db.Lessons
-            .Where(l => statuses.Contains(l.Status) && l.StartTime >= start && l.StartTime < end)
-            .Select(l => new
-            {
-                l.StudentId,
-                StudentName = l.Student.FullName,
-                l.Status,
-                Minutes = (l.EndTime - l.StartTime).TotalMinutes
-            })
-            .ToListAsync();
-
-        static decimal HoursOf(IEnumerable<double> minutes) =>
-            Math.Round((decimal)minutes.Sum() / 60m, 1);
-
-        var byStudent = rows
-            .GroupBy(r => new { r.StudentId, r.StudentName })
-            .Select(g =>
-            {
-                var completed = g.Count(r => r.Status == LessonStatus.Completed);
-                var cancelled = g.Count(r => r.Status == LessonStatus.Cancelled);
-                var noShow = g.Count(r => r.Status == LessonStatus.NoShow);
-                var total = completed + cancelled + noShow;
-                return new StudentAttendanceDto(
-                    g.Key.StudentId,
-                    g.Key.StudentName,
-                    completed,
-                    cancelled,
-                    noShow,
-                    HoursOf(g.Where(r => r.Status == LessonStatus.Completed).Select(r => r.Minutes)),
-                    total == 0 ? 0 : (int)Math.Round((cancelled + noShow) * 100.0 / total));
-            })
-            .OrderByDescending(s => s.MissedPercent)
-            .ThenBy(s => s.StudentName)
-            .ToList();
-
-        return Ok(new AttendanceReportDto(
-            y, m,
-            rows.Count(r => r.Status == LessonStatus.Completed),
-            rows.Count(r => r.Status == LessonStatus.Cancelled),
-            rows.Count(r => r.Status == LessonStatus.NoShow),
-            HoursOf(rows.Where(r => r.Status == LessonStatus.Completed).Select(r => r.Minutes)),
-            byStudent));
-    }
+    private ActionResult OkOr<T>(ServiceResult<T> result) =>
+        result.Error is null ? Ok(result.Value) : this.ToHttp(result.Error);
 }

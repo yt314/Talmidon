@@ -16,6 +16,7 @@ import { MessageAuthor, MessageRecipient, ThreadDetail, ThreadSummary } from './
 import { MessagesService } from './messages.service';
 import { ThreadListComponent } from './thread-list.component';
 import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.directive';
+import { markRead, moveToTop, withSentMessage } from './thread-list.util';
 
 /** נמען עם התווית המוכנה — p-select מקבל שם שדה, לא פונקציה. */
 type RecipientOption = MessageRecipient & { label: string };
@@ -87,7 +88,7 @@ export class MessagesComponent implements OnInit {
       next: detail => {
         this.selected.set(detail);
         // הסימון כנקרא קורה בשרת בעת הפתיחה — מיישרים כאן את הרשימה בלי לטעון אותה שוב
-        this.threads.update(list => list.map(t => (t.id === detail.id ? { ...t, hasUnread: false } : t)));
+        this.threads.update(list => markRead(list, detail.id));
       },
       error: err => this.fail(err, 'לא הצלחנו לפתוח את השיחה.')
     });
@@ -107,7 +108,7 @@ export class MessagesComponent implements OnInit {
         this.sending.set(false);
         this.conversation()?.clearDraft();
         this.selected.set({ ...thread, isClosed: false, messages: [...thread.messages, message] });
-        this.refreshRow(thread.id, message.body, MessageAuthor.Teacher, message.createdAt);
+        this.threads.update(list => moveToTop(withSentMessage(list, thread.id, message, MessageAuthor.Teacher), thread.id));
       },
       error: err => {
         this.sending.set(false);
@@ -187,18 +188,6 @@ export class MessagesComponent implements OnInit {
     });
   }
 
-  /** מעדכן את שורת השיחה ברשימה ומעלה אותה למעלה, בלי לטעון את התיבה מחדש. */
-  private refreshRow(id: string, preview: string, sender: MessageAuthor, at: string): void {
-    this.threads.update(list => {
-      const updated = list.map(t =>
-        t.id === id
-          ? { ...t, lastMessagePreview: preview, lastSenderRole: sender, lastMessageAt: at, hasUnread: false, isClosed: false }
-          : t
-      );
-      const moved = updated.find(t => t.id === id);
-      return moved ? [moved, ...updated.filter(t => t.id !== id)] : updated;
-    });
-  }
 
   private fail(err: unknown, fallback: string): void {
     this.toast.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, fallback) });

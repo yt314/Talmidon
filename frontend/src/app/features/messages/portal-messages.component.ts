@@ -17,6 +17,7 @@ import { MessageAuthor, ThreadDetail, ThreadSummary } from './messages.models';
 import { MessagesService } from './messages.service';
 import { ThreadListComponent } from './thread-list.component';
 import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.directive';
+import { markRead, withSentMessage } from './thread-list.util';
 
 /**
  * תיבת ההודעות של התלמידה ושל ההורה — אותו מסך לשניהם.
@@ -102,7 +103,7 @@ export class PortalMessagesComponent implements OnInit {
     this.service.myThread(thread.id).subscribe({
       next: detail => {
         this.selected.set(detail);
-        this.threads.update(list => list.map(t => (t.id === detail.id ? { ...t, hasUnread: false } : t)));
+        this.threads.update(list => markRead(list, detail.id));
       },
       error: err => this.fail(err, 'לא הצלחנו לפתוח את השיחה.')
     });
@@ -122,20 +123,7 @@ export class PortalMessagesComponent implements OnInit {
         this.sending.set(false);
         this.conversation()?.clearDraft();
         this.selected.set({ ...thread, isClosed: false, messages: [...thread.messages, message] });
-        this.threads.update(list =>
-          list.map(t =>
-            t.id === thread.id
-              ? {
-                  ...t,
-                  lastMessagePreview: message.body,
-                  lastSenderRole: this.me,
-                  lastMessageAt: message.createdAt,
-                  hasUnread: false,
-                  isClosed: false
-                }
-              : t
-          )
-        );
+        this.threads.update(list => withSentMessage(list, thread.id, message, this.me));
       },
       error: err => {
         this.sending.set(false);

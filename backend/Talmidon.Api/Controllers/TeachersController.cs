@@ -1,256 +1,70 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
-using Talmidon.Domain;
-using Talmidon.Domain.Entities;
+using Talmidon.Api.Services;
+using Talmidon.Api.Services.Teachers;
 using Talmidon.Infrastructure.Auth;
-using Talmidon.Infrastructure.Data;
-using Talmidon.Infrastructure.Multitenancy;
 
 namespace Talmidon.Api.Controllers;
 
 /// <summary>
-/// פרופיל המורה עצמה: דף הכללים + הגדרות שמוצגות בספרייה הציבורית (T9).
-/// Teacher ו-TeacherSubject אינם מסוננים ב-Global Query Filter (הם הדייר עצמו / מידע ציבורי),
-/// לכן כל שאילתה כאן מסננת במפורש לפי TenantId (= Teacher.Id) של המורה המחוברת.
+/// פרופיל המורה עצמה: דף הכללים + הגדרות שמוצגות בספרייה הציבורית (T9), התחומים,
+/// ההצעות להשלמה האוטומטית של התחומים, ותמונת הפרופיל. שעות הזמינות —
+/// ב-<see cref="TeacherAvailabilityController"/>.
 /// </summary>
 [ApiController]
 [Authorize(Roles = Roles.Teacher)]
 [Route("api/teachers")]
-public class TeachersController(TalmidonDbContext db, ICurrentTenant currentTenant) : ControllerBase
+public class TeachersController(TeacherProfileService profile) : ControllerBase
 {
-    private Guid TenantId => currentTenant.TenantId
-        ?? throw new InvalidOperationException("No tenant in the current context.");
-
     [HttpGet("me")]
     public async Task<ActionResult<TeacherProfileDto>> GetMyProfile()
     {
-        // הטלה של עמודות בלבד: ‎PhotoData‎ הוא blob, וטעינת הישות הייתה מושכת אותו
-        // מהמסד בכל טעינת פרופיל. ‎Length‎ בתוך ההטלה מיתרגם ל-‎length()‎ של Postgres
-        // ואינו קורא את התוכן עצמו.
-        var row = await db.Teachers
-            .Where(t => t.Id == TenantId)
-            .Select(t => new
-            {
-                t.Id,
-                t.FullName,
-                t.Phone,
-                t.ContactEmail,
-                t.ContactInfo,
-                t.City,
-                t.Neighborhood,
-                t.Bio,
-                t.DefaultPricePerLesson,
-                t.PricePer45Minutes,
-                t.PricePer30Minutes,
-                t.DefaultDurationMinutes,
-                t.RulesText,
-                t.IsPublic,
-                t.AcceptingStudents,
-                Subjects = t.Subjects.Select(s => new SubjectDto(s.Id, s.Name)).ToList(),
-                PhotoLength = t.PhotoData == null ? (int?)null : t.PhotoData.Length
-            })
-            .FirstOrDefaultAsync();
-        if (row is null) return NotFound();
-
-        return Ok(new TeacherProfileDto(
-            row.Id, row.FullName, row.Phone, row.ContactEmail, row.City, row.Neighborhood,
-            row.Bio,
-            row.DefaultPricePerLesson,
-            row.PricePer45Minutes,
-            row.PricePer30Minutes,
-            row.DefaultDurationMinutes, row.RulesText, row.IsPublic,
-            row.Subjects,
-            row.PhotoLength,
-            TeacherProfileRules.IsComplete(
-                row.Subjects.Count, row.DefaultPricePerLesson,
-                row.Phone, row.ContactEmail, row.ContactInfo),
-            row.AcceptingStudents));
+        var dto = await profile.GetAsync();
+        return dto is null ? NotFound() : Ok(dto);
     }
 
     [HttpPut("me")]
-    public async Task<IActionResult> UpdateMyProfile(UpdateTeacherProfileRequest request)
-    {
-        var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == TenantId);
-        if (teacher is null) return NotFound();
+    public async Task<IActionResult> UpdateMyProfile(UpdateTeacherProfileRequest request) =>
+        NoContentOr(await profile.UpdateAsync(request));
 
-        teacher.Phone = request.Phone;
-        teacher.ContactEmail = request.ContactEmail;
-        teacher.City = request.City;
-        teacher.Neighborhood = request.Neighborhood;
-        teacher.Bio = request.Bio;
-        teacher.DefaultPricePerLesson = request.DefaultPricePerLesson;
-        teacher.PricePer45Minutes = request.PricePer45Minutes;
-        teacher.PricePer30Minutes = request.PricePer30Minutes;
-        teacher.DefaultDurationMinutes = request.DefaultDurationMinutes;
-        teacher.RulesText = request.RulesText;
-        teacher.IsPublic = request.IsPublic;
-        if (request.AcceptingStudents is { } accepting) teacher.AcceptingStudents = accepting;
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
+    // ===== תחומים =====
 
     [HttpPost("me/subjects")]
     public async Task<ActionResult<SubjectDto>> AddSubject(AddSubjectRequest request)
     {
-        var name = request.Name.Trim();
-        if (await db.TeacherSubjects.AnyAsync(s => s.TeacherId == TenantId && s.Name == name))
-            return Conflict(new { message = "התחום כבר קיים." });
-
-        var subject = new TeacherSubject { Id = Guid.NewGuid(), TeacherId = TenantId, Name = name };
-        db.TeacherSubjects.Add(subject);
-        await db.SaveChangesAsync();
-        return Ok(new SubjectDto(subject.Id, subject.Name));
+        var result = await profile.AddSubjectAsync(request.Name);
+        return result.Error is null ? Ok(result.Value) : this.ToHttp(result.Error);
     }
 
     [HttpDelete("me/subjects/{id:guid}")]
-    public async Task<IActionResult> DeleteSubject(Guid id)
-    {
-        var subject = await db.TeacherSubjects.FirstOrDefaultAsync(s => s.Id == id && s.TeacherId == TenantId);
-        if (subject is null) return NotFound();
-
-        db.TeacherSubjects.Remove(subject);
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
+    public async Task<IActionResult> DeleteSubject(Guid id) => NoContentOr(await profile.DeleteSubjectAsync(id));
 
     /// <summary>מחליף את כל רשימת התחומים בבת אחת. שמות ריקים וכפילויות מסוננים.</summary>
     [HttpPut("me/subjects")]
-    public async Task<ActionResult<IEnumerable<SubjectDto>>> SetSubjects(SetSubjectsRequest request)
-    {
-        var names = request.Names
-            .Select(n => n?.Trim() ?? string.Empty)
-            .Where(n => n.Length > 0)
-            .Where(n => n.Length <= 100)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var existing = await db.TeacherSubjects.Where(s => s.TeacherId == TenantId).ToListAsync();
-        db.TeacherSubjects.RemoveRange(existing);
-
-        var subjects = names
-            .Select(n => new TeacherSubject { Id = Guid.NewGuid(), TeacherId = TenantId, Name = n })
-            .ToList();
-        db.TeacherSubjects.AddRange(subjects);
-        await db.SaveChangesAsync();
-
-        return Ok(subjects.Select(s => new SubjectDto(s.Id, s.Name)).ToList());
-    }
+    public async Task<ActionResult<IEnumerable<SubjectDto>>> SetSubjects(SetSubjectsRequest request) =>
+        Ok(await profile.SetSubjectsAsync(request.Names));
 
     /// <summary>
     /// הצעות להשלמה אוטומטית: הקטלוג הקבוע יחד עם תחומים שמורות אחרות כבר הזינו,
     /// כך שהרשימה גדלה מעצמה עם השימוש. אינה רשימה סגורה — אפשר להקליד כל תחום.
     /// </summary>
     [HttpGet("subject-suggestions")]
-    public async Task<ActionResult<IEnumerable<string>>> SubjectSuggestions()
-    {
-        var inUse = await db.TeacherSubjects
-            .Select(s => s.Name)
-            .Distinct()
-            .ToListAsync();
-
-        var curated = await db.SubjectSuggestions.ToListAsync();
-        var hidden = curated
-            .Where(x => x.IsHidden)
-            .Select(x => x.Name)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var all = SubjectCatalog.Common
-            .Concat(inUse)
-            .Concat(curated.Where(x => !x.IsHidden).Select(x => x.Name))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            // מה שהמנהל הסתיר יורד גם אם מורה כלשהי כבר הזינה אותו
-            .Where(n => !hidden.Contains(n))
-            .OrderBy(n => n, StringComparer.CurrentCulture)
-            .ToList();
-
-        return Ok(all);
-    }
+    public async Task<ActionResult<IEnumerable<string>>> SubjectSuggestions([FromServices] SubjectSuggestions suggestions) =>
+        Ok(await suggestions.ForTeachersAsync());
 
     // ===== תמונת פרופיל =====
 
-    /// <summary>גודל מרבי לתמונה. הדפדפן מקטין לריבוע לפני השליחה, ולכן זו תקרה נדיבה.</summary>
-    private const int MaxPhotoBytes = 1024 * 1024;
-
-    private static readonly string[] AllowedPhotoTypes = ["image/jpeg", "image/png", "image/webp"];
-
     [HttpPost("me/photo")]
-    [RequestSizeLimit(MaxPhotoBytes + 8192)]
+    [RequestSizeLimit(TeacherProfileService.MaxPhotoBytes + 8192)]
     public async Task<ActionResult<object>> UploadPhoto(IFormFile file)
     {
-        if (file is null || file.Length == 0)
-            return BadRequest(new { message = "לא נבחר קובץ." });
-        if (file.Length > MaxPhotoBytes)
-            return BadRequest(new { message = "הקובץ גדול מדי (עד 1MB)." });
-        if (!AllowedPhotoTypes.Contains(file.ContentType))
-            return BadRequest(new { message = "סוג קובץ לא נתמך. יש להעלות JPG, PNG או WEBP." });
-
-        var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == TenantId);
-        if (teacher is null) return NotFound();
-
-        using var buffer = new MemoryStream();
-        await file.CopyToAsync(buffer);
-        teacher.PhotoData = buffer.ToArray();
-        teacher.PhotoContentType = file.ContentType;
-        await db.SaveChangesAsync();
-
-        return Ok(new { photoVersion = teacher.PhotoData.Length });
+        var result = await profile.SetPhotoAsync(file);
+        return result.Error is null ? Ok(new { photoVersion = result.Value }) : this.ToHttp(result.Error);
     }
 
     [HttpDelete("me/photo")]
-    public async Task<IActionResult> DeletePhoto()
-    {
-        var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == TenantId);
-        if (teacher is null) return NotFound();
+    public async Task<IActionResult> DeletePhoto() => NoContentOr(await profile.ClearPhotoAsync());
 
-        teacher.PhotoData = null;
-        teacher.PhotoContentType = null;
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
-
-    // ===== שעות זמינות (T) =====
-
-    [HttpGet("me/availability")]
-    public async Task<ActionResult<IEnumerable<AvailabilityWindowDto>>> GetMyAvailability()
-    {
-        var windows = await db.TeacherAvailabilities
-            .OrderBy(a => a.DayOfWeek).ThenBy(a => a.StartTime)
-            .Select(a => new AvailabilityWindowDto(
-                (int)a.DayOfWeek, a.StartTime.ToString("HH:mm"), a.EndTime.ToString("HH:mm")))
-            .ToListAsync();
-        return Ok(windows);
-    }
-
-    /// <summary>מחליף את כל חלונות הזמינות בבת אחת (עריכת הלוח השבועי ושמירה).</summary>
-    [HttpPut("me/availability")]
-    public async Task<IActionResult> UpdateMyAvailability(UpdateAvailabilityRequest request)
-    {
-        var parsed = new List<TeacherAvailability>();
-        foreach (var w in request.Windows)
-        {
-            if (w.DayOfWeek is < 0 or > 6)
-                return BadRequest(new { message = "יום לא תקין." });
-            if (!TimeOnly.TryParse(w.StartTime, out var start) || !TimeOnly.TryParse(w.EndTime, out var end))
-                return BadRequest(new { message = "שעה לא תקינה." });
-            if (end <= start)
-                return BadRequest(new { message = "שעת הסיום חייבת להיות אחרי שעת ההתחלה." });
-
-            parsed.Add(new TeacherAvailability
-            {
-                Id = Guid.NewGuid(),
-                TenantId = TenantId,
-                DayOfWeek = (DayOfWeek)w.DayOfWeek,
-                StartTime = start,
-                EndTime = end
-            });
-        }
-
-        var existing = await db.TeacherAvailabilities.ToListAsync();
-        db.TeacherAvailabilities.RemoveRange(existing);
-        db.TeacherAvailabilities.AddRange(parsed);
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
+    private IActionResult NoContentOr(ServiceError? error) => error is null ? NoContent() : this.ToHttp(error);
 }

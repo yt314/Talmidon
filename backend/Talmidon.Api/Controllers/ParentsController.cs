@@ -1,52 +1,27 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
-using Talmidon.Domain.Entities;
+using Talmidon.Api.Services;
+using Talmidon.Api.Services.Parents;
 using Talmidon.Infrastructure.Auth;
-using Talmidon.Infrastructure.Data;
-using Talmidon.Infrastructure.Identity;
-using Talmidon.Infrastructure.Multitenancy;
 
 namespace Talmidon.Api.Controllers;
 
+/// <summary>הורים: ניהול למורה, והפרופיל של ההורה עצמו — ראו <see cref="ParentService"/>.</summary>
 [ApiController]
 [Route("api/parents")]
-public class ParentsController(
-    TalmidonDbContext db,
-    ICurrentTenant currentTenant,
-    IAccountProvisioning provisioning,
-    UserManager<ApplicationUser> userManager) : ControllerBase
+public class ParentsController(ParentService parents) : ControllerBase
 {
-    private Guid TenantId => currentTenant.TenantId
-        ?? throw new InvalidOperationException("No tenant in the current context.");
-
-    private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)
-        ?? throw new InvalidOperationException("No user id in the current context.");
-
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ParentDto>>> List()
-    {
-        var parents = await db.Parents
-            .OrderBy(p => p.FullName)
-            .Select(p => new ParentDto(p.Id, p.FullName, p.Gender, p.Email, p.Phone, p.StudentParents.Count,
-                db.Users.Any(u => u.Id == p.UserId && u.EmailConfirmed)))
-            .ToListAsync();
-        return Ok(parents);
-    }
+    public async Task<ActionResult<IEnumerable<ParentDto>>> List() => Ok(await parents.ListAsync());
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ParentDto>> GetById(Guid id)
     {
-        var parent = await db.Parents
-            .Where(p => p.Id == id)
-            .Select(p => new ParentDto(p.Id, p.FullName, p.Gender, p.Email, p.Phone, p.StudentParents.Count,
-                db.Users.Any(u => u.Id == p.UserId && u.EmailConfirmed)))
-            .FirstOrDefaultAsync();
+        var parent = await parents.GetAsync(id);
         return parent is null ? NotFound() : Ok(parent);
     }
 
@@ -54,99 +29,24 @@ public class ParentsController(
     [HttpPost]
     public async Task<ActionResult<ParentDto>> Create(CreateParentRequest request)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync();
-
-        var (user, errors) = await provisioning.CreateInvitedUserAsync(request.Email, Roles.Parent, request.FullName);
-        if (user is null)
-        {
-            await transaction.RollbackAsync();
-            return BadRequest(new { errors });
-        }
-
-        var parent = new Parent
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            UserId = user.Id,
-            FullName = request.FullName,
-            Gender = request.Gender,
-            Email = request.Email,
-            Phone = request.Phone
-        };
-        db.Parents.Add(parent);
-        await db.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        await provisioning.SendInvitationEmailAsync(user, request.FullName);
-
-        var dto = new ParentDto(parent.Id, parent.FullName, parent.Gender, parent.Email, parent.Phone, 0, false);
-        return CreatedAtAction(nameof(GetById), new { id = parent.Id }, dto);
+        var (parent, errors) = await parents.CreateAsync(request);
+        return parent is null
+            ? BadRequest(new { errors })
+            : CreatedAtAction(nameof(GetById), new { id = parent.Id }, parent);
     }
 
-    /// <summary>
-    /// Sends the invitation again. The first one is sent once and its failure
-    /// is only logged, so a parent who never received it — a send that failed,
-    /// a spam folder, a link that expired — had no way back in and the teacher
-    /// had no way to help her.
-    /// </summary>
+    /// <summary>שליחה חוזרת של ההזמנה להורה שעוד לא קבע סיסמה.</summary>
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/resend-invitation")]
-    public async Task<IActionResult> ResendInvitation(Guid id)
-    {
-        var parent = await db.Parents.FirstOrDefaultAsync(p => p.Id == id);
-        if (parent is null) return NotFound();
-
-        var user = await userManager.FindByIdAsync(parent.UserId);
-        if (user is null) return NotFound();
-        if (user.EmailConfirmed)
-            return Conflict(new { message = "ההורה כבר קבע סיסמה ואין צורך בהזמנה חדשה." });
-
-        await provisioning.SendInvitationEmailAsync(user, parent.FullName);
-        return NoContent();
-    }
+    public async Task<IActionResult> ResendInvitation(Guid id) => NoContentOr(await parents.ResendInvitationAsync(id));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, UpdateParentRequest request)
-    {
-        var parent = await db.Parents.FirstOrDefaultAsync(p => p.Id == id);
-        if (parent is null) return NotFound();
-
-        parent.FullName = request.FullName;
-        parent.Gender = request.Gender;
-        parent.Phone = request.Phone;
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
+    public async Task<IActionResult> Update(Guid id, UpdateParentRequest request) => NoContentOr(await parents.UpdateAsync(id, request));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        var parent = await db.Parents.FirstOrDefaultAsync(p => p.Id == id);
-        if (parent is null) return NotFound();
-
-        var user = await userManager.FindByIdAsync(parent.UserId);
-
-        await using var transaction = await db.Database.BeginTransactionAsync();
-        try
-        {
-            db.Parents.Remove(parent); // מקשרי תלמיד-הורה נמחקים ב-Cascade
-            await db.SaveChangesAsync();
-
-            if (user is not null)
-                await userManager.DeleteAsync(user);
-
-            await transaction.CommitAsync();
-            return NoContent();
-        }
-        catch (DbUpdateException)
-        {
-            await transaction.RollbackAsync();
-            // למשל: קיימים תשלומים המקושרים להורה (FK Restrict)
-            return Conflict(new { message = "לא ניתן למחוק הורה עם תשלומים מקושרים." });
-        }
-    }
+    public async Task<IActionResult> Delete(Guid id) => NoContentOr(await parents.DeleteAsync(id));
 
     // ===== הורה =====
 
@@ -154,10 +54,11 @@ public class ParentsController(
     [HttpGet("me")]
     public async Task<ActionResult<MyParentProfileDto>> MyProfile()
     {
-        var parent = await db.Parents
-            .Where(p => p.UserId == CurrentUserId)
-            .Select(p => new MyParentProfileDto(p.FullName, p.Gender))
-            .FirstOrDefaultAsync();
-        return parent is null ? Forbid() : Ok(parent);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new InvalidOperationException("No user id in the current context.");
+        var profile = await parents.ProfileOfParentAsync(userId);
+        return profile is null ? Forbid() : Ok(profile);
     }
+
+    private IActionResult NoContentOr(ServiceError? error) => error is null ? NoContent() : this.ToHttp(error);
 }

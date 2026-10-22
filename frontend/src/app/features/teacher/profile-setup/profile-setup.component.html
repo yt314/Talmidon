@@ -10,19 +10,19 @@
 
   <p-card>
     <div class="photo-editor mb-4">
-      <app-avatar [name]="fullName()" [photoUrl]="photoUrl()" size="lg" />
+      <app-avatar [name]="fullName()" [photoUrl]="photo.url()" size="lg" />
       <div>
-        <input #photoInput type="file" accept="image/*" hidden (change)="onPhotoSelected($event)" />
+        <input #photoInput type="file" accept="image/*" hidden (change)="photo.upload($event)" />
         <p-button
-          [label]="photoUrl() ? 'החלפת תמונה' : 'העלאת תמונה'"
+          [label]="photo.url() ? 'החלפת תמונה' : 'העלאת תמונה'"
           icon="pi pi-camera"
           severity="secondary"
           [outlined]="true"
           size="small"
-          [loading]="photoBusy()"
+          [loading]="photo.busy()"
           (onClick)="photoInput.click()" />
         <p class="photo-editor-hint">אופציונלי. בלי תמונה יוצגו ראשי התיבות שלך.</p>
-        @if (photoError(); as msg) {
+        @if (photo.error(); as msg) {
           <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>

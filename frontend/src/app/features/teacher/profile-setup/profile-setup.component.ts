@@ -11,11 +11,10 @@ import { fieldError, isInvalid } from '../../../core/forms/validation-messages';
 import { extractErrorMessage } from '../../../core/http/extract-error-message';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { SubjectPickerComponent } from '../../../shared/ui/subject-picker.component';
-import { cropToSquareJpeg } from '../../../shared/avatar/image-resize.util';
-import { teacherPhotoUrl } from '../../../shared/avatar/photo-url.util';
 import { TeacherProfile } from '../profile/profile.models';
 import { TeacherProfileService } from '../profile/profile.service';
 import { ProfileSetupService } from './profile-setup.service';
+import { TeacherPhoto } from '../photo/teacher-photo';
 
 /**
  * מסך ההקמה שאליו מגיעה מורה שהפרופיל הציבורי שלה עדיין ריק. מבקש רק את שלושת
@@ -50,10 +49,7 @@ export class ProfileSetupComponent implements OnInit {
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly fullName = signal('');
-  private readonly teacherId = signal('');
-  protected readonly photoUrl = signal<string | null>(null);
-  protected readonly photoBusy = signal(false);
-  protected readonly photoError = signal<string | null>(null);
+  protected readonly photo = new TeacherPhoto(this.profileService);
 
   protected readonly subjectNames = signal<string[]>([]);
   protected readonly allSuggestions = signal<string[]>([]);
@@ -80,8 +76,7 @@ export class ProfileSetupComponent implements OnInit {
       next: profile => {
         this.loading.set(false);
         this.fullName.set(profile.fullName);
-        this.teacherId.set(profile.id);
-        this.photoUrl.set(teacherPhotoUrl(profile.id, profile.photoVersion));
+        this.photo.show(profile.id, profile.photoVersion);
         this.subjectNames.set(profile.subjects.map(s => s.name));
         this.loaded.set(profile);
         this.form.patchValue({
@@ -97,35 +92,6 @@ export class ProfileSetupComponent implements OnInit {
     });
   }
 
-  async onPhotoSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      this.photoError.set('יש לבחור קובץ תמונה.');
-      return;
-    }
-
-    this.photoError.set(null);
-    this.photoBusy.set(true);
-    try {
-      const square = await cropToSquareJpeg(file);
-      this.profileService.uploadPhoto(square).subscribe({
-        next: result => {
-          this.photoBusy.set(false);
-          this.photoUrl.set(teacherPhotoUrl(this.teacherId(), result.photoVersion));
-        },
-        error: err => {
-          this.photoBusy.set(false);
-          this.photoError.set(extractErrorMessage(err, 'העלאת התמונה נכשלה.'));
-        }
-      });
-    } catch {
-      this.photoBusy.set(false);
-      this.photoError.set('לא הצלחנו לקרוא את הקובץ. נסי תמונה אחרת.');
-    }
-  }
 
   save(): void {
     if (this.subjectNames().length === 0) {
