@@ -1,0 +1,67 @@
+<p-card class="block mt-4">
+  <div class="flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">חומרי לימוד</h3>
+    <p-button label="הוסף חומר" icon="pi pi-plus" size="small" (onClick)="openAdd()" />
+  </div>
+  <p class="text-sm text-color-secondary mt-0 mb-3">
+    כל חומר שתוסיפי כאן גלוי לתלמיד/ה ולהוריו בפורטל שלהם.
+  </p>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-line"></div>
+    <div class="skeleton skeleton-line"></div>
+  } @else if (resources().length === 0) {
+    <app-empty-state
+      icon="pi-folder-open"
+      title="אין חומרי לימוד עדיין"
+      hint="קישור לדף תרגול, מסמך או קובץ — כל מה שיעזור לתלמיד/ה בין השיעורים.">
+      <p-button label="הוסף חומר ראשון" icon="pi pi-plus" (onClick)="openAdd()" />
+    </app-empty-state>
+  } @else {
+    <app-resource-list [resources]="resources()" [deletable]="true" (remove)="confirmDelete($event)" />
+  }
+</p-card>
+
+<p-dialog header="הוספת חומר לימוד" [(visible)]="showDialog" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <div class="field">
+      <label for="r-title">כותרת *</label>
+      <input pInputText id="r-title" formControlName="title" class="w-full" [invalid]="isInvalid(form.controls.title)" />
+      @if (fieldError(form.controls.title); as msg) {
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
+      <label for="r-url">קישור *</label>
+      <input
+        pInputText
+        id="r-url"
+        formControlName="url"
+        class="w-full"
+        dir="ltr"
+        placeholder="https://..."
+        [invalid]="isInvalid(form.controls.url)" />
+      @if (fieldError(form.controls.url); as msg) {
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
+      }
+    </div>
+    <div class="field">
+      <label for="r-description">תיאור</label>
+      <textarea
+        pTextarea
+        id="r-description"
+        formControlName="description"
+        rows="3"
+        class="w-full"
+        [invalid]="isInvalid(form.controls.description)"></textarea>
+      @if (fieldError(form.controls.description); as msg) {
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
+      }
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="showDialog.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>

@@ -1,45 +1,28 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
 using Talmidon.Api.Services;
-using Talmidon.Domain.Entities;
+using Talmidon.Api.Services.Lessons;
 using Talmidon.Domain.Enums;
 using Talmidon.Infrastructure.Auth;
-using Talmidon.Infrastructure.Data;
-using Talmidon.Infrastructure.Diagnostics;
-using Talmidon.Infrastructure.Email;
-using Talmidon.Infrastructure.Identity;
-using Talmidon.Infrastructure.Multitenancy;
 
 namespace Talmidon.Api.Controllers;
 
 /// <summary>
 /// יומן השיעורים: ניהול מלא למורה (T4/T5/T6), בקשות ועיון להורה (R2), עיון בלבד לתלמיד (S2).
-/// כל הפעולות מוגבלות אוטומטית לדייר הנוכחי ע"י ה-Global Query Filter; מעבר לכך נאכפת כאן
-/// שייכות ההורה/התלמיד לתלמיד הספציפי (הרשאה ברמת שורה).
+/// הבקר מתרגם בין HTTP לשירותים בלבד: הכללים, ההרשאה ברמת שורה וההודעות למשפחה
+/// נמצאים ב-<see cref="LessonService"/>, ב-<see cref="LessonRequestService"/> וב-<see cref="LessonQueries"/>.
 /// </summary>
 [ApiController]
 [Route("api/lessons")]
 public class LessonsController(
-    TalmidonDbContext db,
-    ICurrentTenant currentTenant,
-    UserManager<ApplicationUser> userManager,
-    IEmailSender emailSender,
-    AppLinks links,
-    FamilyNotifier familyNotifier,
-    IErrorLog errorLog) : ControllerBase
+    LessonQueries queries,
+    LessonService lessons,
+    LessonRequestService requests) : ControllerBase
 {
-    private Guid TenantId => currentTenant.TenantId
-        ?? throw new InvalidOperationException("No tenant in the current context.");
-
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? throw new InvalidOperationException("No user id in the current context.");
-
-    private Task<Parent?> CurrentParentAsync() => db.Parents.FirstOrDefaultAsync(p => p.UserId == CurrentUserId);
-    private Task<Student?> CurrentStudentAsync() => db.Students.FirstOrDefaultAsync(s => s.UserId == CurrentUserId);
 
     // ===== מורה: יומן =====
 
@@ -47,575 +30,121 @@ public class LessonsController(
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LessonDto>>> List(
         [FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to,
-        [FromQuery] Guid? studentId, [FromQuery] LessonStatus? status)
-    {
-        var query = db.Lessons.AsQueryable();
-        if (from is not null) query = query.Where(l => l.EndTime >= from);
-        if (to is not null) query = query.Where(l => l.StartTime <= to);
-        if (studentId is not null) query = query.Where(l => l.StudentId == studentId);
-        if (status is not null) query = query.Where(l => l.Status == status);
-
-        var lessons = await query
-            .OrderBy(l => l.StartTime)
-            .Select(l => new LessonDto(
-                l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.EndTime, l.Status, l.Origin,
-                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId))
-            .ToListAsync();
-        return Ok(lessons);
-    }
+        [FromQuery] Guid? studentId, [FromQuery] LessonStatus? status) =>
+        Ok(await queries.ListForTeacherAsync(from, to, studentId, status));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<LessonDto>> GetById(Guid id)
     {
-        var lesson = await db.Lessons
-            .Where(l => l.Id == id)
-            .Select(l => new LessonDto(
-                l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.EndTime, l.Status, l.Origin,
-                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId))
-            .FirstOrDefaultAsync();
+        var lesson = await queries.GetAsync(id);
         return lesson is null ? NotFound() : Ok(lesson);
     }
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost]
-    public async Task<ActionResult<LessonDto>> Create(CreateLessonRequest request)
-    {
-        if (request.EndTime <= request.StartTime)
-            return BadRequest(new { message = "שעת הסיום חייבת להיות אחרי שעת ההתחלה." });
-
-        var student = await db.Students.FirstOrDefaultAsync(s => s.Id == request.StudentId);
-        if (student is null) return NotFound(new { message = "תלמיד לא נמצא." });
-
-        var lesson = new Lesson
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            StudentId = student.Id,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            Status = LessonStatus.Scheduled,
-            Origin = LessonOrigin.Teacher
-        };
-        db.Lessons.Add(lesson);
-        await db.SaveChangesAsync();
-
-        await familyNotifier.NotifyParentsAsync(student.Id, EmailSubjects.LessonAdded(student.FullName, lesson.StartTime),
-            $"נקבע שיעור חדש עבור {student.FullName} בתאריך {FormatDate(lesson.StartTime)}.");
-
-        return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
-    }
+    public async Task<ActionResult<LessonDto>> Create(CreateLessonRequest request) =>
+        CreatedOr(await lessons.CreateAsync(request));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, UpdateLessonRequest request)
-    {
-        if (request.EndTime <= request.StartTime)
-            return BadRequest(new { message = "שעת הסיום חייבת להיות אחרי שעת ההתחלה." });
-
-        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
-        if (lesson is null) return NotFound();
-        if (lesson.Status != LessonStatus.Scheduled)
-            return Conflict(new { message = "ניתן לעדכן מועד רק לשיעור מתוזמן." });
-
-        lesson.StartTime = request.StartTime;
-        lesson.EndTime = request.EndTime;
-        await db.SaveChangesAsync();
-
-        await familyNotifier.NotifyParentsAsync(lesson.StudentId, EmailSubjects.LessonUpdated(lesson.Student.FullName, lesson.StartTime),
-            $"מועד השיעור של {lesson.Student.FullName} עודכן ל-{FormatDate(lesson.StartTime)}.");
-
-        return NoContent();
-    }
+    public async Task<IActionResult> Update(Guid id, UpdateLessonRequest request) =>
+        NoContentOr(await lessons.UpdateAsync(id, request));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
-        if (lesson is null) return NotFound();
-        if (lesson.Status == LessonStatus.Completed)
-            return Conflict(new { message = "לא ניתן למחוק שיעור שהושלם." });
-
-        var (studentId, studentName, startTime) = (lesson.StudentId, lesson.Student.FullName, lesson.StartTime);
-
-        db.Lessons.Remove(lesson);
-        await db.SaveChangesAsync();
-
-        await familyNotifier.NotifyParentsAsync(studentId, EmailSubjects.LessonCancelled(studentName, startTime),
-            $"השיעור של {studentName} בתאריך {FormatDate(startTime)} בוטל.");
-
-        return NoContent();
-    }
+    public async Task<IActionResult> Delete(Guid id) =>
+        NoContentOr(await lessons.DeleteAsync(id));
 
     /// <summary>T5 — סיום שיעור: סטטוס, תשלום, שיעורי בית, והערה פדגוגית אופציונלית.</summary>
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/complete")]
-    public async Task<ActionResult<LessonDto>> Complete(Guid id, CompleteLessonRequest request)
-    {
-        if (request.Completed && request.PaymentRequired && request.Amount <= 0)
-            return BadRequest(new { message = "יש להזין סכום חיוב." });
-
-        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
-        if (lesson is null) return NotFound();
-        if (lesson.Status != LessonStatus.Scheduled)
-            return Conflict(new { message = "ניתן לסמן סיום רק לשיעור מתוזמן." });
-
-        if (request.Completed)
-        {
-            lesson.Status = LessonStatus.Completed;
-            lesson.PaymentRequired = request.PaymentRequired;
-            lesson.Amount = request.PaymentRequired ? request.Amount : 0;
-            lesson.Homework = request.Homework;
-            lesson.CompletedAt = DateTimeOffset.UtcNow;
-        }
-        else
-        {
-            lesson.Status = LessonStatus.Cancelled;
-            lesson.PaymentRequired = false;
-            lesson.Amount = 0;
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.NoteContent))
-        {
-            // ברירת מחדל שנאכפת בשרת: הערה גלויה לתלמיד תמיד גלויה גם להורה
-            db.Notes.Add(new Note
-            {
-                Id = Guid.NewGuid(),
-                TenantId = TenantId,
-                StudentId = lesson.StudentId,
-                LessonId = lesson.Id,
-                Content = request.NoteContent,
-                VisibleToStudent = request.NoteVisibleToStudent,
-                VisibleToParent = request.NoteVisibleToParent || request.NoteVisibleToStudent,
-                CreatedAt = DateTimeOffset.UtcNow
-            });
-        }
-
-        await db.SaveChangesAsync();
-
-        if (!request.Completed)
-        {
-            await familyNotifier.NotifyParentsAsync(lesson.StudentId, EmailSubjects.LessonCancelled(lesson.Student.FullName, lesson.StartTime),
-                $"השיעור של {lesson.Student.FullName} בתאריך {FormatDate(lesson.StartTime)} בוטל.");
-        }
-
-        return Ok(ToDto(lesson, lesson.Student.FullName));
-    }
+    public async Task<ActionResult<LessonDto>> Complete(Guid id, CompleteLessonRequest request) =>
+        OkOr(await lessons.CompleteAsync(id, request));
 
     /// <summary>סימון "לא הגיע" — שיעור מתוזמן שהתלמיד לא הופיע אליו (ללא חיוב).</summary>
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/no-show")]
-    public async Task<ActionResult<LessonDto>> MarkNoShow(Guid id)
-    {
-        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
-        if (lesson is null) return NotFound();
-        if (lesson.Status != LessonStatus.Scheduled)
-            return Conflict(new { message = "ניתן לסמן \"לא הגיע\" רק לשיעור מתוזמן." });
+    public async Task<ActionResult<LessonDto>> MarkNoShow(Guid id) =>
+        OkOr(await lessons.MarkNoShowAsync(id));
 
-        lesson.Status = LessonStatus.NoShow;
-        lesson.PaymentRequired = false;
-        lesson.Amount = 0;
-        lesson.CompletedAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync();
-
-        // ההורה הוא מי שאינו יודע. התלמיד/ה היה/הייתה שם או לא, והשיעור נעלם
-        // מהמסכים בלי חיוב — כך שבלי ההודעה הזו אין שום סימן שמשהו קרה.
-        await familyNotifier.NotifyParentsAsync(lesson.StudentId,
-            EmailSubjects.LessonNoShow(lesson.Student.FullName, lesson.StartTime),
-            $"{lesson.Student.FullName} לא הגיע/ה לשיעור בתאריך {FormatDate(lesson.StartTime)}. השיעור לא חויב.");
-
-        return Ok(ToDto(lesson, lesson.Student.FullName));
-    }
-
-    // ===== מורה: בקשות שיעור חדש ממתינות (Origin=Parent, Status=Requested) =====
+    // ===== מורה: בקשות שיעור חדש ממתינות (Status=Requested) =====
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/approve")]
-    public async Task<IActionResult> ApproveRequest(Guid id)
-    {
-        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
-        if (lesson is null) return NotFound();
-        if (lesson.Status != LessonStatus.Requested)
-            return Conflict(new { message = "ניתן לאשר רק בקשת שיעור ממתינה." });
+    public async Task<IActionResult> ApproveRequest(Guid id) =>
+        NoContentOr(await lessons.ApproveRequestAsync(id));
 
-        lesson.Status = LessonStatus.Scheduled;
-        await db.SaveChangesAsync();
-
-        var studentName = lesson.Student.FullName;
-        await familyNotifier.NotifyFamilyAsync(lesson.StudentId,
-            EmailSubjects.LessonRequestApproved(studentName, lesson.StartTime),
-            $"בקשת השיעור של {studentName} לתאריך {FormatDate(lesson.StartTime)} אושרה, והשיעור נקבע ביומן.");
-
-        return NoContent();
-    }
-
-    /// <summary>
-    /// דחיית בקשה. עד לשינוי הזה היא הסתיימה כאן: השיעור ירד מהמסכים של המבקשת,
-    /// ומי שביקשה נשארה עם שקט — בלי לדעת אם נדחתה או שהבקשה בכלל לא נקלטה.
-    /// </summary>
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/decline")]
-    public async Task<IActionResult> DeclineRequest(Guid id)
-    {
-        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == id);
-        if (lesson is null) return NotFound();
-        if (lesson.Status != LessonStatus.Requested)
-            return Conflict(new { message = "ניתן לדחות רק בקשת שיעור ממתינה." });
-
-        lesson.Status = LessonStatus.Declined;
-        await db.SaveChangesAsync();
-
-        var studentName = lesson.Student.FullName;
-        await familyNotifier.NotifyFamilyAsync(lesson.StudentId,
-            EmailSubjects.LessonRequestDeclined(studentName, lesson.StartTime),
-            $"המועד שהתבקש עבור {studentName} — {FormatDate(lesson.StartTime)} — אינו מתאים למורה. אפשר לבקש מועד אחר מהיומן.");
-
-        return NoContent();
-    }
+    public async Task<IActionResult> DeclineRequest(Guid id) =>
+        NoContentOr(await lessons.DeclineRequestAsync(id));
 
     // ===== מורה: בקשות שינוי/ביטול לשיעור קיים (T6) =====
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet("change-requests")]
-    public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> ListChangeRequests([FromQuery] ChangeRequestStatus? status)
-    {
-        var query = status is null
-            ? db.LessonChangeRequests.Where(c => c.Status == ChangeRequestStatus.Pending)
-            : db.LessonChangeRequests.Where(c => c.Status == status);
-
-        var items = await query
-            .OrderBy(c => c.CreatedAt)
-            .Select(c => new ChangeRequestDto(
-                c.Id, c.LessonId, c.Lesson.StudentId, c.Lesson.Student.FullName, c.RequestedByParent.FullName,
-                c.Type, c.Lesson.StartTime, c.Lesson.EndTime, c.ProposedStartTime, c.ProposedEndTime,
-                c.Reason, c.Status, c.CreatedAt))
-            .ToListAsync();
-        return Ok(items);
-    }
+    public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> ListChangeRequests([FromQuery] ChangeRequestStatus? status) =>
+        Ok(await queries.ListChangeRequestsAsync(status));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("change-requests/{id:guid}/approve")]
-    public async Task<IActionResult> ApproveChangeRequest(Guid id)
-    {
-        var request = await db.LessonChangeRequests
-            .Include(c => c.Lesson).ThenInclude(l => l.Student)
-            .FirstOrDefaultAsync(c => c.Id == id);
-        if (request is null) return NotFound();
-        if (request.Status != ChangeRequestStatus.Pending)
-            return Conflict(new { message = "הבקשה כבר טופלה." });
-
-        var originalStart = request.Lesson.StartTime;
-        if (request.Type == ChangeRequestType.Cancel)
-        {
-            request.Lesson.Status = LessonStatus.Cancelled;
-        }
-        else
-        {
-            request.Lesson.StartTime = request.ProposedStartTime!.Value;
-            request.Lesson.EndTime = request.ProposedEndTime!.Value;
-        }
-
-        request.Status = ChangeRequestStatus.Approved;
-        request.ResolvedAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync();
-
-        // המועד בפועל השתנה, ולכן גם התלמידה מקבלת — זה היומן שלה.
-        var studentName = request.Lesson.Student.FullName;
-        if (request.Type == ChangeRequestType.Cancel)
-        {
-            await familyNotifier.NotifyFamilyAsync(request.Lesson.StudentId,
-                EmailSubjects.LessonCancelled(studentName, originalStart),
-                $"בקשת הביטול אושרה. השיעור של {studentName} בתאריך {FormatDate(originalStart)} בוטל.");
-        }
-        else
-        {
-            await familyNotifier.NotifyFamilyAsync(request.Lesson.StudentId,
-                EmailSubjects.LessonUpdated(studentName, request.Lesson.StartTime),
-                $"בקשת שינוי המועד אושרה. השיעור של {studentName} נקבע ל-{FormatDate(request.Lesson.StartTime)} במקום {FormatDate(originalStart)}.");
-        }
-
-        return NoContent();
-    }
+    public async Task<IActionResult> ApproveChangeRequest(Guid id) =>
+        NoContentOr(await requests.ApproveChangeAsync(id));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("change-requests/{id:guid}/reject")]
-    public async Task<IActionResult> RejectChangeRequest(Guid id)
-    {
-        var request = await db.LessonChangeRequests
-            .Include(c => c.Lesson).ThenInclude(l => l.Student)
-            .FirstOrDefaultAsync(c => c.Id == id);
-        if (request is null) return NotFound();
-        if (request.Status != ChangeRequestStatus.Pending)
-            return Conflict(new { message = "הבקשה כבר טופלה." });
-
-        request.Status = ChangeRequestStatus.Rejected;
-        request.ResolvedAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync();
-
-        // דחייה אינה משנה דבר במסכים: השיעור נשאר במועדו והבקשה יורדת מרשימת
-        // הממתינות. בלי ההודעה הזו ההורה ששאל פשוט לא מקבל תשובה.
-        var studentName = request.Lesson.Student.FullName;
-        var lessonStart = request.Lesson.StartTime;
-        var what = request.Type == ChangeRequestType.Cancel ? "בקשת הביטול" : "בקשת שינוי המועד";
-        await familyNotifier.NotifyParentsAsync(request.Lesson.StudentId,
-            EmailSubjects.LessonChangeRequestDeclined(studentName, lessonStart),
-            $"{what} לשיעור של {studentName} לא אושרה. השיעור מתקיים כמתוכנן, בתאריך {FormatDate(lessonStart)}.");
-
-        return NoContent();
-    }
+    public async Task<IActionResult> RejectChangeRequest(Guid id) =>
+        NoContentOr(await requests.RejectChangeAsync(id));
 
     // ===== הורה (R2) =====
 
     [Authorize(Roles = Roles.Parent)]
     [HttpGet("mine")]
-    public async Task<ActionResult<IEnumerable<LessonDto>>> MyChildrensLessons([FromQuery] Guid? studentId)
-    {
-        var parent = await CurrentParentAsync();
-        if (parent is null) return Forbid();
-
-        var childIds = db.StudentParents.Where(sp => sp.ParentId == parent.Id).Select(sp => sp.StudentId);
-        var query = db.Lessons.Where(l => childIds.Contains(l.StudentId));
-        if (studentId is not null) query = query.Where(l => l.StudentId == studentId);
-
-        var lessons = await query
-            .OrderBy(l => l.StartTime)
-            .Select(l => new LessonDto(
-                l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.EndTime, l.Status, l.Origin,
-                l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId))
-            .ToListAsync();
-        return Ok(lessons);
-    }
+    public async Task<ActionResult<IEnumerable<LessonDto>>> MyChildrensLessons([FromQuery] Guid? studentId) =>
+        OkOr(await queries.ListForParentAsync(CurrentUserId, studentId));
 
     /// <summary>בקשת שיעור חדש (נכנס כ-Requested עד אישור המורה).</summary>
     [Authorize(Roles = Roles.Parent)]
     [HttpPost("requests")]
-    public async Task<ActionResult<LessonDto>> RequestLesson(CreateLessonRequest request)
-    {
-        if (request.EndTime <= request.StartTime)
-            return BadRequest(new { message = "שעת הסיום חייבת להיות אחרי שעת ההתחלה." });
+    public async Task<ActionResult<LessonDto>> RequestLesson(CreateLessonRequest request) =>
+        CreatedOr(await requests.RequestByParentAsync(CurrentUserId, request));
 
-        var parent = await CurrentParentAsync();
-        if (parent is null) return Forbid();
-
-        var isOwnChild = await db.StudentParents.AnyAsync(sp => sp.ParentId == parent.Id && sp.StudentId == request.StudentId);
-        if (!isOwnChild) return Forbid();
-
-        var student = await db.Students.FirstAsync(s => s.Id == request.StudentId);
-
-        var lesson = new Lesson
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            StudentId = student.Id,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            Status = LessonStatus.Requested,
-            Origin = LessonOrigin.Parent,
-            RequestedByParentId = parent.Id
-        };
-        db.Lessons.Add(lesson);
-
-        var message = LessonRequestMessage(student.FullName, lesson.StartTime, request.Reason);
-        AddTeacherNotification(NotificationType.LessonRequest, "בקשת שיעור חדשה", message, "/app/lessons");
-        await db.SaveChangesAsync();
-
-        await NotifyTeacherAsync(EmailSubjects.LessonRequest(student.FullName, lesson.StartTime), message);
-
-        return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
-    }
-
-    /// <summary>
-    /// בקשת שיעור מתלמיד — אותו מסלול כמו של ההורה, והשיעור נכנס כ-Requested עד אישור.
-    ///
-    /// אין כאן מזהה תלמיד: התלמיד מבקש עבור עצמו בלבד, ולכן אין מה לאמת ואין דרך לבקש
-    /// עבור מישהו אחר.
-    /// </summary>
+    /// <summary>בקשת שיעור מהתלמיד עבור עצמו בלבד.</summary>
     [Authorize(Roles = Roles.Student)]
     [HttpPost("my-requests")]
-    public async Task<ActionResult<LessonDto>> RequestOwnLesson(CreateStudentLessonRequest request)
-    {
-        if (request.EndTime <= request.StartTime)
-            return BadRequest(new { message = "שעת הסיום חייבת להיות אחרי שעת ההתחלה." });
+    public async Task<ActionResult<LessonDto>> RequestOwnLesson(CreateStudentLessonRequest request) =>
+        CreatedOr(await requests.RequestByStudentAsync(CurrentUserId, request));
 
-        var student = await CurrentStudentAsync();
-        if (student is null) return Forbid();
-
-        var lesson = new Lesson
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            StudentId = student.Id,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            Status = LessonStatus.Requested,
-            Origin = LessonOrigin.Student
-        };
-        db.Lessons.Add(lesson);
-
-        var message = LessonRequestMessage(student.FullName, lesson.StartTime, request.Reason);
-        AddTeacherNotification(NotificationType.LessonRequest, "בקשת שיעור חדשה", message, "/app/lessons");
-        await db.SaveChangesAsync();
-
-        await NotifyTeacherAsync(EmailSubjects.LessonRequest(student.FullName, lesson.StartTime), message);
-
-        return CreatedAtAction(nameof(GetById), new { id = lesson.Id }, ToDto(lesson, student.FullName));
-    }
-
-    /// <summary>
-    /// נוסח ההודעה למורה. הסיבה שנכתבה בבקשה נכללת בה — עד כה היא התקבלה בשרת ונזרקה,
-    /// כך שמי שטרח להסביר למה הוא מבקש שיעור, הסביר לאף אחד.
-    /// </summary>
-    private static string LessonRequestMessage(string studentName, DateTimeOffset startTime, string? reason)
-    {
-        var text = $"התקבלה בקשה לקביעת שיעור עבור {studentName} בתאריך {FormatDate(startTime)}.";
-        return string.IsNullOrWhiteSpace(reason) ? text : $"{text} סיבה: {reason.Trim()}";
-    }
-
-    /// <summary>
-    /// בקשות השינוי של ילדי ההורה — כולל התשובה שהתקבלה עליהן.
-    ///
-    /// עד לשינוי הזה לא הייתה להורה שום דרך לראות בקשה ששלח: הוא יכול היה ליצור
-    /// אחת, ומשם היא נעלמה מבחינתו. דחייה אינה משנה דבר במסכים, ולכן היא הייתה
-    /// בלתי נראית לגמרי; וגם הכלל "כבר קיימת בקשה ממתינה לשיעור זה" נשמע שרירותי
-    /// כשאי אפשר לראות את הבקשה שכבר קיימת.
-    ///
-    /// מוחזרות בקשות של כל ההורים המשויכים לאותו ילד ולא רק של המבקש: זו אותה
-    /// משפחה, וזה בדיוק מה שמסביר בקשה ממתינה שההורה השני פתח.
-    /// </summary>
+    /// <summary>בקשות השינוי של ילדי ההורה — כולל התשובה שהתקבלה עליהן.</summary>
     [Authorize(Roles = Roles.Parent)]
     [HttpGet("my-change-requests")]
-    public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> MyChangeRequests()
-    {
-        var parent = await CurrentParentAsync();
-        if (parent is null) return Forbid();
-
-        var childIds = db.StudentParents.Where(sp => sp.ParentId == parent.Id).Select(sp => sp.StudentId);
-
-        var items = await db.LessonChangeRequests
-            .Where(c => childIds.Contains(c.Lesson.StudentId))
-            .OrderByDescending(c => c.CreatedAt)
-            .Select(c => new ChangeRequestDto(
-                c.Id, c.LessonId, c.Lesson.StudentId, c.Lesson.Student.FullName, c.RequestedByParent.FullName,
-                c.Type, c.Lesson.StartTime, c.Lesson.EndTime, c.ProposedStartTime, c.ProposedEndTime,
-                c.Reason, c.Status, c.CreatedAt))
-            .ToListAsync();
-        return Ok(items);
-    }
+    public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> MyChangeRequests() =>
+        OkOr(await queries.ListChangeRequestsForParentAsync(CurrentUserId));
 
     /// <summary>בקשת ביטול/שינוי מועד לשיעור קיים ומתוזמן.</summary>
     [Authorize(Roles = Roles.Parent)]
     [HttpPost("{lessonId:guid}/change-requests")]
-    public async Task<ActionResult<ChangeRequestDto>> RequestChange(Guid lessonId, CreateChangeRequestRequest request)
-    {
-        if (request.Type == ChangeRequestType.Reschedule &&
-            (request.ProposedStartTime is null || request.ProposedEndTime is null ||
-             request.ProposedEndTime <= request.ProposedStartTime))
-            return BadRequest(new { message = "יש לציין מועד חדש תקין לבקשת שינוי." });
-
-        var parent = await CurrentParentAsync();
-        if (parent is null) return Forbid();
-
-        var lesson = await db.Lessons.Include(l => l.Student).FirstOrDefaultAsync(l => l.Id == lessonId);
-        if (lesson is null) return NotFound();
-
-        var isOwnChild = await db.StudentParents.AnyAsync(sp => sp.ParentId == parent.Id && sp.StudentId == lesson.StudentId);
-        if (!isOwnChild) return Forbid();
-
-        if (lesson.Status != LessonStatus.Scheduled)
-            return Conflict(new { message = "ניתן לבקש שינוי רק לשיעור מתוזמן." });
-
-        if (await db.LessonChangeRequests.AnyAsync(c => c.LessonId == lessonId && c.Status == ChangeRequestStatus.Pending))
-            return Conflict(new { message = "כבר קיימת בקשה ממתינה לשיעור זה." });
-
-        var changeRequest = new LessonChangeRequest
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            LessonId = lessonId,
-            RequestedByParentId = parent.Id,
-            Type = request.Type,
-            ProposedStartTime = request.ProposedStartTime,
-            ProposedEndTime = request.ProposedEndTime,
-            Reason = request.Reason,
-            Status = ChangeRequestStatus.Pending,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-        db.LessonChangeRequests.Add(changeRequest);
-        var subject = request.Type == ChangeRequestType.Cancel ? "בקשה לביטול שיעור" : "בקשה לעדכון שיעור";
-        var emailSubject = request.Type == ChangeRequestType.Cancel
-            ? EmailSubjects.LessonCancelRequest(lesson.Student.FullName, lesson.StartTime)
-            : EmailSubjects.LessonRescheduleRequest(lesson.Student.FullName, lesson.StartTime);
-        AddTeacherNotification(NotificationType.ChangeRequest, subject,
-            $"התקבלה {subject} עבור {lesson.Student.FullName} (שיעור בתאריך {FormatDate(lesson.StartTime)}).", "/app/lessons");
-        await db.SaveChangesAsync();
-
-        await NotifyTeacherAsync(emailSubject,
-            $"התקבלה {subject} עבור {lesson.Student.FullName} (שיעור בתאריך {FormatDate(lesson.StartTime)}).");
-
-        return Ok(new ChangeRequestDto(
-            changeRequest.Id, lesson.Id, lesson.StudentId, lesson.Student.FullName, parent.FullName,
-            changeRequest.Type, lesson.StartTime, lesson.EndTime,
-            changeRequest.ProposedStartTime, changeRequest.ProposedEndTime,
-            changeRequest.Reason, changeRequest.Status, changeRequest.CreatedAt));
-    }
+    public async Task<ActionResult<ChangeRequestDto>> RequestChange(Guid lessonId, CreateChangeRequestRequest request) =>
+        OkOr(await requests.RequestChangeAsync(CurrentUserId, lessonId, request));
 
     // ===== תלמיד (S2) =====
 
     [Authorize(Roles = Roles.Student)]
     [HttpGet("my-schedule")]
-    public async Task<ActionResult<IEnumerable<StudentLessonDto>>> MySchedule()
-    {
-        var student = await CurrentStudentAsync();
-        if (student is null) return Forbid();
-
-        var lessons = await db.Lessons
-            .Where(l => l.StudentId == student.Id)
-            .OrderBy(l => l.StartTime)
-            .Select(l => new StudentLessonDto(l.Id, l.StartTime, l.EndTime, l.Status, l.Homework))
-            .ToListAsync();
-        return Ok(lessons);
-    }
+    public async Task<ActionResult<IEnumerable<StudentLessonDto>>> MySchedule() =>
+        OkOr(await queries.ScheduleForStudentAsync(CurrentUserId));
 
     // ----- עזר -----
 
-    private static LessonDto ToDto(Lesson l, string studentName) => new(
-        l.Id, l.StudentId, studentName, l.StartTime, l.EndTime, l.Status, l.Origin,
-        l.Homework, l.PaymentRequired, l.Amount, l.PaymentId != null, l.CompletedAt, l.SeriesId);
+    private ActionResult OkOr<T>(ServiceResult<T> result) =>
+        result.Error is null ? Ok(result.Value) : this.ToHttp(result.Error);
 
-    /// <summary>מועד שיעור בתוך גוף מייל. שעון ישראל, לא UTC — ראו EmailTime.</summary>
-    private static string FormatDate(DateTimeOffset dt) => EmailTime.DateAndTime(dt);
+    private IActionResult NoContentOr(ServiceError? error) =>
+        error is null ? NoContent() : this.ToHttp(error);
 
-    private string BuildEmailHtml(string title, string message, string? actionUrl) =>
-        EmailLayout.Render(new EmailMessage(
-            title, Intro: message, ActionLabel: "לצפייה ביומן", ActionUrl: actionUrl));
-
-    /// <summary>מוסיף התראה למרכז ההתראות של המורה (הדייר הנוכחי). נשמר יחד עם ה-SaveChanges הבא.</summary>
-    private void AddTeacherNotification(NotificationType type, string title, string message, string? linkPath)
-    {
-        db.Notifications.Add(new Notification
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            Type = type,
-            Title = title,
-            Message = message,
-            LinkPath = linkPath,
-            IsRead = false,
-            CreatedAt = DateTimeOffset.UtcNow
-        });
-    }
-
-    /// <summary>שולח מייל למורה (בקשות שמגיעות מהורה).</summary>
-    private async Task NotifyTeacherAsync(string subject, string message)
-    {
-        var teacher = await db.Teachers.FirstOrDefaultAsync(t => t.Id == TenantId);
-        if (teacher is null) return;
-
-        var user = await userManager.FindByIdAsync(teacher.UserId);
-        if (user?.Email is null) return;
-
-        try { await emailSender.SendAsync(user.Email, subject, BuildEmailHtml(subject, message, links.TeacherLessons)); }
-        catch (Exception ex) { await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "lessons/teacher-notification" }); }
-    }
+    private ActionResult CreatedOr(ServiceResult<LessonDto> result) =>
+        result.Error is null
+            ? CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value)
+            : this.ToHttp(result.Error);
 }

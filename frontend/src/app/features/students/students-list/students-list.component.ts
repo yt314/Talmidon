@@ -26,6 +26,7 @@ import { ParentsService } from '../../parents/parents.service';
 import { StudentListItem } from '../students.models';
 import { StudentsService } from '../students.service';
 import { RestoreFocusOnCloseDirective } from '../../../shared/a11y/restore-focus.directive';
+import { toDateOnly } from '../../../shared/dates/date-only.util';
 
 @Component({
   selector: 'app-students-list',
@@ -292,7 +293,7 @@ export class StudentsListComponent implements OnInit {
         fullName: raw.fullName,
         gender: raw.gender,
         gradeLevel: raw.gradeLevel || null,
-        birthDate: raw.birthDate ? this.toDateOnly(raw.birthDate) : null,
+        birthDate: raw.birthDate ? toDateOnly(raw.birthDate) : null,
         generalInfo: raw.generalInfo || null,
         loginEmail: raw.loginEmail || null,
         parentIds: raw.parentIds
@@ -384,10 +385,4 @@ export class StudentsListComponent implements OnInit {
     this.parentsService.list().subscribe(parents => this.parents.set(parents));
   }
 
-  private toDateOnly(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
 }

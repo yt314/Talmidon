@@ -1,33 +1,29 @@
 using System.Security.Claims;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
-using Talmidon.Domain.Entities;
-using Talmidon.Infrastructure.Auth;
-using Talmidon.Infrastructure.Data;
-using Talmidon.Infrastructure.Diagnostics;
-using Talmidon.Infrastructure.Email;
+using Talmidon.Api.Services;
+using Talmidon.Api.Services.Auth;
 using Talmidon.Infrastructure.Identity;
 
 namespace Talmidon.Api.Controllers;
 
+/// <summary>
+/// הרשמה, אימות מייל, התחברות, אסימונים וסיסמאות. הבקר מתרגם בין HTTP לשירותים
+/// שב-Services/Auth; תגובות שעלולות לחשוף אם כתובת רשומה — זהות תמיד.
+/// </summary>
 [ApiController]
 [EnableRateLimiting("auth")]
 [Route("api/auth")]
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    TalmidonDbContext db,
-    ITokenService tokenService,
-    IEmailSender emailSender,
-    IConfiguration configuration,
-    IErrorLog errorLog,
-    ILogger<AuthController> logger) : ControllerBase
+    TeacherRegistration registration,
+    RefreshTokens refreshTokens,
+    AuthEmails emails,
+    IConfiguration configuration) : ControllerBase
 {
     // תגובה גנרית זהה — מונעת חשיפה אם המייל כבר קיים (user enumeration)
     private const string GenericRegisterMessage =
@@ -36,56 +32,19 @@ public class AuthController(
     private const string GenericForgotPasswordMessage =
         "אם הכתובת רשומה במערכת, נשלח אליה קישור לאיפוס סיסמה. נא לבדוק את תיבת הדואר.";
 
+    private const string InvalidLinkMessage = "קישור לא תקין.";
+
+    private string RequestBaseUrl => $"{Request.Scheme}://{Request.Host}";
+
     /// <summary>הרשמת מורה עצמאית: יוצר משתמש + תפקיד Teacher + ישות מורה (דייר) + שולח מייל אימות.</summary>
     [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        // אם המייל כבר רשום — לא חושפים זאת, מחזירים תגובה גנרית זהה
-        if (await userManager.FindByEmailAsync(request.Email) is not null)
-            return Ok(new { message = GenericRegisterMessage });
-
-        await using var transaction = await db.Database.BeginTransactionAsync();
-
-        var user = new ApplicationUser
-        {
-            UserName = request.Email,
-            Email = request.Email,
-            DisplayName = request.FullName
-        };
-
-        var createResult = await userManager.CreateAsync(user, request.Password);
-        if (!createResult.Succeeded)
-        {
-            await transaction.RollbackAsync();
-            // שגיאות אלו נוגעות לסיסמה שנשלחה (לא לקיום החשבון) — בטוח להחזירן
-            return BadRequest(new { errors = createResult.Errors.Select(e => e.Description) });
-        }
-
-        var roleResult = await userManager.AddToRoleAsync(user, Roles.Teacher);
-        if (!roleResult.Succeeded)
-        {
-            await transaction.RollbackAsync();
-            logger.LogError("Failed to assign Teacher role: {Errors}",
-                string.Join("; ", roleResult.Errors.Select(e => e.Description)));
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                new { message = "ההרשמה נכשלה. נסה שוב מאוחר יותר." });
-        }
-
-        db.Teachers.Add(new Teacher
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            FullName = request.FullName,
-            Phone = request.Phone,
-            IsPublic = false,
-            DefaultPricePerLesson = 0,
-            CreatedAt = DateTimeOffset.UtcNow
-        });
-        await db.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        await SendConfirmationEmailAsync(user, request.FullName);
+        var result = await registration.RegisterAsync(request, RequestBaseUrl);
+        if (result.PasswordErrors is not null) return BadRequest(new { errors = result.PasswordErrors });
+        if (result.ServerError)
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "ההרשמה נכשלה. נסה שוב מאוחר יותר." });
         return Ok(new { message = GenericRegisterMessage });
     }
 
@@ -96,7 +55,7 @@ public class AuthController(
     {
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is not null && !await userManager.IsEmailConfirmedAsync(user))
-            await SendConfirmationEmailAsync(user, user.DisplayName ?? user.Email!);
+            await emails.SendConfirmationAsync(user, user.DisplayName ?? user.Email!, RequestBaseUrl);
 
         return Ok(new { message = GenericRegisterMessage });
     }
@@ -108,14 +67,14 @@ public class AuthController(
     {
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is not null)
-            await SendPasswordResetEmailAsync(user, user.DisplayName ?? user.Email!);
+            await emails.SendPasswordResetAsync(user, user.DisplayName ?? user.Email!);
 
         return Ok(new { message = GenericForgotPasswordMessage });
     }
 
-    /// <summary>אימות כתובת המייל (מהקישור במייל). מפנה חזרה לאפליקציית הלקוח.</summary>
-    [AllowAnonymous]
     /// <summary>
+    /// אימות כתובת המייל, מהקישור במייל — ולכן שתי התוצאות מפנות חזרה לאפליקציה.
+    ///
     /// Opened by clicking the link in the confirmation email, so both outcomes
     /// land in the app. A failure used to answer with a JSON body, which a
     /// browser shows as a bare line of text on a white page with no way back —
@@ -123,6 +82,7 @@ public class AuthController(
     /// a link older than its lifetime, or one a mail client wrapped and cut.
     /// The login screen takes it from here and offers to send a new one.
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("confirm-email")]
     public async Task<IActionResult> ConfirmEmail([FromQuery] string? userId, [FromQuery] string? token)
     {
@@ -136,30 +96,22 @@ public class AuthController(
             return failed;
 
         var user = await userManager.FindByIdAsync(userId);
-        if (user is null) return failed;
-
-        string decoded;
-        try { decoded = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token)); }
-        catch { return failed; }
+        var decoded = AuthEmails.Decode(token);
+        if (user is null || decoded is null) return failed;
 
         var result = await userManager.ConfirmEmailAsync(user, decoded);
-        return result.Succeeded
-            ? Redirect($"{clientUrl}/login?confirmed=1")
-            : failed;
+        return result.Succeeded ? Redirect($"{clientUrl}/login?confirmed=1") : failed;
     }
 
-    /// <summary>קביעת סיסמה מקישור הזמנה (הורה/תלמיד שהמורה יצרה). מאמת גם את המייל.</summary>
+    /// <summary>קביעת סיסמה מקישור הזמנה (הורה/תלמיד שהמורה יצרה) או מאיפוס. מאמת גם את המייל.</summary>
     [AllowAnonymous]
     [HttpPost("set-password")]
     public async Task<IActionResult> SetPassword(SetPasswordRequest request)
     {
         var user = await userManager.FindByIdAsync(request.UserId);
-        if (user is null)
-            return BadRequest(new { message = "קישור לא תקין." });
-
-        string decoded;
-        try { decoded = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token)); }
-        catch { return BadRequest(new { message = "קישור לא תקין." }); }
+        var decoded = AuthEmails.Decode(request.Token);
+        if (user is null || decoded is null)
+            return BadRequest(new { message = InvalidLinkMessage });
 
         var result = await userManager.ResetPasswordAsync(user, decoded, request.Password);
         if (!result.Succeeded)
@@ -193,66 +145,23 @@ public class AuthController(
         if (!result.Succeeded)
             return Unauthorized(new { message = "אימייל או סיסמה שגויים." });
 
-        var roles = await userManager.GetRolesAsync(user);
-        var tenantId = await ResolveTenantIdAsync(user, roles);
-        return await IssueTokensAsync(user, roles, tenantId);
+        return Ok(await refreshTokens.IssueAsync(user));
     }
 
     [AllowAnonymous]
     [HttpPost("refresh")]
     public async Task<ActionResult<AuthResponse>> Refresh(RefreshRequest request)
     {
-        var hash = tokenService.HashToken(request.RefreshToken);
-        var stored = await db.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == hash);
-
-        if (stored is null)
-            return Unauthorized(new { message = "אסימון רענון לא תקין." });
-
-        // שימוש חוזר באסימון שכבר נשלל/הוחלף = חשד לגניבה → שלילת כל המשפחה
-        if (!stored.IsActive)
-        {
-            await RevokeAllActiveTokensAsync(stored.UserId);
-            logger.LogWarning("Refresh token reuse detected for user {UserId}; revoked all tokens.", stored.UserId);
-            return Unauthorized(new { message = "אסימון רענון לא תקין או שפג תוקפו." });
-        }
-
-        var user = await userManager.FindByIdAsync(stored.UserId);
-        // אימות מחדש של מצב החשבון בכל רענון
-        if (user is null || await userManager.IsLockedOutAsync(user) || !await userManager.IsEmailConfirmedAsync(user))
-        {
-            stored.RevokedAt = DateTimeOffset.UtcNow;
-            await db.SaveChangesAsync();
-            return Unauthorized(new { message = "החשבון אינו זמין כעת." });
-        }
-
-        var roles = await userManager.GetRolesAsync(user);
-        var tenantId = await ResolveTenantIdAsync(user, roles);
-
-        var access = tokenService.CreateAccessToken(user, roles, tenantId);
-        var (rawRefresh, newToken) = tokenService.CreateRefreshToken(user.Id);
-
-        stored.RevokedAt = DateTimeOffset.UtcNow;
-        stored.ReplacedByTokenHash = newToken.TokenHash;
-        db.RefreshTokens.Add(newToken);
-        await db.SaveChangesAsync();
-
-        return Ok(new AuthResponse(access, tokenService.AccessTokenExpiry, rawRefresh, user.Email!, roles.ToArray()));
+        var result = await refreshTokens.RotateAsync(request.RefreshToken);
+        return result.Error is null ? Ok(result.Value) : this.ToHttp(result.Error);
     }
 
     [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(RefreshRequest request)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var hash = tokenService.HashToken(request.RefreshToken);
-        var stored = await db.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == hash);
-
         // רק הבעלים של האסימון רשאי לשלול אותו
-        if (stored is { RevokedAt: null } && stored.UserId == currentUserId)
-        {
-            stored.RevokedAt = DateTimeOffset.UtcNow;
-            await db.SaveChangesAsync();
-        }
+        await refreshTokens.RevokeAsync(request.RefreshToken, User.FindFirstValue(ClaimTypes.NameIdentifier));
         return NoContent();
     }
 
@@ -271,118 +180,7 @@ public class AuthController(
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
 
-        await RevokeAllActiveTokensAsync(user.Id);
+        await refreshTokens.RevokeAllAsync(user.Id);
         return Ok(new { message = "הסיסמה עודכנה בהצלחה. יש להתחבר מחדש." });
-    }
-
-    // ----- עזר -----
-
-    private async Task<ActionResult<AuthResponse>> IssueTokensAsync(
-        ApplicationUser user, IList<string> roles, Guid? tenantId)
-    {
-        var access = tokenService.CreateAccessToken(user, roles, tenantId);
-        var (rawRefresh, entity) = tokenService.CreateRefreshToken(user.Id);
-        db.RefreshTokens.Add(entity);
-        await db.SaveChangesAsync();
-        return Ok(new AuthResponse(access, tokenService.AccessTokenExpiry, rawRefresh, user.Email!, roles.ToArray()));
-    }
-
-    private async Task RevokeAllActiveTokensAsync(string userId)
-    {
-        var now = DateTimeOffset.UtcNow;
-        var active = await db.RefreshTokens
-            .Where(r => r.UserId == userId && r.RevokedAt == null)
-            .ToListAsync();
-        foreach (var token in active)
-            token.RevokedAt = now;
-        await db.SaveChangesAsync();
-    }
-
-    /// <summary>
-    /// מאתר את הדייר של המשתמש לפי תפקידו (Teacher → Parent → Student). שימוש ב-IgnoreQueryFilters
-    /// כי בהתחברות אין עדיין הקשר דייר; SingleOrDefault אוכף מיפוי 1:1 בין משתמש לישות דומיין.
-    /// </summary>
-    private async Task<Guid?> ResolveTenantIdAsync(ApplicationUser user, IList<string> roles)
-    {
-        if (roles.Contains(Roles.Teacher))
-        {
-            var teacher = await db.Teachers.IgnoreQueryFilters()
-                .SingleOrDefaultAsync(t => t.UserId == user.Id);
-            return teacher?.Id;
-        }
-        if (roles.Contains(Roles.Parent))
-        {
-            var parent = await db.Parents.IgnoreQueryFilters()
-                .SingleOrDefaultAsync(p => p.UserId == user.Id);
-            return parent?.TenantId;
-        }
-        if (roles.Contains(Roles.Student))
-        {
-            var student = await db.Students.IgnoreQueryFilters()
-                .SingleOrDefaultAsync(s => s.UserId == user.Id);
-            return student?.TenantId;
-        }
-        return null;
-    }
-
-    private async Task SendConfirmationEmailAsync(ApplicationUser user, string fullName)
-    {
-        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-
-        // בסיס כתובת אמין מהקונפיג (לא מ-Request.Host — מניעת host-header injection)
-        var apiBase = configuration["App:ApiBaseUrl"];
-        var baseUrl = string.IsNullOrWhiteSpace(apiBase)
-            ? $"{Request.Scheme}://{Request.Host}"
-            : apiBase.TrimEnd('/');
-        var confirmUrl = $"{baseUrl}/api/auth/confirm-email?userId={user.Id}&token={encoded}";
-
-        var html = EmailLayout.Render(new EmailMessage(
-            "ברוכה הבאה לתלמידון",
-            Greeting: $"שלום {fullName},",
-            Intro: "תודה שנרשמת. נשאר רק לאשר את כתובת המייל:",
-            ActionLabel: "אישור כתובת המייל",
-            ActionUrl: confirmUrl,
-            Note: "אם לא נרשמת, אפשר להתעלם מההודעה."));
-
-        try
-        {
-            await emailSender.SendAsync(user.Email!, "אימות חשבון תלמידון", html);
-        }
-        catch (Exception ex)
-        {
-            // מייל אימות שלא יצא פירושו מורה שנרשמה ואינה יכולה להיכנס, בלי שאיש יודע.
-            await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "auth/confirmation" });
-        }
-    }
-
-    /// <summary>
-    /// שולח קישור לעמוד /set-password בלקוח (אותו עמוד שמשמש גם להזמנות הורה/תלמיד) —
-    /// קביעת סיסמה חדשה מאמתת מחדש את הבעלות על המייל, ולכן מאשרת אותו גם אם לא היה מאושר.
-    /// </summary>
-    private async Task SendPasswordResetEmailAsync(ApplicationUser user, string fullName)
-    {
-        var token = await userManager.GeneratePasswordResetTokenAsync(user);
-        var encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-        var clientUrl = (configuration["App:ClientUrl"] ?? "http://localhost:4200").TrimEnd('/');
-        var resetUrl = $"{clientUrl}/set-password?userId={user.Id}&token={encoded}";
-
-        var html = EmailLayout.Render(new EmailMessage(
-            "איפוס סיסמה",
-            Greeting: $"שלום {fullName},",
-            Intro: "קיבלנו בקשה לאיפוס הסיסמה שלך.",
-            ActionLabel: "קביעת סיסמה חדשה",
-            ActionUrl: resetUrl,
-            Note: "אם לא ביקשת לאפס סיסמה, אפשר להתעלם מההודעה — החשבון שלך בטוח."));
-
-        try
-        {
-            await emailSender.SendAsync(user.Email!, "איפוס סיסמה — תלמידון", html);
-        }
-        catch (Exception ex)
-        {
-            // ואיפוס סיסמה שלא יצא פירושו משתמשת נעולה מחוץ לחשבון שלה.
-            await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "auth/password-reset" });
-        }
     }
 }

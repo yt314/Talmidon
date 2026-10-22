@@ -1,0 +1,95 @@
+<p-dialog header="סיום שיעור" [(visible)]="visible" [modal]="true" [style]="{ width: '480px' }" (onHide)="onHidden()">
+  <form [formGroup]="form" (ngSubmit)="save()">
+    @if (lesson(); as lesson) {
+      <p class="mt-0 mb-3 text-color-secondary text-sm">
+        {{ lesson.studentName }} · {{ lesson.startTime | ilDate: 'dd/MM HH:mm' }}
+        @if (batch() && remainingAfterCurrent() > 0) {
+          <span class="marking-progress">עוד {{ remainingAfterCurrent() }} אחרי זה</span>
+        }
+      </p>
+    }
+    <div class="field flex align-items-center gap-2">
+      <p-checkbox inputId="c-completed" formControlName="completed" [binary]="true" />
+      <label for="c-completed" class="m-0">השיעור התקיים</label>
+    </div>
+
+    @if (form.controls.completed.value) {
+      <div class="field flex align-items-center gap-2">
+        <p-checkbox inputId="c-paymentRequired" formControlName="paymentRequired" [binary]="true" />
+        <label for="c-paymentRequired" class="m-0">נדרש תשלום</label>
+      </div>
+
+      @if (form.controls.paymentRequired.value) {
+        <div class="field">
+          <label for="c-amount">סכום (₪) *</label>
+          <p-inputnumber
+            inputId="c-amount"
+            formControlName="amount"
+            mode="decimal"
+            [min]="0"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            styleClass="w-full"
+            inputStyleClass="w-full"
+            [invalid]="isInvalid(form.controls.amount)" />
+          @if (fieldError(form.controls.amount); as msg) {
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
+          } @else if (amountExplanation(); as hint) {
+            <small class="text-color-secondary block mt-1">{{ hint }}</small>
+          }
+        </div>
+      }
+
+      <div class="field">
+        <label for="c-homework">שיעורי בית</label>
+        <textarea
+          pTextarea
+          id="c-homework"
+          formControlName="homework"
+          rows="2"
+          class="w-full"
+          [invalid]="isInvalid(form.controls.homework)"></textarea>
+        @if (fieldError(form.controls.homework); as msg) {
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="c-note">הערה פדגוגית (אופציונלי)</label>
+        <textarea
+          pTextarea
+          id="c-note"
+          formControlName="noteContent"
+          rows="3"
+          class="w-full"
+          [invalid]="isInvalid(form.controls.noteContent)"></textarea>
+        @if (fieldError(form.controls.noteContent); as msg) {
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
+        }
+      </div>
+
+      @if (form.controls.noteContent.value) {
+        <div class="field flex align-items-center gap-2">
+          <p-checkbox
+            inputId="c-noteVisibleToStudent"
+            formControlName="noteVisibleToStudent"
+            [binary]="true"
+            (onChange)="onNoteVisibleToStudentChange($event.checked)" />
+          <label for="c-noteVisibleToStudent" class="m-0">גלוי לתלמיד</label>
+        </div>
+        <div class="field flex align-items-center gap-2">
+          <p-checkbox inputId="c-noteVisibleToParent" formControlName="noteVisibleToParent" [binary]="true" />
+          <label for="c-noteVisibleToParent" class="m-0">גלוי להורה</label>
+        </div>
+        <p class="text-sm text-color-secondary mt-0 mb-3">הערה שמסומנת "גלוי לתלמיד" גלויה אוטומטית גם להורה.</p>
+      }
+    } @else {
+      <p class="text-color-secondary">השיעור יסומן כמבוטל.</p>
+    }
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <p-button label="ביטול" severity="secondary" [text]="true" (onClick)="visible.set(false)" type="button" />
+      <p-button label="שמירה" icon="pi pi-check" type="submit" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>
