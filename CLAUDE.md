@@ -1,5 +1,12 @@
 # Working conventions for Claude Code in this repository
 
+## Branches
+
+- Name branches by what they change, in lowercase kebab-case with a type prefix:
+  `fix/lesson-times`, `feature/data-export`, `refactor/payments-service`, `docs/readme-setup`.
+- Do not use `claude/...` names or random suffixes. If the session assigns one and the owner has
+  named a branch in the task, use the owner's name.
+
 ## Commits
 
 - Author commits as the repository owner, not as Claude:
