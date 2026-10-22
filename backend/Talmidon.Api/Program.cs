@@ -20,6 +20,7 @@ using Talmidon.Api.Services.Auth;
 using Talmidon.Api.Services.Lessons;
 using Talmidon.Api.Services.Messages;
 using Talmidon.Api.Services.Payments;
+using Talmidon.Api.Services.Students;
 using Talmidon.Infrastructure.Multitenancy;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,10 @@ builder.Services.AddScoped<LessonRequestService>();
 // תשלומים: קריאות, ורישום/ביטול תשלום
 builder.Services.AddScoped<PaymentQueries>();
 builder.Services.AddScoped<PaymentService>();
+
+// תלמידים
+builder.Services.AddScoped<StudentQueries>();
+builder.Services.AddScoped<StudentService>();
 
 // שיחות בין המורה למשפחה
 builder.Services.AddScoped<MessageThreads>();

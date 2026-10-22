@@ -1,223 +1,73 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
-using Talmidon.Domain.Entities;
+using Talmidon.Api.Services;
+using Talmidon.Api.Services.Students;
 using Talmidon.Infrastructure.Auth;
-using Talmidon.Infrastructure.Data;
-using Talmidon.Infrastructure.Identity;
-using Talmidon.Infrastructure.Multitenancy;
 
 namespace Talmidon.Api.Controllers;
 
+/// <summary>
+/// תלמידים: ניהול למורה, ומה שהמשפחה רואה על עצמה. הבקר מתרגם בין HTTP
+/// ל-<see cref="StudentService"/> ול-<see cref="StudentQueries"/>.
+/// </summary>
 [ApiController]
 [Route("api/students")]
-public class StudentsController(
-    TalmidonDbContext db,
-    ICurrentTenant currentTenant,
-    IAccountProvisioning provisioning,
-    UserManager<ApplicationUser> userManager) : ControllerBase
+public class StudentsController(StudentQueries queries, StudentService students) : ControllerBase
 {
-    private Guid TenantId => currentTenant.TenantId
-        ?? throw new InvalidOperationException("No tenant in the current context.");
-
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? throw new InvalidOperationException("No user id in the current context.");
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<StudentListItemDto>>> List()
-    {
-        var students = await db.Students
-            .OrderBy(s => s.FullName)
-            .Select(s => new StudentListItemDto(
-                s.Id, s.FullName, s.GradeLevel, s.IsActive, s.UserId != null, s.StudentParents.Count,
-                s.DefaultPricePerLesson, s.DefaultDurationMinutes,
-                db.Users.Any(u => u.Id == s.UserId && u.EmailConfirmed)))
-            .ToListAsync();
-        return Ok(students);
-    }
+    public async Task<ActionResult<IEnumerable<StudentListItemDto>>> List() =>
+        Ok(await queries.ListAsync());
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<StudentDetailDto>> GetById(Guid id)
     {
-        var student = await db.Students
-            .Where(s => s.Id == id)
-            .Select(s => new StudentDetailDto(
-                s.Id, s.FullName, s.Gender, s.GradeLevel, s.BirthDate, s.GeneralInfo,
-                s.DefaultPricePerLesson, s.DefaultDurationMinutes, s.IsActive, s.UserId != null,
-                s.StudentParents.Select(sp => new ParentSummaryDto(
-                    sp.Parent.Id, sp.Parent.FullName, sp.Parent.Email, sp.Parent.Phone)).ToList()))
-            .FirstOrDefaultAsync();
+        var student = await queries.GetAsync(id);
         return student is null ? NotFound() : Ok(student);
     }
 
-    /// <summary>
-    /// Sends the invitation again, for a student who has her own sign-in. The
-    /// first one is sent once and its failure is only logged, so a student who
-    /// never received it had no way in and the teacher had no way to help.
-    /// </summary>
+    /// <summary>שליחה חוזרת של ההזמנה לתלמיד/ה שיש לו/ה כניסה משלו/ה ועוד לא קבע/ה סיסמה.</summary>
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/resend-invitation")]
-    public async Task<IActionResult> ResendInvitation(Guid id)
-    {
-        var student = await db.Students.FirstOrDefaultAsync(s => s.Id == id);
-        if (student is null) return NotFound();
-        if (student.UserId is null)
-            return Conflict(new { message = "לתלמיד/ה אין כניסה משלו/ה, ולכן אין הזמנה לשלוח." });
-
-        var user = await userManager.FindByIdAsync(student.UserId);
-        if (user is null) return NotFound();
-        if (user.EmailConfirmed)
-            return Conflict(new { message = "התלמיד/ה כבר קבע/ה סיסמה ואין צורך בהזמנה חדשה." });
-
-        await provisioning.SendInvitationEmailAsync(user, student.FullName);
-        return NoContent();
-    }
+    public async Task<IActionResult> ResendInvitation(Guid id) =>
+        NoContentOr(await students.ResendInvitationAsync(id));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost]
     public async Task<ActionResult<StudentDetailDto>> Create(CreateStudentRequest request)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync();
-
-        ApplicationUser? user = null;
-        if (!string.IsNullOrWhiteSpace(request.LoginEmail))
-        {
-            var (created, errors) = await provisioning.CreateInvitedUserAsync(
-                request.LoginEmail, Roles.Student, request.FullName);
-            if (created is null)
-            {
-                await transaction.RollbackAsync();
-                return BadRequest(new { errors });
-            }
-            user = created;
-        }
-
-        var student = new Student
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            UserId = user?.Id,
-            FullName = request.FullName,
-            Gender = request.Gender,
-            GradeLevel = request.GradeLevel,
-            BirthDate = request.BirthDate,
-            GeneralInfo = request.GeneralInfo,
-            DefaultPricePerLesson = request.DefaultPricePerLesson,
-            DefaultDurationMinutes = request.DefaultDurationMinutes,
-            IsActive = true,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-        db.Students.Add(student);
-
-        if (request.ParentIds is { Count: > 0 })
-        {
-            // רק הורים של הדייר הנוכחי (מסונן אוטומטית)
-            var validParentIds = await db.Parents
-                .Where(p => request.ParentIds.Contains(p.Id))
-                .Select(p => p.Id)
-                .ToListAsync();
-
-            foreach (var parentId in validParentIds)
-            {
-                db.StudentParents.Add(new StudentParent
-                {
-                    TenantId = TenantId,
-                    StudentId = student.Id,
-                    ParentId = parentId
-                });
-            }
-        }
-
-        await db.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        if (user is not null)
-            await provisioning.SendInvitationEmailAsync(user, request.FullName);
-
-        return CreatedAtAction(nameof(GetById), new { id = student.Id }, await BuildDetailAsync(student.Id));
+        var (studentId, errors) = await students.CreateAsync(request);
+        if (studentId is not Guid id) return BadRequest(new { errors });
+        return CreatedAtAction(nameof(GetById), new { id }, await queries.GetAsync(id));
     }
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, UpdateStudentRequest request)
-    {
-        var student = await db.Students.FirstOrDefaultAsync(s => s.Id == id);
-        if (student is null) return NotFound();
-
-        student.FullName = request.FullName;
-        student.Gender = request.Gender;
-        student.GradeLevel = request.GradeLevel;
-        student.BirthDate = request.BirthDate;
-        student.GeneralInfo = request.GeneralInfo;
-        student.DefaultPricePerLesson = request.DefaultPricePerLesson;
-        student.DefaultDurationMinutes = request.DefaultDurationMinutes;
-        student.IsActive = request.IsActive;
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
+    public async Task<IActionResult> Update(Guid id, UpdateStudentRequest request) =>
+        NoContentOr(await students.UpdateAsync(id, request));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        var student = await db.Students.FirstOrDefaultAsync(s => s.Id == id);
-        if (student is null) return NotFound();
-
-        var user = student.UserId is not null ? await userManager.FindByIdAsync(student.UserId) : null;
-
-        await using var transaction = await db.Database.BeginTransactionAsync();
-        try
-        {
-            db.Students.Remove(student); // שיעורים/הערות/קישורי הורה נמחקים ב-Cascade
-            await db.SaveChangesAsync();
-
-            if (user is not null)
-                await userManager.DeleteAsync(user);
-
-            await transaction.CommitAsync();
-            return NoContent();
-        }
-        catch (DbUpdateException)
-        {
-            await transaction.RollbackAsync();
-            return Conflict(new { message = "לא ניתן למחוק את התלמיד." });
-        }
-    }
+    public async Task<IActionResult> Delete(Guid id) =>
+        NoContentOr(await students.DeleteAsync(id));
 
     // ----- קישור הורה-תלמיד -----
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpPost("{id:guid}/parents/{parentId:guid}")]
-    public async Task<IActionResult> LinkParent(Guid id, Guid parentId)
-    {
-        var studentExists = await db.Students.AnyAsync(s => s.Id == id);
-        var parentExists = await db.Parents.AnyAsync(p => p.Id == parentId);
-        if (!studentExists || !parentExists) return NotFound();
-
-        if (await db.StudentParents.AnyAsync(sp => sp.StudentId == id && sp.ParentId == parentId))
-            return NoContent();
-
-        db.StudentParents.Add(new StudentParent { TenantId = TenantId, StudentId = id, ParentId = parentId });
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
+    public async Task<IActionResult> LinkParent(Guid id, Guid parentId) =>
+        NoContentOr(await students.LinkParentAsync(id, parentId));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpDelete("{id:guid}/parents/{parentId:guid}")]
-    public async Task<IActionResult> UnlinkParent(Guid id, Guid parentId)
-    {
-        var link = await db.StudentParents.FirstOrDefaultAsync(sp => sp.StudentId == id && sp.ParentId == parentId);
-        if (link is null) return NotFound();
-
-        db.StudentParents.Remove(link);
-        await db.SaveChangesAsync();
-        return NoContent();
-    }
+    public async Task<IActionResult> UnlinkParent(Guid id, Guid parentId) =>
+        NoContentOr(await students.UnlinkParentAsync(id, parentId));
 
     // ===== הורה =====
 
@@ -225,15 +75,8 @@ public class StudentsController(
     [HttpGet("mine")]
     public async Task<ActionResult<IEnumerable<MyChildDto>>> MyChildren()
     {
-        var parent = await db.Parents.FirstOrDefaultAsync(p => p.UserId == CurrentUserId);
-        if (parent is null) return Forbid();
-
-        var children = await db.StudentParents
-            .Where(sp => sp.ParentId == parent.Id)
-            .OrderBy(sp => sp.Student.FullName)
-            .Select(sp => new MyChildDto(sp.Student.Id, sp.Student.FullName))
-            .ToListAsync();
-        return Ok(children);
+        var result = await queries.ChildrenOfParentAsync(CurrentUserId);
+        return result.Error is null ? Ok(result.Value) : this.ToHttp(result.Error);
     }
 
     // ===== תלמיד =====
@@ -242,20 +85,10 @@ public class StudentsController(
     [HttpGet("me")]
     public async Task<ActionResult<MyStudentProfileDto>> MyProfile()
     {
-        var student = await db.Students
-            .Where(s => s.UserId == CurrentUserId)
-            .Select(s => new MyStudentProfileDto(s.FullName, s.Gender))
-            .FirstOrDefaultAsync();
-        return student is null ? Forbid() : Ok(student);
+        var profile = await queries.ProfileOfStudentAsync(CurrentUserId);
+        return profile is null ? Forbid() : Ok(profile);
     }
 
-    private async Task<StudentDetailDto?> BuildDetailAsync(Guid id) =>
-        await db.Students
-            .Where(s => s.Id == id)
-            .Select(s => new StudentDetailDto(
-                s.Id, s.FullName, s.Gender, s.GradeLevel, s.BirthDate, s.GeneralInfo,
-                s.DefaultPricePerLesson, s.DefaultDurationMinutes, s.IsActive, s.UserId != null,
-                s.StudentParents.Select(sp => new ParentSummaryDto(
-                    sp.Parent.Id, sp.Parent.FullName, sp.Parent.Email, sp.Parent.Phone)).ToList()))
-            .FirstOrDefaultAsync();
+    private IActionResult NoContentOr(ServiceError? error) =>
+        error is null ? NoContent() : this.ToHttp(error);
 }
