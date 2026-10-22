@@ -21,6 +21,7 @@ using Talmidon.Api.Services.Lessons;
 using Talmidon.Api.Services.Messages;
 using Talmidon.Api.Services.Payments;
 using Talmidon.Api.Services.Students;
+using Talmidon.Api.Services.Teachers;
 using Talmidon.Infrastructure.Multitenancy;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +63,10 @@ builder.Services.AddScoped<StudentService>();
 // ניהול: חשבונות מורות והצעות תחומי לימוד
 builder.Services.AddScoped<TeacherAccounts>();
 builder.Services.AddScoped<SubjectSuggestions>();
+
+// הפרופיל ושעות הזמינות של המורה
+builder.Services.AddScoped<TeacherProfileService>();
+builder.Services.AddScoped<TeacherAvailabilityService>();
 
 // שיחות בין המורה למשפחה
 builder.Services.AddScoped<MessageThreads>();
