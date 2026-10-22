@@ -1,139 +1,52 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Talmidon.Api.Contracts;
-using Talmidon.Domain.Entities;
+using Talmidon.Api.Services;
+using Talmidon.Api.Services.Payments;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.BackgroundJobs;
-using Talmidon.Infrastructure.Data;
-using Talmidon.Infrastructure.Diagnostics;
-using Talmidon.Infrastructure.Email;
-using Talmidon.Infrastructure.Multitenancy;
 
 namespace Talmidon.Api.Controllers;
 
 /// <summary>
-/// תשלומים: חיוב לפי שיעור (לא מנוי חודשי). המורה בוחרת שיעורים פתוחים של הורה מסוים
-/// ומסמנת אותם כ"שולם" ביחד — נוצר Payment אחד שמכסה אותם ונשלח מייל אישור להורה (T7/R3).
+/// תשלומים: חיוב לפי שיעור (לא מנוי חודשי). הבקר מתרגם בין HTTP לשירותים —
+/// הכללים והמייל ב-<see cref="PaymentService"/>, הקריאות ב-<see cref="PaymentQueries"/>.
 /// </summary>
 [ApiController]
 [Route("api/payments")]
 public class PaymentsController(
-    TalmidonDbContext db,
-    ICurrentTenant currentTenant,
-    IEmailSender emailSender,
-    MonthlyPaymentReminderJob monthlyReminderJob,
-    AppLinks links,
-    IErrorLog errorLog) : ControllerBase
+    PaymentQueries queries,
+    PaymentService payments,
+    MonthlyPaymentReminderJob monthlyReminderJob) : ControllerBase
 {
-    private Guid TenantId => currentTenant.TenantId
-        ?? throw new InvalidOperationException("No tenant in the current context.");
-
     private string CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? throw new InvalidOperationException("No user id in the current context.");
-
-    private Task<Parent?> CurrentParentAsync() => db.Parents.FirstOrDefaultAsync(p => p.UserId == CurrentUserId);
 
     // ===== מורה =====
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet("open-charges")]
     public async Task<ActionResult<IEnumerable<OpenChargeDto>>> OpenCharges(
-        [FromQuery] Guid? studentId, [FromQuery] Guid? parentId)
-    {
-        var query = db.Lessons.Where(l => l.PaymentRequired && l.PaymentId == null);
-        if (studentId is not null) query = query.Where(l => l.StudentId == studentId);
-        if (parentId is not null)
-        {
-            var childIds = db.StudentParents.Where(sp => sp.ParentId == parentId).Select(sp => sp.StudentId);
-            query = query.Where(l => childIds.Contains(l.StudentId));
-        }
+        [FromQuery] Guid? studentId, [FromQuery] Guid? parentId) =>
+        Ok(await queries.OpenChargesAsync(studentId, parentId));
 
-        var charges = await query
-            .OrderBy(l => l.StartTime)
-            .Select(l => new OpenChargeDto(l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.Amount))
-            .ToListAsync();
-        return Ok(charges);
-    }
-
-    /// <summary>
-    /// "מי חייב כמה" — סיכום החיובים הפתוחים לפי הורה, כדי שהמורה תראה את התמונה
-    /// בלי לבחור הורה־הורה. תלמיד המשויך לשני הורים נספר פעם אחת בלבד, אצל ההורה
-    /// הראשון בסדר אלפביתי, כדי שהסכומים יסתכמו לסך החוב האמיתי.
-    /// </summary>
+    /// <summary>"מי חייב כמה" — סיכום החיובים הפתוחים לפי הורה.</summary>
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet("open-charges/summary")]
-    public async Task<ActionResult<IEnumerable<OpenChargeSummaryDto>>> OpenChargesSummary()
-    {
-        var charges = await db.Lessons
-            .Where(l => l.PaymentRequired && l.PaymentId == null)
-            .Select(l => new
-            {
-                l.StudentId,
-                l.StartTime,
-                l.Amount,
-                Parents = l.Student.StudentParents
-                    .Select(sp => new { sp.ParentId, sp.Parent.FullName })
-                    .ToList()
-            })
-            .ToListAsync();
-
-        var summary = charges
-            .Select(c =>
-            {
-                var payer = c.Parents.OrderBy(p => p.FullName).ThenBy(p => p.ParentId).FirstOrDefault();
-                return new
-                {
-                    ParentId = payer?.ParentId,
-                    ParentName = payer?.FullName ?? "ללא הורה משויך",
-                    c.StudentId,
-                    c.StartTime,
-                    c.Amount
-                };
-            })
-            .GroupBy(c => new { c.ParentId, c.ParentName })
-            .Select(g => new OpenChargeSummaryDto(
-                g.Key.ParentId,
-                g.Key.ParentName,
-                g.Select(c => c.StudentId).Distinct().Count(),
-                g.Count(),
-                g.Sum(c => c.Amount),
-                g.Min(c => c.StartTime)))
-            .OrderBy(s => s.OldestLessonStartTime)
-            .ToList();
-
-        return Ok(summary);
-    }
+    public async Task<ActionResult<IEnumerable<OpenChargeSummaryDto>>> OpenChargesSummary() =>
+        Ok(await queries.OpenChargesSummaryAsync());
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PaymentDto>>> List([FromQuery] Guid? parentId)
-    {
-        var query = db.Payments.AsQueryable();
-        if (parentId is not null) query = query.Where(p => p.ParentId == parentId);
-
-        var payments = await query
-            .OrderByDescending(p => p.PaidDate)
-            .Select(p => new PaymentDto(
-                p.Id, p.ParentId, p.Parent.FullName, p.Amount, p.PaidDate, p.Method, p.Note,
-                p.CoveredLessons.Count, p.ConfirmationSentAt))
-            .ToListAsync();
-        return Ok(payments);
-    }
+    public async Task<ActionResult<IEnumerable<PaymentDto>>> List([FromQuery] Guid? parentId) =>
+        Ok(await queries.ListAsync(parentId));
 
     [Authorize(Roles = Roles.Teacher)]
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<PaymentDetailDto>> GetById(Guid id)
     {
-        var payment = await db.Payments
-            .Where(p => p.Id == id)
-            .Select(p => new PaymentDetailDto(
-                p.Id, p.ParentId, p.Parent.FullName, p.Amount, p.PaidDate, p.Method, p.Note, p.ConfirmationSentAt,
-                p.CoveredLessons
-                    .Select(l => new PaymentLessonDto(l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.Amount))
-                    .ToList()))
-            .FirstOrDefaultAsync();
+        var payment = await queries.GetAsync(id);
         return payment is null ? NotFound() : Ok(payment);
     }
 
@@ -142,51 +55,10 @@ public class PaymentsController(
     [HttpPost]
     public async Task<ActionResult<PaymentDto>> Create(CreatePaymentRequest request)
     {
-        var parent = await db.Parents.FirstOrDefaultAsync(p => p.Id == request.ParentId);
-        if (parent is null) return NotFound(new { message = "הורה לא נמצא." });
-
-        var lessonIds = request.LessonIds.Distinct().ToList();
-        var lessons = await db.Lessons.Include(l => l.Student)
-            .Where(l => lessonIds.Contains(l.Id))
-            .ToListAsync();
-
-        if (lessons.Count != lessonIds.Count)
-            return NotFound(new { message = "אחד או יותר מהשיעורים לא נמצאו." });
-        if (lessons.Any(l => !l.PaymentRequired || l.PaymentId != null))
-            return Conflict(new { message = "ניתן לשלם רק על שיעורים פתוחים לתשלום." });
-
-        var childIds = await db.StudentParents
-            .Where(sp => sp.ParentId == parent.Id)
-            .Select(sp => sp.StudentId)
-            .ToListAsync();
-        if (lessons.Any(l => !childIds.Contains(l.StudentId)))
-            return BadRequest(new { message = "השיעורים חייבים להיות של ילדי ההורה הנבחר." });
-
-        var payment = new Payment
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantId,
-            ParentId = parent.Id,
-            Amount = lessons.Sum(l => l.Amount),
-            PaidDate = request.PaidDate,
-            Method = request.Method,
-            Note = request.Note
-        };
-        db.Payments.Add(payment);
-        foreach (var lesson in lessons)
-            lesson.PaymentId = payment.Id;
-
-        await db.SaveChangesAsync();
-
-        if (await SendPaymentConfirmationAsync(parent, payment.Amount, payment.PaidDate, lessons))
-        {
-            payment.ConfirmationSentAt = DateTimeOffset.UtcNow;
-            await db.SaveChangesAsync();
-        }
-
-        return CreatedAtAction(nameof(GetById), new { id = payment.Id },
-            new PaymentDto(payment.Id, parent.Id, parent.FullName, payment.Amount, payment.PaidDate,
-                payment.Method, payment.Note, lessons.Count, payment.ConfirmationSentAt));
+        var result = await payments.CreateAsync(request);
+        return result.Error is null
+            ? CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value)
+            : this.ToHttp(result.Error);
     }
 
     /// <summary>ביטול סימון תשלום בטעות: משחרר את השיעורים חזרה לפתוחים ומוחק את הרשומה.</summary>
@@ -194,16 +66,8 @@ public class PaymentsController(
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var payment = await db.Payments.FirstOrDefaultAsync(p => p.Id == id);
-        if (payment is null) return NotFound();
-
-        var coveredLessons = await db.Lessons.Where(l => l.PaymentId == id).ToListAsync();
-        foreach (var lesson in coveredLessons)
-            lesson.PaymentId = null;
-
-        db.Payments.Remove(payment);
-        await db.SaveChangesAsync();
-        return NoContent();
+        var error = await payments.DeleteAsync(id);
+        return error is null ? NoContent() : this.ToHttp(error);
     }
 
     /// <summary>
@@ -222,62 +86,14 @@ public class PaymentsController(
 
     [Authorize(Roles = Roles.Parent)]
     [HttpGet("mine/open-charges")]
-    public async Task<ActionResult<IEnumerable<OpenChargeDto>>> MyOpenCharges()
-    {
-        var parent = await CurrentParentAsync();
-        if (parent is null) return Forbid();
-
-        var childIds = db.StudentParents.Where(sp => sp.ParentId == parent.Id).Select(sp => sp.StudentId);
-        var charges = await db.Lessons
-            .Where(l => l.PaymentRequired && l.PaymentId == null && childIds.Contains(l.StudentId))
-            .OrderBy(l => l.StartTime)
-            .Select(l => new OpenChargeDto(l.Id, l.StudentId, l.Student.FullName, l.StartTime, l.Amount))
-            .ToListAsync();
-        return Ok(charges);
-    }
+    public async Task<ActionResult<IEnumerable<OpenChargeDto>>> MyOpenCharges() =>
+        OkOr(await queries.OpenChargesForParentAsync(CurrentUserId));
 
     [Authorize(Roles = Roles.Parent)]
     [HttpGet("mine")]
-    public async Task<ActionResult<IEnumerable<PaymentDto>>> MyPayments()
-    {
-        var parent = await CurrentParentAsync();
-        if (parent is null) return Forbid();
+    public async Task<ActionResult<IEnumerable<PaymentDto>>> MyPayments() =>
+        OkOr(await queries.PaymentsOfParentAsync(CurrentUserId));
 
-        var payments = await db.Payments
-            .Where(p => p.ParentId == parent.Id)
-            .OrderByDescending(p => p.PaidDate)
-            .Select(p => new PaymentDto(
-                p.Id, p.ParentId, parent.FullName, p.Amount, p.PaidDate, p.Method, p.Note,
-                p.CoveredLessons.Count, p.ConfirmationSentAt))
-            .ToListAsync();
-        return Ok(payments);
-    }
-
-    // ----- עזר -----
-
-    private async Task<bool> SendPaymentConfirmationAsync(
-        Parent parent, decimal amount, DateOnly paidDate, List<Lesson> lessons)
-    {
-        var lines = lessons
-            .Select(l => $"{l.Student.FullName} — {EmailTime.Date(l.StartTime)} — ₪{l.Amount}")
-            .ToList();
-        var html = EmailLayout.Render(new EmailMessage(
-            "אישור קבלת תשלום",
-            Greeting: $"שלום {parent.FullName},",
-            Intro: $"התקבל תשלום בסך ₪{amount} בתאריך {paidDate:dd/MM/yyyy}, המכסה את השיעורים הבאים:",
-            Items: lines,
-            ActionLabel: "לצפייה בתשלומים",
-            ActionUrl: links.ParentPayments));
-
-        try
-        {
-            await emailSender.SendAsync(parent.Email, EmailSubjects.PaymentReceived(amount, paidDate), html);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            await errorLog.RecordAsync(ex, new ErrorOrigin { Source = "email", Path = "payments/receipt" });
-            return false;
-        }
-    }
+    private ActionResult OkOr<T>(ServiceResult<T> result) =>
+        result.Error is null ? Ok(result.Value) : this.ToHttp(result.Error);
 }
