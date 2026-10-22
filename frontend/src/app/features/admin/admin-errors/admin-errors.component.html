@@ -10,12 +10,12 @@
       pInputText
       type="search"
       inputmode="latin"
-      placeholder="קוד תקלה, למשל ABC-234"
+      placeholder="קוד תקלה, למשל ABC-234" aria-label="קוד תקלה"
       style="max-width: 14rem"
       [(ngModel)]="search"
       (keyup.enter)="load()"
     />
-    <p-button icon="pi pi-search" severity="secondary" [outlined]="true" (onClick)="load()" />
+    <p-button icon="pi pi-search" severity="secondary" [outlined]="true" ariaLabel="חיפוש" (onClick)="load()" />
     @if (search) {
       <p-button label="ניקוי" severity="secondary" [text]="true" (onClick)="clearSearch()" />
     }

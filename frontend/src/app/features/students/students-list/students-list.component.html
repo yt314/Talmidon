@@ -36,7 +36,8 @@
                 <span class="avatar-circle" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem" [style.--avatar-color]="avatarColor(student.fullName)">
                   {{ initials(student.fullName) }}
                 </span>
-                {{ student.fullName }}
+                <!-- הקישור נותן גישה במקלדת; לחיצה על כל השורה נשארת קיצור לעכבר -->
+                <a class="row-link" [routerLink]="['/app/students', student.id]" (click)="$event.stopPropagation()">{{ student.fullName }}</a>
               </div>
             </td>
             <td>{{ student.gradeLevel || '—' }}</td>
@@ -155,7 +156,7 @@
       <label for="s-fullName">שם מלא *</label>
       <input pInputText id="s-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(studentForm.controls.fullName)" />
       @if (fieldError(studentForm.controls.fullName); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -170,14 +171,14 @@
         styleClass="w-full"
         [invalid]="isInvalid(studentForm.controls.gender)" />
       @if (fieldError(studentForm.controls.gender); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
       <label for="s-gradeLevel">כיתה</label>
       <input pInputText id="s-gradeLevel" formControlName="gradeLevel" class="w-full" [invalid]="isInvalid(studentForm.controls.gradeLevel)" />
       @if (fieldError(studentForm.controls.gradeLevel); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -195,7 +196,7 @@
       <label for="s-generalInfo">מידע כללי</label>
       <input pInputText id="s-generalInfo" formControlName="generalInfo" class="w-full" [invalid]="isInvalid(studentForm.controls.generalInfo)" />
       @if (fieldError(studentForm.controls.generalInfo); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -208,7 +209,7 @@
         class="w-full"
         [invalid]="isInvalid(studentForm.controls.loginEmail)" />
       @if (fieldError(studentForm.controls.loginEmail); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -260,7 +261,7 @@
       <label for="p-fullName">שם מלא *</label>
       <input pInputText id="p-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(parentForm.controls.fullName)" (focus)="onParentNameFocused()" />
       @if (fieldError(parentForm.controls.fullName); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -275,21 +276,21 @@
         styleClass="w-full"
         [invalid]="isInvalid(parentForm.controls.gender)" />
       @if (fieldError(parentForm.controls.gender); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
       <label for="p-email">אימייל *</label>
       <input pInputText id="p-email" type="email" formControlName="email" class="w-full" [invalid]="isInvalid(parentForm.controls.email)" />
       @if (fieldError(parentForm.controls.email); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
       <label for="p-phone">טלפון</label>
       <input pInputText id="p-phone" formControlName="phone" class="w-full" [invalid]="isInvalid(parentForm.controls.phone)" />
       @if (fieldError(parentForm.controls.phone); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 
@@ -306,7 +307,7 @@
       <label for="ep-fullName">שם מלא *</label>
       <input pInputText id="ep-fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(editParentForm.controls.fullName)" />
       @if (fieldError(editParentForm.controls.fullName); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -321,14 +322,14 @@
         styleClass="w-full"
         [invalid]="isInvalid(editParentForm.controls.gender)" />
       @if (fieldError(editParentForm.controls.gender); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
       <label for="ep-phone">טלפון</label>
       <input pInputText id="ep-phone" formControlName="phone" class="w-full" [invalid]="isInvalid(editParentForm.controls.phone)" />
       @if (fieldError(editParentForm.controls.phone); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 

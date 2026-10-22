@@ -35,7 +35,7 @@ import { ContactRequestsService } from './contact-requests.service';
           <label for="c-name">שם מלא *</label>
           <input pInputText id="c-name" formControlName="fullName" class="w-full" [invalid]="isInvalid(form.controls.fullName)" />
           @if (fieldError(form.controls.fullName); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
 
@@ -43,7 +43,7 @@ import { ContactRequestsService } from './contact-requests.service';
           <label for="c-phone">טלפון *</label>
           <input pInputText id="c-phone" formControlName="phone" class="w-full" inputmode="tel" [invalid]="isInvalid(form.controls.phone)" />
           @if (fieldError(form.controls.phone); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
 
@@ -51,7 +51,7 @@ import { ContactRequestsService } from './contact-requests.service';
           <label for="c-email">מייל</label>
           <input pInputText id="c-email" formControlName="email" class="w-full" type="email" [invalid]="isInvalid(form.controls.email)" />
           @if (fieldError(form.controls.email); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
 
@@ -79,7 +79,7 @@ import { ContactRequestsService } from './contact-requests.service';
             placeholder="כיתה, מטרת השיעורים, זמינות — כל מה שיעזור לענות לך מדויק"
             [invalid]="isInvalid(form.controls.message)"></textarea>
           @if (fieldError(form.controls.message); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           }
         </div>
 

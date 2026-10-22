@@ -73,6 +73,7 @@ const SCREENS: { label: string; icon: string; path: string; keywords: string }[]
           pInputText
           type="text"
           placeholder="חיפוש תלמידה או מסך…"
+          aria-label="חיפוש מהיר"
           [value]="term()"
           (input)="term.set($any($event.target).value)"
           (keydown)="onKey($event)" />

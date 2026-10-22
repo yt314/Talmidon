@@ -12,7 +12,7 @@
         styleClass="w-full"
         [invalid]="isInvalid(form.controls.studentId)" />
       @if (fieldError(form.controls.studentId); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -27,7 +27,7 @@
         inputStyleClass="w-full"
         [invalid]="isInvalid(form.controls.date)" />
       @if (fieldError(form.controls.date); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="flex gap-3">
@@ -50,7 +50,7 @@
           </ng-template>
         </p-datepicker>
         @if (fieldError(form.controls.startTime); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
       <div class="field flex-1">
@@ -72,12 +72,12 @@
           </ng-template>
         </p-datepicker>
         @if (fieldError(form.controls.endTime); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
     </div>
     @if (form.errors?.['dateRange'] && form.controls.endTime.touched) {
-      <small class="text-red-500 block mt-1">שעת הסיום חייבת להיות אחרי שעת ההתחלה</small>
+      <small role="alert" class="field-error block mt-1">שעת הסיום חייבת להיות אחרי שעת ההתחלה</small>
     }
 
     <div class="field flex align-items-center gap-2">

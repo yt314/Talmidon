@@ -16,7 +16,7 @@
         [invalid]="isInvalid(form.controls.title)"
       />
       @if (fieldError(form.controls.title); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 
@@ -38,7 +38,7 @@
         [invalid]="isInvalid(form.controls.date)"
       />
       @if (fieldError(form.controls.date); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 
@@ -100,7 +100,7 @@
         </div>
       </div>
       @if (form.errors?.['dateRange']) {
-        <small class="text-red-500 block mb-3">שעת הסיום חייבת להיות אחרי שעת ההתחלה.</small>
+        <small role="alert" class="field-error block mb-3">שעת הסיום חייבת להיות אחרי שעת ההתחלה.</small>
       }
     }
 

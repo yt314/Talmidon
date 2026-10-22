@@ -33,7 +33,7 @@
             inputStyleClass="w-full"
             [invalid]="isInvalid(form.controls.amount)" />
           @if (fieldError(form.controls.amount); as msg) {
-            <small class="text-red-500 block mt-1">{{ msg }}</small>
+            <small role="alert" class="field-error block mt-1">{{ msg }}</small>
           } @else if (amountExplanation(); as hint) {
             <small class="text-color-secondary block mt-1">{{ hint }}</small>
           }
@@ -50,7 +50,7 @@
           class="w-full"
           [invalid]="isInvalid(form.controls.homework)"></textarea>
         @if (fieldError(form.controls.homework); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
 
@@ -64,7 +64,7 @@
           class="w-full"
           [invalid]="isInvalid(form.controls.noteContent)"></textarea>
         @if (fieldError(form.controls.noteContent); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
 

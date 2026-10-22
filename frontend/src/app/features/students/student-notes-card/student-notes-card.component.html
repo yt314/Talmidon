@@ -48,7 +48,7 @@
         class="w-full"
         [invalid]="isInvalid(form.controls.content)"></textarea>
       @if (fieldError(form.controls.content); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field flex align-items-center gap-2">

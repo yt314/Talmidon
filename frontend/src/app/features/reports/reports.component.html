@@ -162,7 +162,7 @@
                 <td
                   class="text-center font-medium"
                   [class.text-orange-500]="s.missedPercent >= 25 && s.missedPercent < 50"
-                  [class.text-red-500]="s.missedPercent >= 50"
+                  [class.field-error]="s.missedPercent >= 50"
                 >
                   {{ s.missedPercent }}%
                 </td>

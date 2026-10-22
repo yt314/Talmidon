@@ -26,7 +26,7 @@
               [invalid]="isInvalid(form.controls.subject)"
             />
             @if (fieldError(form.controls.subject); as msg) {
-              <small class="text-red-500 block mt-1">{{ msg }}</small>
+              <small role="alert" class="field-error block mt-1">{{ msg }}</small>
             }
           </div>
 
@@ -41,7 +41,7 @@
               [invalid]="isInvalid(form.controls.topic)"
             />
             @if (fieldError(form.controls.topic); as msg) {
-              <small class="text-red-500 block mt-1">{{ msg }}</small>
+              <small role="alert" class="field-error block mt-1">{{ msg }}</small>
             }
           </div>
 

@@ -28,7 +28,7 @@
       <label for="r-title">כותרת *</label>
       <input pInputText id="r-title" formControlName="title" class="w-full" [invalid]="isInvalid(form.controls.title)" />
       @if (fieldError(form.controls.title); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -42,7 +42,7 @@
         placeholder="https://..."
         [invalid]="isInvalid(form.controls.url)" />
       @if (fieldError(form.controls.url); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
     <div class="field">
@@ -55,7 +55,7 @@
         class="w-full"
         [invalid]="isInvalid(form.controls.description)"></textarea>
       @if (fieldError(form.controls.description); as msg) {
-        <small class="text-red-500 block mt-1">{{ msg }}</small>
+        <small role="alert" class="field-error block mt-1">{{ msg }}</small>
       }
     </div>
 

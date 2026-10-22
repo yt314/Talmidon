@@ -18,7 +18,7 @@
         <label for="fullName">שם מלא *</label>
         <input pInputText id="fullName" formControlName="fullName" class="w-full" [invalid]="isInvalid(form.controls.fullName)" />
         @if (fieldError(form.controls.fullName); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
       <div class="field">
@@ -32,7 +32,7 @@
           autocomplete="email"
           [invalid]="isInvalid(form.controls.email)" />
         @if (fieldError(form.controls.email); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
       <div class="field">
@@ -50,7 +50,7 @@
           autocomplete="new-password"
           [invalid]="isInvalid(form.controls.password)" />
         @if (fieldError(form.controls.password); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
       <div class="field">
@@ -65,14 +65,14 @@
           autocomplete="new-password"
           [invalid]="isInvalid(form.controls.confirmPassword)" />
         @if (fieldError(form.controls.confirmPassword); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
       <div class="field">
         <label for="phone">טלפון (לא חובה)</label>
         <input pInputText id="phone" formControlName="phone" class="w-full" [invalid]="isInvalid(form.controls.phone)" />
         @if (fieldError(form.controls.phone); as msg) {
-          <small class="text-red-500 block mt-1">{{ msg }}</small>
+          <small role="alert" class="field-error block mt-1">{{ msg }}</small>
         }
       </div>
 
