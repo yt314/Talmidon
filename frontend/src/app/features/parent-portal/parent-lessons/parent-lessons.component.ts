@@ -192,14 +192,15 @@ export class ParentLessonsComponent implements OnInit {
   }
 
   openCancelDialog(lesson: Lesson): void {
-    this.changeRequestType.set(ChangeRequestType.Cancel);
-    this.changingLessonId.set(lesson.id);
-    this.changeForm.reset({ proposedStartTime: null, proposedEndTime: null, reason: '' });
-    this.showChangeDialog.set(true);
+    this.openChangeDialog(lesson, ChangeRequestType.Cancel);
   }
 
   openRescheduleDialog(lesson: Lesson): void {
-    this.changeRequestType.set(ChangeRequestType.Reschedule);
+    this.openChangeDialog(lesson, ChangeRequestType.Reschedule);
+  }
+
+  private openChangeDialog(lesson: Lesson, type: ChangeRequestType): void {
+    this.changeRequestType.set(type);
     this.changingLessonId.set(lesson.id);
     this.changeForm.reset({ proposedStartTime: null, proposedEndTime: null, reason: '' });
     this.showChangeDialog.set(true);
@@ -216,18 +217,7 @@ export class ParentLessonsComponent implements OnInit {
       return;
     }
 
-    if (type === ChangeRequestType.Reschedule) {
-      const startControl = this.changeForm.controls.proposedStartTime;
-      const endControl = this.changeForm.controls.proposedEndTime;
-      startControl.markAsTouched();
-      endControl.markAsTouched();
-      if (!raw.proposedStartTime) startControl.setErrors({ required: true });
-      if (!raw.proposedEndTime) endControl.setErrors({ required: true });
-      if (raw.proposedStartTime && raw.proposedEndTime && raw.proposedEndTime <= raw.proposedStartTime) {
-        endControl.setErrors({ dateRange: true });
-      }
-      if (startControl.invalid || endControl.invalid) return;
-    }
+    if (type === ChangeRequestType.Reschedule && !this.proposedTimeIsValid()) return;
 
     this.savingChange.set(true);
     this.portalService
@@ -249,6 +239,21 @@ export class ParentLessonsComponent implements OnInit {
           this.messageService.add({ severity: 'error', summary: 'שגיאה', detail: extractErrorMessage(err, 'שליחת הבקשה נכשלה.') });
         }
       });
+  }
+
+  /**
+   * בבקשת שינוי מועד חובה מועד חדש, ושעת הסיום אחרי ההתחלה. בבקשת ביטול השדות לא מוצגים,
+   * ולכן הבדיקה כאן ולא כ-validator של הטופס.
+   */
+  private proposedTimeIsValid(): boolean {
+    const start = this.changeForm.controls.proposedStartTime;
+    const end = this.changeForm.controls.proposedEndTime;
+    start.markAsTouched();
+    end.markAsTouched();
+    if (!start.value) start.setErrors({ required: true });
+    if (!end.value) end.setErrors({ required: true });
+    if (start.value && end.value && end.value <= start.value) end.setErrors({ dateRange: true });
+    return start.valid && end.valid;
   }
 
   private load(): void {
