@@ -51,6 +51,7 @@ builder.Services.AddScoped<TeacherRegistration>();
 builder.Services.AddScoped<LessonQueries>();
 builder.Services.AddScoped<LessonService>();
 builder.Services.AddScoped<LessonRequestService>();
+builder.Services.AddScoped<LessonSeriesService>();
 
 // תשלומים: קריאות, ורישום/ביטול תשלום
 builder.Services.AddScoped<PaymentQueries>();
