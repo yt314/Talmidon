@@ -19,6 +19,7 @@ using Talmidon.Api.Services;
 using Talmidon.Api.Services.Auth;
 using Talmidon.Api.Services.Lessons;
 using Talmidon.Api.Services.Messages;
+using Talmidon.Api.Services.Parents;
 using Talmidon.Api.Services.Payments;
 using Talmidon.Api.Services.Students;
 using Talmidon.Api.Services.Teachers;
@@ -60,6 +61,7 @@ builder.Services.AddScoped<PaymentService>();
 // תלמידים
 builder.Services.AddScoped<StudentQueries>();
 builder.Services.AddScoped<StudentService>();
+builder.Services.AddScoped<ParentService>();
 
 // ניהול: חשבונות מורות והצעות תחומי לימוד
 builder.Services.AddScoped<TeacherAccounts>();
