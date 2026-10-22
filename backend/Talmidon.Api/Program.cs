@@ -69,6 +69,10 @@ builder.Services.AddScoped<SubjectSuggestions>();
 builder.Services.AddScoped<TeacherProfileService>();
 builder.Services.AddScoped<TeacherAvailabilityService>();
 
+// דוחות
+builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<ExportService>();
+
 // שיחות בין המורה למשפחה
 builder.Services.AddScoped<MessageThreads>();
 builder.Services.AddScoped<MessageNotifier>();
