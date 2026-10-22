@@ -78,7 +78,61 @@ public class NoteVisibilityTests(TalmidonWebApplicationFactory factory)
         Assert.Equal(visibleNoteId, notes![0].Id);
     }
 
+    /// <summary>אותו כלל גם להערה שנכתבת בסיום שיעור — מסלול נפרד בשרת, שלא היה מכוסה.</summary>
+    [Fact]
+    public async Task CompletingALesson_WithANoteVisibleToTheStudent_AlsoShowsItToTheParent()
+    {
+        var (teacher, parent, _, studentId) = await CreateTeacherParentStudentAsync("noteOnComplete");
+        var lessonId = await CreateLessonAsync(teacher, studentId);
+
+        var complete = await teacher.PostAsJsonAsync($"/api/lessons/{lessonId}/complete", new
+        {
+            completed = true,
+            paymentRequired = false,
+            amount = 0,
+            homework = (string?)null,
+            noteContent = "התקדמות יפה בשברים",
+            noteVisibleToStudent = true,
+            noteVisibleToParent = false
+        });
+        complete.EnsureSuccessStatusCode();
+
+        var parentNotes = await parent.GetFromJsonAsync<List<ParentNoteDto>>("/api/notes/mine");
+        Assert.Contains(parentNotes!, n => n.Content == "התקדמות יפה בשברים");
+    }
+
+    [Fact]
+    public async Task Create_LinkedToALessonOfAnotherStudent_IsRejected()
+    {
+        var (teacher, _, _, studentId) = await CreateTeacherParentStudentAsync("noteWrongLesson");
+        var otherStudent = await teacher.PostAsJsonAsync("/api/students", new
+        {
+            fullName = "תלמידה אחרת", gender = (int?)null, gradeLevel = (string?)null, birthDate = (string?)null,
+            generalInfo = (string?)null, loginEmail = (string?)null, parentIds = Array.Empty<Guid>()
+        });
+        var otherLessonId = await CreateLessonAsync(teacher, (await otherStudent.Content.ReadFromJsonAsync<StudentDto>())!.Id);
+
+        var response = await teacher.PostAsJsonAsync("/api/notes", new
+        {
+            studentId,
+            lessonId = otherLessonId,
+            content = "הערה לשיעור הלא נכון",
+            visibleToStudent = false,
+            visibleToParent = false
+        });
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     // ----- עזר -----
+
+    private static async Task<Guid> CreateLessonAsync(HttpClient teacher, Guid studentId)
+    {
+        var start = TestHelpers.MiddayUtcIn(-1);
+        var response = await teacher.PostAsJsonAsync("/api/lessons", new { studentId, startTime = start, endTime = start.AddMinutes(45) });
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<IdDto>())!.Id;
+    }
 
     private static async Task<Guid> CreateNoteAsync(HttpClient teacherClient, Guid studentId, bool visibleToStudent, bool visibleToParent)
     {
@@ -148,6 +202,7 @@ public class NoteVisibilityTests(TalmidonWebApplicationFactory factory)
         return TestHelpers.AuthorizedClient(factory, accessToken);
     }
 
+    private record IdDto(Guid Id);
     private record ParentDto(Guid Id, string FullName);
     private record StudentDto(Guid Id, string FullName);
     private record NoteDto(Guid Id, Guid StudentId, string StudentName, Guid? LessonId, string Content, bool VisibleToStudent, bool VisibleToParent, DateTimeOffset CreatedAt);
