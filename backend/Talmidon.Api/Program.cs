@@ -1,30 +1,8 @@
-using System.Text;
-using System.Threading.RateLimiting;
 using Hangfire;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Talmidon.Api.Diagnostics;
-using Talmidon.Api.Multitenancy;
+using Talmidon.Api.Startup;
 using Talmidon.Infrastructure;
-using Talmidon.Infrastructure.Auth;
-using Talmidon.Infrastructure.BackgroundJobs;
-using Talmidon.Infrastructure.Data;
-using Talmidon.Infrastructure.Identity;
-using Talmidon.Api.Services;
-using Talmidon.Api.Services.Auth;
-using Talmidon.Api.Services.Lessons;
-using Talmidon.Api.Services.Messages;
-using Talmidon.Api.Services.Parents;
-using Talmidon.Api.Services.Payments;
-using Talmidon.Api.Services.Public;
-using Talmidon.Api.Services.Students;
-using Talmidon.Api.Services.Teachers;
-using Talmidon.Infrastructure.Multitenancy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,107 +12,10 @@ builder.Services.AddOpenApi();
 // שכבת התשתית: DbContext (PostgreSQL), Identity, טוקנים, מיילים
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// ספק דייר אמיתי מתוך טוקן ה-JWT (מחליף את NullCurrentTenant)
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentTenant, HttpContextCurrentTenant>();
-
-// הודעות למשפחה של תלמיד/ה — משותף לבקרי השיעורים והסדרות
-builder.Services.AddScoped<FamilyNotifier>();
-builder.Services.AddScoped<TeacherNotifier>();
-builder.Services.AddScoped<FamilyMembers>();
-
-// חשבונות: הרשמה, מיילים, אסימונים
-builder.Services.AddScoped<TenantResolver>();
-builder.Services.AddScoped<RefreshTokens>();
-builder.Services.AddScoped<AuthEmails>();
-builder.Services.AddScoped<TeacherRegistration>();
-
-// היומן: קריאות, פעולות המורה, ובקשות מהמשפחה
-builder.Services.AddScoped<LessonQueries>();
-builder.Services.AddScoped<LessonService>();
-builder.Services.AddScoped<LessonRequestService>();
-builder.Services.AddScoped<LessonSeriesService>();
-
-// תשלומים: קריאות, ורישום/ביטול תשלום
-builder.Services.AddScoped<PaymentQueries>();
-builder.Services.AddScoped<PaymentService>();
-
-// תלמידים
-builder.Services.AddScoped<StudentQueries>();
-builder.Services.AddScoped<StudentService>();
-builder.Services.AddScoped<ParentService>();
-builder.Services.AddScoped<NoteService>();
-
-// הספרייה הציבורית והפניות ממנה
-builder.Services.AddScoped<PublicLibrary>();
-builder.Services.AddScoped<ContactRequestIntake>();
-
-// ניהול: חשבונות מורות והצעות תחומי לימוד
-builder.Services.AddScoped<TeacherAccounts>();
-builder.Services.AddScoped<SubjectSuggestions>();
-
-// הפרופיל ושעות הזמינות של המורה
-builder.Services.AddScoped<TeacherProfileService>();
-builder.Services.AddScoped<TeacherAvailabilityService>();
-
-// דוחות
-builder.Services.AddScoped<ReportService>();
-builder.Services.AddScoped<ExportService>();
-
-// שיחות בין המורה למשפחה
-builder.Services.AddScoped<MessageThreads>();
-builder.Services.AddScoped<MessageNotifier>();
-builder.Services.AddScoped<MessageQueries>();
-builder.Services.AddScoped<TeacherMessageService>();
-builder.Services.AddScoped<FamilyMessageService>();
-
-// אימות JWT
-var jwt = builder.Configuration.GetSection("Jwt");
-var secret = jwt["SecretKey"]
-    ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
-if (Encoding.UTF8.GetByteCount(secret) < 32)
-    throw new InvalidOperationException("Jwt:SecretKey must be at least 32 bytes (256 bits) for HMAC-SHA256.");
-
-var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = jwt["Issuer"],
-            ValidateAudience = true,
-            ValidAudience = jwt["Audience"],
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = signingKey,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(1)
-        };
-    });
-
-// כל נקודת קצה דורשת אימות כברירת מחדל; נקודות ציבוריות מסומנות [AllowAnonymous]
-builder.Services.AddAuthorization(options =>
-    options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
-
-// הגבלת קצב לנקודות האימות (לפי כתובת IP) — ניתנת לכיוונון בלי קומפילציה מחדש;
-// גם מאפשרת להרחיב את המכסה בבדיקות אינטגרציה, שבהן כל הבקשות חולקות "כתובת" מזוהה אחת.
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    var permitLimit = builder.Configuration.GetValue("RateLimiting:Auth:PermitLimit", 10);
-    var windowMinutes = builder.Configuration.GetValue("RateLimiting:Auth:WindowMinutes", 1);
-    options.AddPolicy("auth", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = permitLimit,
-                Window = TimeSpan.FromMinutes(windowMinutes),
-                QueueLimit = 0
-            }));
-});
+// שירותי ה-API, אימות JWT והגבלת קצב לנקודות האימות
+builder.Services.AddApiServices();
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddAuthRateLimiting(builder.Configuration);
 
 // CORS לאפליקציית ה-Angular
 const string CorsPolicy = "TalmidonClient";
@@ -175,9 +56,7 @@ var app = builder.Build();
 // במקום להסיק אותה משגיאת CORS בדפדפן.
 app.Logger.LogInformation("CORS allowed origins: {Origins}", string.Join(", ", allowedOrigins));
 
-await MigrateDatabaseAsync(app);
-await SeedRolesAsync(app);
-await SeedAdminUserAsync(app);
+await app.InitializeDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
 {
@@ -219,95 +98,8 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// המשימות רשומות בכל סביבה: השיעורים החוזרים והתזכורות הם חלק מהמוצר, ובלעדיהן
-// המורה צריכה ליצור כל שיעור ביד.
-// לוח הבקרה של Hangfire נשאר לפיתוח בלבד; הוא מאמת דרך Cookie ולא מכיר את ה-JWT.
-//
-// ה-API הסטטי RecurringJob שלמטה קורא מ-JobStorage.Current, ובלעדיו העלייה נופלת
-// ב-"Current JobStorage instance has not been initialized yet". השרת עצמו כבר רשום
-// ב-DI דרך AddHangfireServer ורץ כשירות רקע, ולכן נותר רק להצביע על אותו אחסון —
-// במקום UseHangfireServer, שהוא מיושן ומרים שרת שני.
-JobStorage.Current = app.Services.GetRequiredService<JobStorage>();
-
-RecurringJob.AddOrUpdate<MonthlyPaymentReminderJob>(
-    "monthly-payment-reminders",
-    job => job.RunForAllTenantsAsync(),
-    Cron.Monthly(),
-    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
-
-RecurringJob.AddOrUpdate<LessonSeriesGenerationJob>(
-    "lesson-series-generation",
-    job => job.RunForAllTenantsAsync(),
-    Cron.Daily(),
-    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
-
-RecurringJob.AddOrUpdate<ErrorLogCleanupJob>(
-    "error-log-cleanup",
-    job => job.RunAsync(),
-    Cron.Daily(),
-    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
-
-RecurringJob.AddOrUpdate<LessonReminderJob>(
-    "lesson-reminders",
-    job => job.RunForAllTenantsAsync(),
-    Cron.Hourly(),
-    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+app.ScheduleRecurringJobs();
 
 app.MapControllers();
 
 app.Run();
-
-/// <summary>מחילה מיגרציות ממתינות באתחול — כדי שפריסה (deploy) תהיה "git pull + docker compose up" בלי צעד ידני נפרד.</summary>
-static async Task MigrateDatabaseAsync(WebApplication app)
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<TalmidonDbContext>();
-    await db.Database.MigrateAsync();
-}
-
-// זריעת התפקידים (Teacher/Parent/Student/Admin) אם חסרים
-static async Task SeedRolesAsync(WebApplication app)
-{
-    using var scope = app.Services.CreateScope();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    foreach (var role in Roles.All)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-    }
-}
-
-/// <summary>
-/// זורעת משתמש-על יחיד לתחזוקת הפלטפורמה, אם מוגדר ב-Admin:Email/Admin:Password. בניגוד למורה/הורה/תלמיד,
-/// אין הרשמה עצמית או הזמנה למנהל — זו הדרך היחידה שבה חשבון כזה נוצר, ורק אם הוגדר במפורש (כלומר
-/// בפרודקשן חובה להגדיר את שני הערכים ב-secrets/סביבת ההרצה, אחרת לא ייווצר אף חשבון מנהל).
-/// </summary>
-static async Task SeedAdminUserAsync(WebApplication app)
-{
-    var email = app.Configuration["Admin:Email"]
-        ?? Environment.GetEnvironmentVariable("ADMIN_EMAIL");
-    var password = app.Configuration["Admin:Password"]
-        ?? Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
-    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-        return;
-
-    using var scope = app.Services.CreateScope();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    if (await userManager.FindByEmailAsync(email) is not null)
-        return;
-
-    var admin = new ApplicationUser { UserName = email, Email = email, DisplayName = "מנהל מערכת", EmailConfirmed = true };
-    var createResult = await userManager.CreateAsync(admin, password);
-    if (!createResult.Succeeded)
-    {
-        var errors = string.Join("; ", createResult.Errors.Select(error => error.Description));
-        throw new InvalidOperationException($"Admin user could not be created: {errors}");
-    }
-
-    var roleResult = await userManager.AddToRoleAsync(admin, Roles.Admin);
-    if (!roleResult.Succeeded)
-    {
-        var errors = string.Join("; ", roleResult.Errors.Select(error => error.Description));
-        throw new InvalidOperationException($"Admin role could not be assigned: {errors}");
-    }
-}
