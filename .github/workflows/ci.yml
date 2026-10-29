@@ -87,10 +87,12 @@ jobs:
     services:
       postgres:
         image: postgres:17
+        # A throwaway database only this job can reach, so it takes no password;
+        # the tests connect with the dev connection string from appsettings.json.
         env:
           POSTGRES_USER: talmidon
-          POSTGRES_PASSWORD: talmidon_dev_pw
           POSTGRES_DB: talmidon_e2e
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-

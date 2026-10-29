@@ -1,13 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
+import { connectionString } from './e2e/database';
 
 /**
  * בדיקות דפדפן מול שרת אמיתי ומסד נתונים אמיתי. מריצים עם `npm run e2e`, שבונה את
  * האתר בתצורת e2e ואז מריץ את הבדיקות. השרת והאתר עולים מכאן; Postgres צריך לרוץ
  * (בפיתוח: docker compose up db).
  */
-/** מסד נפרד משל הפיתוח ומשל בדיקות ה-backend; אותו מסד ש-e2e/support.ts פונה אליו. */
-const connectionString = 'Host=localhost;Port=5432;Database=talmidon_e2e;Username=talmidon;Password=talmidon_dev_pw';
-
 export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.e2e.ts',

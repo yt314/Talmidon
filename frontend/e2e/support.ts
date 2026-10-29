@@ -1,12 +1,10 @@
 import { execFileSync } from 'node:child_process';
 import { test as base, expect, type Locator, type Page } from '@playwright/test';
-
-/** אותו מסד שהשרת המקומי עובד מולו (playwright.config.ts). */
-const databaseUrl = 'postgresql://talmidon:talmidon_dev_pw@localhost:5432/talmidon_e2e';
+import { psqlEnvironment } from './database';
 
 /** שאילתה ישירה למסד — רק למה שאין לו דרך במוצר בלי מייל אמיתי. */
 export function sql(query: string): string {
-  return execFileSync('psql', [databaseUrl, '-qAtc', query], { encoding: 'utf-8' }).trim();
+  return execFileSync('psql', ['-qAtc', query], { encoding: 'utf-8', env: { ...process.env, ...psqlEnvironment } }).trim();
 }
 
 /**
