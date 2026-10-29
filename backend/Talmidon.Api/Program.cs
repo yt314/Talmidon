@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.AspNetCore.HttpOverrides;
 using Talmidon.Api.Diagnostics;
+using Talmidon.Api.Security;
 using Talmidon.Api.Startup;
 using Talmidon.Infrastructure;
 
@@ -82,6 +83,9 @@ else
     forwardedHeadersOptions.KnownProxies.Clear();
     app.UseForwardedHeaders(forwardedHeadersOptions);
 }
+
+// לפני CORS ושאר הצינור, כדי שכל תשובה תקבל את כותרות האבטחה — גם הפניות ותשובות שגיאה.
+app.UseSecurityHeaders();
 
 // CORS לפני הפניית HTTPS: בקשת preflight שמגיעה ב-HTTP הייתה מקבלת 307 לפני
 // שנוספות כותרות ה-CORS, והדפדפן אינו עוקב אחרי הפניה ב-preflight — הבקשה נכשלת

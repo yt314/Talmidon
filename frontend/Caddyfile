@@ -1,6 +1,18 @@
 {$DOMAIN} {
 	encode gzip
 
+	# כותרות האבטחה של האתר. חייבות להיות זהות לאלה שב-vercel.json, הפריסה המתארחת;
+	# security-headers.spec.ts נכשל אם השתיים נפרדות. ה-? קובע כותרת רק כשאין כבר כזו
+	# בתשובה: תשובות ה-API קובעות כותרות משלהן (למשל Referrer-Policy: no-referrer בקישור
+	# אישור המייל, שבו הטוקן בכתובת), ואסור לדרוס אותן כאן.
+	header {
+		?Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-8K0h4fDCFaBx8lIg5EiHkYbdMaD1xCyyl1rEzLUm1gk='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://talmidon.onrender.com; connect-src 'self' https://talmidon.onrender.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		?X-Content-Type-Options "nosniff"
+		?X-Frame-Options "DENY"
+		?Referrer-Policy "strict-origin-when-cross-origin"
+		?Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+	}
+
 	# בקשות API עוברות ל-container של הבקאנד ברשת הפנימית של docker compose.
 	# הנתיב לא נחתך (Caddy שולח /api/... כמות שהוא) — כך שהוא תואם ל-[Route("api/...")] בקונטרולרים.
 	handle /api/* {
