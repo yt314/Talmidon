@@ -28,6 +28,9 @@ const caddyHeaders = (): Map<string, string> => {
   return new Map(lines.map(([, key, value]) => [key, value]));
 };
 
+/** index.html כפי שהדפדפן קורא אותו — כדי לא לפספס סקריפט עם מאפיינים או באותיות גדולות. */
+const indexDocument = () => new DOMParser().parseFromString(read('src/index.html'), 'text/html');
+
 const csp = () => vercelHeaders().get('Content-Security-Policy') ?? '';
 
 const directive = (name: string) =>
@@ -39,7 +42,7 @@ describe('security headers', () => {
   });
 
   it('כל סקריפט מוטבע ב-index.html מותר ב-CSP לפי הגיבוב שלו', () => {
-    const scripts = [...read('src/index.html').matchAll(/<script>([\s\S]*?)<\/script>/g)].map(([, body]) => body);
+    const scripts = [...indexDocument().querySelectorAll('script:not([src])')].map(script => script.textContent ?? '');
     expect(scripts.length).toBeGreaterThan(0);
 
     for (const body of scripts) {
@@ -58,7 +61,10 @@ describe('security headers', () => {
     // CSP בלי 'unsafe-inline' חוסם onload="..." ודומיו. הטמעת ה-CSS הקריטי של Angular
     // טוענת את גיליון הסגנונות דרך onload="this.media='all'", ולכן היא כבויה ב-angular.json —
     // אחרת האתר כולו היה עולה בלי עיצוב.
-    expect(read('src/index.html')).not.toMatch(/\son[a-z]+=/i);
+    const handlers = [...indexDocument().querySelectorAll('*')]
+      .flatMap(element => [...element.attributes].map(attribute => attribute.name))
+      .filter(name => name.startsWith('on'));
+    expect(handlers).toEqual([]);
 
     const angular = JSON.parse(read('angular.json'));
     const project = Object.values(angular.projects)[0] as {
