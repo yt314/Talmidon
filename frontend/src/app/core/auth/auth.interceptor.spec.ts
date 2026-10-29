@@ -112,6 +112,21 @@ describe('authInterceptor', () => {
     expect(failed?.status).toBe(401);
   });
 
+  /** בקשה שהמתינה לרענון שנכשל מקבלת שגיאה — אחרת הספינר שלה נשאר על המסך לתמיד. */
+  it('רענון שנכשל מחזיר שגיאה לכל הבקשות שהמתינו לו, ומפנה להתחברות פעם אחת', () => {
+    refreshThroughBackend();
+    const failures: number[] = [];
+
+    http.get(`${api}/students`).subscribe({ error: (e: HttpErrorResponse) => failures.push(e.status) });
+    http.get(`${api}/lessons`).subscribe({ error: (e: HttpErrorResponse) => failures.push(e.status) });
+    backend.expectOne(`${api}/students`).flush(null, unauthorized);
+    backend.expectOne(`${api}/lessons`).flush(null, unauthorized);
+    backend.expectOne(`${api}/auth/refresh`).flush(null, unauthorized);
+
+    expect(failures).toEqual([401, 401]);
+    expect(router.navigate).toHaveBeenCalledTimes(1);
+  });
+
   /** "//host" היא כתובת לאתר אחר; ו-/login עצמו אינו יעד לחזור אליו. */
   it.each(['/login?expired=1', '//evil.example'])('לא זוכר את %s ככתובת לחזרה', url => {
     refreshThroughBackend();
@@ -157,3 +172,80 @@ describe('authInterceptor', () => {
   });
 });
 
+describe('authInterceptor — בקשה שבוטלה באמצע רענון', () => {
+  /**
+   * מונה ההתראות מחליף בקשה בכל דקה ובכל מעבר לשונית. כשהרענון היה תלוי בבקשה שהתחילה
+   * אותו, ביטול שלה השאיר אותו "רץ" לנצח, וכל בקשה שפקעה אחר כך חיכתה עד רענון הדף.
+   */
+  it('הרענון ממשיך ומסתיים, והבקשה הבאה עובדת', () => {
+    let token = 'old-token';
+    const auth = {
+      accessToken: vi.fn(() => token),
+      refreshTokenValue: vi.fn(() => 'refresh-token'),
+      refresh: vi.fn(() => TestBed.inject(HttpClient).post<string>(`${api}/auth/refresh`, null)),
+      clearSession: vi.fn()
+    };
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: AuthService, useValue: auth }
+      ]
+    });
+    const http = TestBed.inject(HttpClient);
+    const backend = TestBed.inject(HttpTestingController);
+
+    const poll = http.get(`${api}/notifications/unread-count`).subscribe();
+    backend.expectOne(`${api}/notifications/unread-count`).flush(null, unauthorized);
+    const refresh = backend.expectOne(`${api}/auth/refresh`);
+    poll.unsubscribe();
+
+    expect(refresh.cancelled).toBe(false);
+    refresh.flush('new-token');
+    token = 'new-token';
+
+    let result: unknown;
+    http.get(`${api}/students`).subscribe(body => (result = body));
+    const next = backend.expectOne(`${api}/students`);
+    next.flush(['ok']);
+
+    expect(next.request.headers.get('Authorization')).toBe('Bearer new-token');
+    expect(result).toEqual(['ok']);
+    backend.verify();
+  });
+
+  it('גם כשהרענון שבוטל עוד לא חזר — בקשה חדשה שפקעה מחכה לו ולא נתקעת', () => {
+    const auth = {
+      accessToken: vi.fn(() => 'old-token'),
+      refreshTokenValue: vi.fn(() => 'refresh-token'),
+      refresh: vi.fn(() => TestBed.inject(HttpClient).post<string>(`${api}/auth/refresh`, null)),
+      clearSession: vi.fn()
+    };
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: AuthService, useValue: auth }
+      ]
+    });
+    const http = TestBed.inject(HttpClient);
+    const backend = TestBed.inject(HttpTestingController);
+
+    const poll = http.get(`${api}/notifications/unread-count`).subscribe();
+    backend.expectOne(`${api}/notifications/unread-count`).flush(null, unauthorized);
+    const refresh = backend.expectOne(`${api}/auth/refresh`);
+    poll.unsubscribe();
+
+    let result: unknown;
+    http.get(`${api}/students`).subscribe(body => (result = body));
+    backend.expectOne(`${api}/students`).flush(null, unauthorized);
+    refresh.flush('new-token');
+    backend.expectOne(`${api}/students`).flush(['ok']);
+
+    expect(auth.refresh).toHaveBeenCalledTimes(1);
+    expect(result).toEqual(['ok']);
+    backend.verify();
+  });
+});
