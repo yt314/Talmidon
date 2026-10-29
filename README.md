@@ -220,6 +220,16 @@ component may hardcode a color:
   context, so they call `IgnoreQueryFilters()` on purpose and in named places; the anonymous
   contact form writes an explicit `TenantId`, which is exactly the case `EnforceTenantOnSave`
   permits.
+- **Security headers on both sides.** The site (`frontend/vercel.json`, mirrored in
+  `frontend/Caddyfile`) sends a Content-Security-Policy that allows scripts only from the
+  site itself plus the one inline theme script, by hash, and allows only the API and
+  Google Fonts as outside origins. It also blocks framing and turns off sniffing.
+  The API sends a closed policy (`default-src 'none'`) on every response, because none of
+  its responses — JSON, CSV, uploaded profile photos — is a page that should run.
+  `security-headers.spec.ts` fails when the two config files drift apart, when the inline
+  script changes without its hash, or when the API URL leaves the policy. The production build
+  does not inline critical CSS: Angular loads the stylesheet through an `onload` handler then,
+  which the policy blocks, and the site would come up unstyled.
 - **Client-side validation mirrors every server-side rule** (`DataAnnotations` on the API
   DTOs ↔ Angular `Validators` in `core/forms/`) — the same password policy, max lengths,
   and cross-field checks (e.g. end time after start time) are enforced on both sides.

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Talmidon.Api.Diagnostics;
 using Talmidon.Api.Multitenancy;
+using Talmidon.Api.Security;
 using Talmidon.Infrastructure;
 using Talmidon.Infrastructure.Auth;
 using Talmidon.Infrastructure.BackgroundJobs;
@@ -203,6 +204,9 @@ else
     forwardedHeadersOptions.KnownProxies.Clear();
     app.UseForwardedHeaders(forwardedHeadersOptions);
 }
+
+// לפני CORS ושאר הצינור, כדי שכל תשובה תקבל את כותרות האבטחה — גם הפניות ותשובות שגיאה.
+app.UseSecurityHeaders();
 
 // CORS לפני הפניית HTTPS: בקשת preflight שמגיעה ב-HTTP הייתה מקבלת 307 לפני
 // שנוספות כותרות ה-CORS, והדפדפן אינו עוקב אחרי הפניה ב-preflight — הבקשה נכשלת
