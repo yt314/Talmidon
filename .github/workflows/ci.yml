@@ -77,3 +77,72 @@ jobs:
       - name: Test
         working-directory: frontend
         run: npm test -- --watch=false
+
+  # The whole product in a real browser: the API against Postgres, the production
+  # build of the site under the CSP from vercel.json, and a teacher going from
+  # sign-up to a recorded payment. Catches what no unit test can — a script the
+  # policy blocks, or two halves that no longer agree with each other.
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        # A throwaway database only this job can reach, so it takes no password;
+        # the tests connect with the dev connection string from appsettings.json.
+        env:
+          POSTGRES_USER: talmidon
+          POSTGRES_DB: talmidon_e2e
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U talmidon -d talmidon_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # Built up front, so the API starts within the test runner's wait for it
+      - name: Build the API
+        run: dotnet build backend/Talmidon.Api
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        working-directory: frontend
+        run: npm run e2e
+
+      - name: Upload the report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 14

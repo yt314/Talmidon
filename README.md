@@ -346,7 +346,8 @@ The suite runs the real API in-process (`WebApplicationFactory`) against its own
 database on the same PostgreSQL server — not mocks, not an in-memory provider — so the actual
 EF Core global query filters and Npgsql behavior are what's under test. The database and its
 schema are created automatically on first run. CI (`.github/workflows/ci.yml`) runs the same
-suite against a Postgres service container, plus a production build of the frontend.
+suite against a Postgres service container, plus a production build of the frontend, its unit
+tests, and the browser tests below.
 
 Coverage is aimed at the highest-blast-radius failure modes for a multi-tenant app, plus the
 core domain rules that are easy to silently break in a refactor:
@@ -403,6 +404,45 @@ core domain rules that are easy to silently break in a refactor:
 - **Rate limiting:** the per-IP limit on `/api/auth/*` actually returns 429 once exceeded
   (`RateLimitingTests`) — this needs its own `WebApplicationFactory` with a small permit limit,
   since the shared test fixture intentionally inflates the limit for every other test.
+
+### Frontend
+
+```bash
+cd frontend
+npm test -- --watch=false
+```
+
+Vitest specs next to the code they cover. They cover the session and the token-refresh
+interceptor, the route guards, the sign-in screens, the public library and contact form, the
+dashboard, and `security-headers.spec.ts`, which keeps the CSP in `vercel.json` in step with the
+code.
+
+### In a real browser
+
+```bash
+docker compose up -d db
+cd frontend
+npx playwright install chromium   # once
+npm run e2e
+```
+
+`npm run e2e` builds the site for production, pointed at a local API, and runs the Playwright tests
+in `frontend/e2e/`. Playwright starts the API itself, against its own `talmidon_e2e` database,
+and serves the build with the headers from `vercel.json`. The tests run under the real CSP, and
+any blocked script or uncaught error fails them. `teacher-journey.e2e.ts` follows a new teacher
+through these steps:
+
+1. registration and login;
+2. profile setup;
+3. a parent and a student;
+4. a lesson, marked as taught;
+5. collecting its payment;
+6. a parent finding her in the public library and sending an enquiry, which reaches her inbox.
+
+Email confirmation is the one step done straight in the database, since the tests run without a
+mail server.
+
+CI runs both suites, the backend tests and the browser tests, on every pull request.
 
 ## Configuration
 
