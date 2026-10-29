@@ -1,12 +1,14 @@
 import { HttpErrorResponse, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, catchError, filter, switchMap, take, throwError } from 'rxjs';
+import { AsyncSubject, Observable, catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
-// מצב משותף למניעת רענונים מקבילים מרובים
-let isRefreshing = false;
-const refreshedToken$ = new BehaviorSubject<string | null>(null);
+/**
+ * הרענון שרץ כרגע, משותף לכל הבקשות שנכשלו בזמנו. רענון אחד בלבד: שניים במקביל
+ * היו שולחים את אותו אסימון רענון פעמיים, והשרת מזהה בזה שימוש חוזר ומבטל הכול.
+ */
+let refreshInFlight: Observable<string> | null = null;
 
 const AUTH_PATHS = [
   '/auth/login',
@@ -60,29 +62,32 @@ function withBearer(req: HttpRequest<unknown>, token: string): HttpRequest<unkno
 }
 
 function handle401(req: HttpRequest<unknown>, next: HttpHandlerFn, auth: AuthService, router: Router) {
-  if (isRefreshing) {
-    // ממתינים שהרענון שכבר רץ יסתיים, ואז משחזרים את הבקשה
-    return refreshedToken$.pipe(
-      filter((t): t is string => t !== null),
-      take(1),
-      switchMap(t => next(withBearer(req, t)))
-    );
-  }
+  return sharedRefresh(auth, router).pipe(switchMap(token => next(withBearer(req, token))));
+}
 
-  isRefreshing = true;
-  refreshedToken$.next(null);
+/**
+ * הרענון נרשם כאן ולא דרך הבקשה שגילתה את ה-401, כי לבקשה מותר להתבטל: מונה
+ * ההתראות מחליף בקשה בכל דקה ובכל מעבר לשונית, ומסך שעוזבים מבטל את שלו. כשהרענון
+ * היה תלוי בה, ביטול באמצע השאיר אותו "רץ" לנצח — וכל בקשה שפקעה אחר כך חיכתה לו
+ * עד רענון הדף, מה שנראה בדיוק כמו שרת מת.
+ */
+function sharedRefresh(auth: AuthService, router: Router): Observable<string> {
+  if (refreshInFlight) return refreshInFlight;
 
-  return auth.refresh().pipe(
-    switchMap(newToken => {
-      isRefreshing = false;
-      refreshedToken$.next(newToken);
-      return next(withBearer(req, newToken));
-    }),
-    catchError(error => {
-      isRefreshing = false;
+  const result = new AsyncSubject<string>();
+  refreshInFlight = result;
+  auth.refresh().subscribe({
+    next: token => result.next(token),
+    error: error => {
+      refreshInFlight = null;
       auth.clearSession();
       router.navigate(['/login'], { queryParams: expiredSessionParams(router.url) });
-      return throwError(() => error);
-    })
-  );
+      result.error(error);
+    },
+    complete: () => {
+      refreshInFlight = null;
+      result.complete();
+    }
+  });
+  return result;
 }
