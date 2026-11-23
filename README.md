@@ -442,7 +442,9 @@ through these steps:
 Email confirmation is the one step done straight in the database, since the tests run without a
 mail server.
 
-CI runs both suites, the backend tests and the browser tests, on every pull request.
+CI runs both suites, the backend tests and the browser tests, on every pull request. It also
+builds the two production images from `docker-compose.prod.yml`, so a change to a Dockerfile or
+a new base image is caught before a deploy.
 
 ## Configuration
 
