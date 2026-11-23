@@ -1,5 +1,5 @@
-import { definePreset } from '@primeng/themes';
-import Aura from '@primeng/themes/aura';
+import { definePreset } from '@primeuix/themes';
+import Aura from '@primeuix/themes/aura';
 
 /**
  * ערכת העיצוב של תלמידון — מבוססת Aura, אך לא רק החלפת צבע: כאן מוגדרת שפת העיצוב
