@@ -27,7 +27,7 @@
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "temporal-polyfill": "^1.0.6",
-    "tslib": "^2.3.0"
+    "tslib": "^2.9.1"
   },
   "devDependencies": {
     "@angular/build": "^21.2.31",
