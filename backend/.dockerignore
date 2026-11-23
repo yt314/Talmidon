@@ -1,0 +1,17 @@
+# The build context for the API image (see docker-compose.prod.yml and Talmidon.Api/Dockerfile).
+
+# Output of a local build. The image restores and publishes on its own, and a host obj/
+# copied over that restore would make `dotnet publish --no-restore` use the host's paths.
+**/[Bb]in/
+**/[Oo]bj/
+
+# Local development secrets. These are ignored by git, but `dotnet publish` copies every
+# appsettings.*.json into the output, so without this line they would end up in the image.
+**/appsettings.Development.json
+**/appsettings.*.local.json
+
+# Not part of the image: the Dockerfile copies only Domain, Infrastructure and Api.
+Talmidon.Tests/
+**/TestResults/
+**/*.user
+.vs/
