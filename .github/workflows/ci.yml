@@ -78,6 +78,42 @@ jobs:
         working-directory: frontend
         run: npm test -- --watch=false
 
+  # The production images, built the way docker-compose.prod.yml builds them.
+  # The jobs above build on the runner's own .NET and Node, so a new base image
+  # (a Node, .NET or Caddy update from Dependabot) would otherwise first be
+  # built on a real deploy. Nothing is pushed anywhere.
+  docker-images:
+    name: docker-images (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: api
+            context: backend
+            dockerfile: backend/Talmidon.Api/Dockerfile
+          - image: web
+            context: frontend
+            dockerfile: frontend/Dockerfile
+    env:
+      TAG: talmidon-${{ matrix.image }}:ci
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build
+        env:
+          CONTEXT: ${{ matrix.context }}
+          DOCKERFILE: ${{ matrix.dockerfile }}
+        run: docker build --file "$DOCKERFILE" --tag "$TAG" "$CONTEXT"
+
+      # The build stage's output path and the Caddyfile are the two things a new
+      # Node or Caddy image can break without failing the build itself.
+      - name: Check the site and the Caddyfile
+        if: matrix.image == 'web'
+        run: |
+          docker run --rm --entrypoint test "$TAG" -f /srv/index.html
+          docker run --rm -e DOMAIN=localhost "$TAG" caddy adapt --config /etc/caddy/Caddyfile > /dev/null
+
   # The whole product in a real browser: the API against Postgres, the production
   # build of the site under the CSP from vercel.json, and a teacher going from
   # sign-up to a recorded payment. Catches what no unit test can — a script the
