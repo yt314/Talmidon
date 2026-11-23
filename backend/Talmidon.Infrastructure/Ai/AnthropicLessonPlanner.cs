@@ -50,7 +50,7 @@ public class AnthropicLessonPlanner : ILessonPlanner
                 // משימה מוגדרת היטב; מאמץ בינוני מספיק, וכל בקשה עולה כסף
                 OutputConfig = new OutputConfig { Effort = Effort.Medium },
                 System = LessonPlanPrompt.System,
-                Messages = [new() { Role = Role.User, Content = LessonPlanPrompt.Details(request) }]
+                Messages = [new UserMessageParam { Content = LessonPlanPrompt.Details(request) }]
             });
 
             if (response.StopReason == "refusal")
