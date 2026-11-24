@@ -17,6 +17,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# The Node the site is built and tested with. Keep it on the major in the build stage
+# of frontend/Dockerfile, so CI tests what production builds with; Dependabot updates
+# the Dockerfile only, so a new major there needs this line changed by hand.
+env:
+  NODE_VERSION: "26"
+
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
@@ -62,7 +68,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
@@ -157,7 +163,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
