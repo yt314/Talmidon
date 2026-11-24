@@ -282,7 +282,7 @@ Talmidon/
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Node.js](https://nodejs.org/) 20+ and npm
+- [Node.js](https://nodejs.org/) 20.19+ and npm (CI and the production image use Node 26)
 - [Docker](https://www.docker.com/) (for PostgreSQL and the local mail sandbox)
 
 ### 1. Start local infrastructure
