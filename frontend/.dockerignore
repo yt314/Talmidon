@@ -1,0 +1,19 @@
+# The build context for the web image (see docker-compose.prod.yml and Dockerfile).
+# The Dockerfile runs `npm ci` and `npm run build` itself, after `COPY . .`.
+
+# Installed packages and build output from the host. A host node_modules copied over the
+# image's own `npm ci` could carry binaries built for another OS.
+node_modules/
+dist/
+.angular/
+out-tsc/
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+
+# Local settings and logs
+.env
+*.local
+*.log
