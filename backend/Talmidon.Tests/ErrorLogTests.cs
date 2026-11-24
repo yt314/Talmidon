@@ -126,8 +126,8 @@ public class ErrorLogTests(TalmidonWebApplicationFactory factory)
         var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
 
         var admin = await TestHelpers.CreateAuthorizedAdminClientAsync(factory);
-        var row = Assert.Single(await admin.GetFromJsonAsync<List<AdminErrorDto>>(
-            $"/api/admin/errors?reference={body!.Reference}")!);
+        var row = Assert.Single((await admin.GetFromJsonAsync<List<AdminErrorDto>>(
+            $"/api/admin/errors?reference={body!.Reference}"))!);
 
         var marked = await admin.PostAsync($"/api/admin/errors/{row.Id}/handled?handled=true", null);
         Assert.Equal(HttpStatusCode.NoContent, marked.StatusCode);
@@ -136,8 +136,8 @@ public class ErrorLogTests(TalmidonWebApplicationFactory factory)
         Assert.DoesNotContain(open!, e => e.Id == row.Id);
 
         // חיפוש לפי קוד מוצא גם מה שכבר טופל — הקוד מגיע מהמשתמשת, לא מהרשימה.
-        var found = Assert.Single(await admin.GetFromJsonAsync<List<AdminErrorDto>>(
-            $"/api/admin/errors?reference={body.Reference}")!);
+        var found = Assert.Single((await admin.GetFromJsonAsync<List<AdminErrorDto>>(
+            $"/api/admin/errors?reference={body.Reference}"))!);
         Assert.True(found.IsHandled);
     }
 
@@ -157,8 +157,8 @@ public class ErrorLogTests(TalmidonWebApplicationFactory factory)
         var after = await admin.GetFromJsonAsync<AdminErrorCountDto>("/api/admin/errors/open-count");
         Assert.Equal(before!.Open + 1, after!.Open);
 
-        var row = Assert.Single(await admin.GetFromJsonAsync<List<AdminErrorDto>>(
-            $"/api/admin/errors?reference={body!.Reference}")!);
+        var row = Assert.Single((await admin.GetFromJsonAsync<List<AdminErrorDto>>(
+            $"/api/admin/errors?reference={body!.Reference}"))!);
         await admin.PostAsync($"/api/admin/errors/{row.Id}/handled?handled=true", null);
 
         var handled = await admin.GetFromJsonAsync<AdminErrorCountDto>("/api/admin/errors/open-count");
