@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { confirmEmail, dialog, expect, expectNoProblems, test, toast, uniqueEmail, watchForProblems } from './support';
+import { closePickers, confirmEmail, dialog, expect, expectNoProblems, test, toast, uniqueEmail, watchForProblems } from './support';
 
 /**
  * הדרך של מורה חדשה מההרשמה ועד תשלום ראשון — דרך הדפדפן, מול השרת והמסד האמיתיים,
@@ -109,10 +109,10 @@ test.describe('מורה חדשה', () => {
     await add.locator('#l-student').click();
     await page.getByRole('option', { name: studentName }).click();
     await add.locator('#l-date').pressSequentially(yesterday());
-    await add.locator('.p-dialog-title').click();
+    await closePickers(page, add);
     await add.locator('#l-start').pressSequentially('10:00');
     await add.locator('#l-start').press('Tab');
-    await add.locator('.p-dialog-title').click();
+    await closePickers(page, add);
     await add.getByRole('button', { name: 'שמירה' }).click();
 
     await expect(toast(page, 'השיעור נוסף בהצלחה')).toBeVisible();

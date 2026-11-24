@@ -25,6 +25,18 @@ export const dialog = (page: Page, title: string): Locator =>
 export const toast = (page: Page, text: string): Locator => page.locator('.p-toast-message', { hasText: text }).first();
 
 /**
+ * סוגר בוחר תאריך או שעה פתוח בלחיצה על כותרת הדיאלוג. בוחר שעדיין באמצע אנימציית
+ * הפתיחה (למשל של השדה הבא, שקיבל פוקוס ב-Tab) יכול להתעלם מלחיצה אחת ולהישאר פתוח
+ * מעל הכפתורים שמתחתיו — ולכן הלחיצה חוזרת עד שלא נשאר אף בוחר פתוח.
+ */
+export async function closePickers(page: Page, dialogLocator: Locator): Promise<void> {
+  await expect(async () => {
+    await dialogLocator.locator('.p-dialog-title').click();
+    await expect(page.locator('.p-datepicker-panel:not(.p-datepicker-panel-inline)')).toHaveCount(0, { timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
+}
+
+/**
  * אוסף את מה שהדפדפן חסם לפי ה-CSP ואת השגיאות שנזרקו בדף. אלה בדיוק התקלות שלא
  * מופיעות בשום בנייה ובשום בדיקת יחידה — האתר פשוט מפסיק לעבוד בשקט.
  */
