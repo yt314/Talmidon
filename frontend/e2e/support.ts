@@ -24,6 +24,14 @@ export const dialog = (page: Page, title: string): Locator =>
 
 export const toast = (page: Page, text: string): Locator => page.locator('.p-toast-message', { hasText: text }).first();
 
+/** התחברות דרך מסך ההתחברות. */
+export async function signIn(page: Page, email: string, password: string): Promise<void> {
+  await page.goto('/login');
+  await page.locator('#email').fill(email);
+  await page.locator('#password').fill(password);
+  await page.locator('button[type=submit]').click();
+}
+
 /**
  * סוגר בוחר תאריך או שעה פתוח בלחיצה על כותרת הדיאלוג. בוחר שעדיין באמצע אנימציית
  * הפתיחה (למשל של השדה הבא, שקיבל פוקוס ב-Tab) יכול להתעלם מלחיצה אחת ולהישאר פתוח
