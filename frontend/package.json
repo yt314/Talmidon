@@ -39,5 +39,11 @@
     "prettier": "^3.9.10",
     "typescript": "~5.9.2",
     "vitest": "^4.1.12"
+  },
+  "allowScripts": {
+    "@parcel/watcher": false,
+    "esbuild": false,
+    "lmdb": false,
+    "msgpackr-extract": false
   }
 }
