@@ -7,6 +7,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+COPY Directory.Build.props ./
 COPY Talmidon.Domain/Talmidon.Domain.csproj Talmidon.Domain/
 COPY Talmidon.Infrastructure/Talmidon.Infrastructure.csproj Talmidon.Infrastructure/
 COPY Talmidon.Api/Talmidon.Api.csproj Talmidon.Api/

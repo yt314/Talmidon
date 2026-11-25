@@ -1,0 +1,11 @@
+<Project>
+  <!-- Applies to every project under backend/, and to the API image, which copies this file
+       before it restores. -->
+  <PropertyGroup>
+    <!-- The build is warning-free, so a new warning fails it rather than piling up unread. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Except NuGet's vulnerability audit: an advisory published for a package would otherwise
+         fail every pull request, whatever it changes. Those updates come from Dependabot. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+</Project>
