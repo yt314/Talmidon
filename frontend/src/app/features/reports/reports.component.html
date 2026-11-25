@@ -2,6 +2,7 @@
   <p-datepicker
     view="month"
     dateFormat="mm/yy"
+    ariaLabel="חודש הדוח"
     [ngModel]="month()"
     (ngModelChange)="onMonthChange($event)"
     [showIcon]="true"
@@ -87,8 +88,8 @@
                 <td>{{ s.studentName }}</td>
                 <td class="text-center">{{ s.lessons }}</td>
                 <td class="text-center">{{ s.charged }} ₪</td>
-                <td class="text-center text-green-600">{{ s.paid }} ₪</td>
-                <td class="text-center" [class.text-orange-500]="s.charged - s.paid > 0">{{ s.charged - s.paid }} ₪</td>
+                <td class="text-center success-text">{{ s.paid }} ₪</td>
+                <td class="text-center" [class.warn-text]="s.charged - s.paid > 0">{{ s.charged - s.paid }} ₪</td>
               </tr>
             }
           </tbody>
@@ -161,7 +162,7 @@
                 <td class="text-center">{{ s.hours }}</td>
                 <td
                   class="text-center font-medium"
-                  [class.text-orange-500]="s.missedPercent >= 25 && s.missedPercent < 50"
+                  [class.warn-text]="s.missedPercent >= 25 && s.missedPercent < 50"
                   [class.field-error]="s.missedPercent >= 50"
                 >
                   {{ s.missedPercent }}%

@@ -18,11 +18,11 @@ import { getAvatarColor, getInitials } from '../avatar/avatar.util';
     <button
       type="button"
       class="user-menu-trigger"
-      [attr.aria-label]="greeting()"
+      [attr.aria-label]="label()"
       [title]="greeting()"
       (click)="menu.toggle($event)">
       <span class="avatar-circle user-menu-avatar" [style.--avatar-color]="color()">{{ initials() }}</span>
-      <i class="pi pi-angle-down text-xs"></i>
+      <i class="pi pi-angle-down text-xs" aria-hidden="true"></i>
     </button>
 
     <p-menu #menu [model]="items()" [popup]="true" [appendTo]="'body'" styleClass="user-menu-panel">
@@ -56,6 +56,11 @@ export class UserMenuComponent {
   protected readonly initials = computed(() => (this.name() ? getInitials(this.name()!) : '?'));
   protected readonly color = computed(() => getAvatarColor(this.name() ?? ''));
   protected readonly greeting = computed(() => (this.name() ? `${this.name()} — תפריט משתמש` : 'תפריט משתמש'));
+  /**
+   * שם הכפתור מתחיל בראשי התיבות שעל העיגול, כי זה מה שרואים עליו: מי שמפעילה את האתר
+   * בקול אומרת את מה שכתוב על הכפתור, והשם חייב להכיל אותו (WCAG 2.5.3).
+   */
+  protected readonly label = computed(() => `${this.initials()} · ${this.greeting()}`);
 
   protected readonly items = computed<MenuItem[]>(() => [
     { separator: true },

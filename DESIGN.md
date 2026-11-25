@@ -15,7 +15,7 @@ colors:
   card: "#ffffff"
   border-warm: "#e7e5e4"
   ink: "#292524"
-  ink-muted: "#78716c"
+  ink-muted: "#736c68"
   night: "#0f151b"
   night-card: "#171f27"
   night-border: "#2c3743"
@@ -138,7 +138,7 @@ Warm neutrals carry the page; teal speaks for the brand; amber speaks only when 
 - **Warm Paper** (`paper`): App and page background (stone 100). Separates the page from white cards without a border.
 - **Card White** (`card`): Cards, dialogs, search bar, form fields.
 - **Pencil Line** (`border-warm`): Dividers, glass header border, card borders.
-- **Ink** (`ink`) / **Faded Ink** (`ink-muted`): Body text and secondary text (stone 800 / 500).
+- **Ink** (`ink`) / **Faded Ink** (`ink-muted`): Body text and secondary text. Ink is stone 800. Faded Ink sits 15% of the way from stone 500 to stone 600, because stone 500 gives only 4.4:1 on paper and 4.3:1 on teal-tinted surfaces; this keeps every secondary text at 4.5:1 (AA) or above.
 - **Night Study** (`night`, `night-card`, `night-border`, `night-ink`, `night-ink-muted`): The custom dark scale. Muted text in dark mode is surface 300, because 400 falls under 4:1 on cards.
 
 ### Status
