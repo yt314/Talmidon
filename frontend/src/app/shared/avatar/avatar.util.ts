@@ -6,7 +6,11 @@ export function getInitials(fullName: string): string {
   return parts[0][0] + parts[1][0];
 }
 
-const AVATAR_PALETTE = ['#0d9488', '#0891b2', '#7c3aed', '#c026d3', '#e11d48', '#ea580c', '#65a30d', '#4338ca'];
+/**
+ * ראשי התיבות כתובים בלבן, ולכן כל צבע כאן נותן לפחות 4.5:1 מול לבן. teal, cyan, orange
+ * ו-lime הם בגוון 700, כי ב-600 הם נותנים 3.1–3.7:1 בלבד.
+ */
+const AVATAR_PALETTE = ['#0f766e', '#0e7490', '#7c3aed', '#c026d3', '#e11d48', '#c2410c', '#4d7c0f', '#4338ca'];
 
 /** צבע יציב (לא רנדומלי מחדש בכל רינדור) שנגזר מהשם עצמו — כל מורה מקבלת אותו צבע תמיד. */
 export function getAvatarColor(fullName: string): string {

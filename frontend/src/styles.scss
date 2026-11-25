@@ -46,10 +46,24 @@ a {
 a:hover {
   text-decoration: underline;
 }
+/* קישור בתוך משפט: הצבע לבדו לא מבדיל אותו מהטקסט שסביבו (2.8:1, ונדרש 3:1), ולכן קו תחתון */
+a.inline-link {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
 
 /* הודעת שגיאה מתחת לשדה — טוקן ולא red-500 של PrimeFlex, שנותן רק 3.8:1 על לבן */
 .field-error {
   color: var(--p-talmidon-danger-text);
+}
+
+/* סכומים ואחוזים צבעוניים בטבלאות — טוקנים ולא green-600 ו-orange-500 של PrimeFlex, שנותנים
+   רק 3.3:1 ו-2.8:1 על לבן, ולטוקנים יש גם ערך משלהם למצב הכהה */
+.success-text {
+  color: var(--p-talmidon-success-text);
+}
+.warn-text {
+  color: var(--p-talmidon-warn-text);
 }
 
 /* דיאלוגים מוגדרים ברוחב קבוע בפיקסלים; בטלפון הם לא יגלשו מהמסך */
@@ -2242,7 +2256,8 @@ full-calendar th {
   padding: 0.2rem 0.75rem;
   border-radius: var(--p-border-radius-xl);
   background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
-  color: var(--p-primary-color);
+  /* גוון ה-hover ולא primary: teal 700 על הרקע הבהיר שלו נותן 4.3:1, ו-800 נותן 5.9:1 */
+  color: var(--p-primary-hover-color);
   font-size: 0.8rem;
   font-weight: 600;
   margin-bottom: 0.75rem;

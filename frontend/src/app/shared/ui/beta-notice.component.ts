@@ -33,11 +33,12 @@ import { RestoreFocusOnCloseDirective } from '../../shared/a11y/restore-focus.di
       class="beta-fab"
       (click)="open()"
       title="האתר בהרצה — לשליחת רעיון או דיווח על תקלה"
-      aria-label="האתר בהרצה. לשליחת רעיון או דיווח על תקלה"
+      aria-label="בהרצה. שלחו לנו הודעה — רעיון או דיווח על תקלה"
     >
       <span class="beta-fab-dot" aria-hidden="true"></span>
-      <span class="beta-fab-label">בהרצה</span>
-      <span class="beta-fab-more">שלחו לנו הודעה</span>
+      <!-- הרווח בין שתי התוויות נשמר במפורש: Angular מוחק רווח בין תגיות, ובלעדיו הטקסט של
+           הכפתור הוא "בהרצהשלחו", ומי שמפעילה את האתר בקול לא תוכל לקרוא לו בשם שהיא רואה -->
+      <span class="beta-fab-label">בהרצה</span>&ngsp;<span class="beta-fab-more">שלחו לנו הודעה</span>
     </button>
 
     <p-dialog

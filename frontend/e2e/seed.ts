@@ -11,6 +11,8 @@ export interface Practice {
   password: string;
   /** ה-API בתור המורה — לבדוק שמה שההורה או התלמידה שלחו הגיע אליה. */
   teacherApi: () => Promise<APIRequestContext>;
+  /** המורה עוד לא השלימה את הפרופיל, ולכן התחברות שלה נשלחת קודם להשלמתו. */
+  teacher: { email: string };
   parent: { email: string; name: string };
   student: { email: string; name: string };
   notes: { private: string; forParent: string; forStudent: string };
@@ -116,5 +118,5 @@ export async function seedPractice(): Promise<Practice> {
   sharePassword(teacherEmail, parent.email);
   sharePassword(teacherEmail, student.email);
 
-  return { password, teacherApi, parent, student, notes, resourceTitle, charge };
+  return { password, teacherApi, teacher: { email: teacherEmail }, parent, student, notes, resourceTitle, charge };
 }
