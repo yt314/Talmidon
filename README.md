@@ -439,8 +439,20 @@ through these steps:
 5. collecting its payment;
 6. a parent finding her in the public library and sending an enquiry, which reaches her inbox.
 
-Email confirmation is the one step done straight in the database, since the tests run without a
-mail server.
+`portals.e2e.ts` signs in as a parent and as a student, against a teacher set up through the API
+(`seed.ts`) with lessons, notes, a charge and a study material, and checks that each sees what is
+meant for them:
+
+- the parent sees the notes marked for parents, and the one marked for the student, but not a
+  private one; the student sees only the note shared with her;
+- the parent sees the open charge, and the student has no payments in her menu or behind the
+  parents' URL;
+- both see the study material, and a message each sends reaches the teacher;
+- each is sent back to their own portal from another role's pages.
+
+Email confirmation is done straight in the database, since the tests run without a mail server.
+For the same reason the parent and the student get the teacher's password hash there, in place of
+the password they would set from the invitation link, which the backend tests cover.
 
 CI runs both suites, the backend tests and the browser tests, on every pull request. It also
 builds the two production images from `docker-compose.prod.yml`, so a change to a Dockerfile or
