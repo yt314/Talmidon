@@ -1,36 +1,68 @@
 name: Release
 
-# Pushing a version tag (v0.1.0) publishes a GitHub release for it. The notes are that
-# version's section of CHANGELOG.md, so the changelog is written once and the release
-# page never drifts from it.
+# Publishes a GitHub release for a version, with that version's section of CHANGELOG.md
+# as its notes, so the changelog is written once and the release page never drifts from it.
+#
+# Two ways in:
+# - push a tag vX.Y.Z, and the release is made for that tag;
+# - or run this workflow from the Actions tab on main with the version (0.1.0), and the
+#   release and its tag are made on the latest commit of main.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version to release, as its CHANGELOG.md heading has it (0.1.0)"
+        required: true
 
 permissions:
   contents: write
 
 jobs:
   release:
+    # A release made by hand comes from main only, never from a branch under review
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
+      - name: Work out the version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            version="${INPUT_VERSION#v}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$version' is not a version like 0.1.0"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
       - name: Take the notes from CHANGELOG.md
         run: |
-          version="${GITHUB_REF_NAME#v}"
           # From the "## [x.y.z]" heading to the next heading or the link list at the end
-          awk -v heading="## [$version]" '
+          awk -v heading="## [$VERSION]" '
             found && (/^## \[/ || /^\[[^]]+\]: /) { exit }
             found { print }
             index($0, heading) == 1 { found = 1 }
           ' CHANGELOG.md > notes.md
           if ! grep -q '[^[:space:]]' notes.md; then
-            echo "::error::CHANGELOG.md has no section for $version"
+            echo "::error::CHANGELOG.md has no section for $VERSION"
             exit 1
           fi
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "Talmidon $GITHUB_REF_NAME" --notes-file notes.md
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            # Makes the tag on this commit as well
+            where=(--target "$GITHUB_SHA")
+          else
+            where=(--verify-tag)
+          fi
+          gh release create "v$VERSION" "${where[@]}" --title "Talmidon v$VERSION" --notes-file notes.md
