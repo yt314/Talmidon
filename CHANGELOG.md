@@ -5,8 +5,9 @@ Notable changes to Talmidon, newest first. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html); before 1.0, a minor version may
 change behavior.
 
-Pushing a tag `vX.Y.Z` publishes a GitHub release whose notes are that version's section
-below, so add the section before tagging.
+A GitHub release takes that version's section below as its notes, so add the section
+first. Then either push a tag `vX.Y.Z`, or run the Release workflow from the Actions tab
+with the version, which tags the latest commit on main.
 
 ## [Unreleased]
 
