@@ -11,6 +11,17 @@ with the version, which tags the latest commit on main.
 
 ## [Unreleased]
 
+### Fixed
+
+- Dark mode: the text of secondary, outlined and text buttons, toggle buttons and field
+  placeholders was under the WCAG AA contrast ratio on cards (4.0:1). It now reaches 4.7:1.
+
+### Quality
+
+- The accessibility check in CI runs on every main screen in dark mode as well as light.
+- A new phone-width check in CI: on a 360-pixel screen no page scrolls sideways, the top bar
+  stays on one row, and dialogs fit on the screen.
+
 ## [0.1.0] - 2026-11-26
 
 The first tagged version: the platform as it runs today. See the

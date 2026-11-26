@@ -450,13 +450,19 @@ meant for them:
 - both see the study material, and a message each sends reaches the teacher;
 - each is sent back to their own portal from another role's pages.
 
-`accessibility.e2e.ts` runs [axe-core](https://github.com/dequelabs/axe-core) on 23 screens: the
-public pages, the teacher's profile setup and main screens, and both portals, with the same seeded
-data. Any WCAG 2.1 A or AA violation fails it with the rule and the element, so contrast, field
-labels and button names do not regress quietly with a design change. One rule is off on the
+`accessibility.e2e.ts` runs [axe-core](https://github.com/dequelabs/axe-core) on 23 screens, in
+light mode and again in dark mode: the public pages, the teacher's profile setup and main screens,
+and both portals, with the same seeded data. Any WCAG 2.1 A or AA violation fails it with the rule
+and the element, so contrast, field labels and button names do not regress quietly with a design
+change, including in the dark palette nobody sees while working in light mode. One rule is off on the
 calendar pages only: FullCalendar scrolls its hours inside a `role="table"`, and giving that
 scroller a tab stop, as the rule asks when the week has no focusable lesson, breaks the table's
 ARIA structure instead.
+
+`mobile.e2e.ts` opens the same screens on a 360-pixel phone and checks the phone rules from
+`DESIGN.md`: no page scrolls sideways, every top bar stays on one row, and the add-student and
+add-lesson dialogs fit on the screen. The screens both files go through are listed once, in
+`screens.ts`.
 
 Email confirmation is done straight in the database, since the tests run without a mail server.
 For the same reason the parent and the student get the teacher's password hash there, in place of

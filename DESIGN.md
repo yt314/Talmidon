@@ -139,7 +139,7 @@ Warm neutrals carry the page; teal speaks for the brand; amber speaks only when 
 - **Card White** (`card`): Cards, dialogs, search bar, form fields.
 - **Pencil Line** (`border-warm`): Dividers, glass header border, card borders.
 - **Ink** (`ink`) / **Faded Ink** (`ink-muted`): Body text and secondary text. Ink is stone 800. Faded Ink sits 15% of the way from stone 500 to stone 600, because stone 500 gives only 4.4:1 on paper and 4.3:1 on teal-tinted surfaces; this keeps every secondary text at 4.5:1 (AA) or above.
-- **Night Study** (`night`, `night-card`, `night-border`, `night-ink`, `night-ink-muted`): The custom dark scale. Muted text in dark mode is surface 300, because 400 falls under 4:1 on cards.
+- **Night Study** (`night`, `night-card`, `night-border`, `night-ink`, `night-ink-muted`): The custom dark scale. Muted text in dark mode is surface 300, because 400 falls under 4:1 on cards. Surface 400 itself (`#7b8b9a`) is 30% of the way from the original `#6e7e8e` to surface 300: PrimeNG uses it for the text of secondary, outlined and text buttons, toggle buttons and placeholders in dark mode, and the original gave those 4.0:1 on a card. It now gives 4.7:1 on a card and 5.2:1 on the page.
 
 ### Status
 - **Success / Info / Danger** (`success-*`, `info-*`, `danger-text`): Soft tinted backgrounds with a dark text tone of the same hue. Field errors use `danger-text` (red 700), never PrimeFlex red 500, which only reaches 3.8:1 on white.
