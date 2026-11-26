@@ -652,6 +652,13 @@ See [docs/](docs/) for the original requirements specification, database schema 
 and screen/wireframe planning (in Hebrew), plus [docs/images/](docs/images/) — the
 screenshots used in the *Screens* section above.
 
+[CHANGELOG.md](CHANGELOG.md) lists what changed in each version. Pushing a tag such as
+`v0.2.0` publishes a GitHub release with that version's section as its notes
+(`.github/workflows/release.yml`), so the section goes in before the tag.
+
+[docs/social-preview/](docs/social-preview/) holds the image shown when a link to the
+repository is shared (Settings → General → Social preview) and the page it is rendered from.
+
 ## License
 
 Proprietary — copyright © 2026 Yehudit Pollock, all rights reserved. See [LICENSE](LICENSE).
