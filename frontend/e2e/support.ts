@@ -33,6 +33,22 @@ export async function signIn(page: Page, email: string, password: string): Promi
 }
 
 /**
+ * משלים את פרופיל המורה במסך ההגדרה הראשונה, שאליו נשלחת מורה בכניסה הראשונה, ומגיע
+ * ללוח הבקרה.
+ */
+export async function completeSetup(page: Page): Promise<void> {
+  await expect(page).toHaveURL(/\/app\/setup/);
+  const subjects = page.locator('#s-subjects');
+  await subjects.fill('מתמטיקה');
+  await subjects.press('Enter');
+  await page.locator('#s-price').fill('150');
+  await page.locator('#s-city').fill('ירושלים');
+  await page.locator('#s-phone').fill('050-0000000');
+  await page.getByRole('button', { name: 'סיימתי' }).click();
+  await expect(page).toHaveURL(/\/app\/dashboard/);
+}
+
+/**
  * סוגר בוחר תאריך או שעה פתוח בלחיצה על כותרת הדיאלוג. בוחר שעדיין באמצע אנימציית
  * הפתיחה (למשל של השדה הבא, שקיבל פוקוס ב-Tab) יכול להתעלם מלחיצה אחת ולהישאר פתוח
  * מעל הכפתורים שמתחתיו — ולכן הלחיצה חוזרת עד שלא נשאר אף בוחר פתוח.
